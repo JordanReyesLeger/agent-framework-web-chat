@@ -25,7 +25,7 @@ El objetivo es demostrar de forma práctica:
 SE-AgentFramework.sln
 │
 ├── 02-AFWebChat/              ← Aplicación principal
-│   ├── Agents/                   30+ agentes organizados por categoría
+│   ├── Agents/                   35+ agentes organizados por categoría
 │   ├── Orchestrations/           Orquestación multi-agente (Sequential, GroupChat, GroupChatAI)
 │   ├── Workflows/                Workflows (Iterative, Conditional, FanOut)
 │   ├── Bot/                      Integración Bot Framework para Teams
@@ -43,14 +43,13 @@ SE-AgentFramework.sln
 
 ## Capacidades principales
 
-### Agentes de IA (30+)
+### Agentes de IA (35+)
 
 | Categoría | Agentes | Descripción |
 |---|---|---|
 | **Básico** | GeneralAssistant, Translator, Summarizer | Conversación general, traducción, resúmenes |
 | **Herramientas** | DatabaseQuery, WebSearch, Lights, Weather, FileManager | Agentes con tool-calling (function calling) |
 | **Dominio** | SqlAzure, LegalAdvisor, CodeReviewer, BingGrounding, AzureSearch | Especializados con conocimiento de dominio |
-| **INEGI** | INEGICenso | Consultas al Censo de Población 2020 de México |
 | **Empresarial** | MultiAgentPlanner, DataStoryteller | Orquestadores que combinan SQL + RAG + Web |
 | **Structured Output** | EntityExtractor, SentimentAnalyzer | Salida JSON estructurada |
 | **Multimodal** | Vision | Análisis de imágenes con GPT-4o |
@@ -58,7 +57,7 @@ SE-AgentFramework.sln
 | **MCP** | McpTools | Herramientas vía Model Context Protocol |
 | **Foundry** | FoundrySimpleBot, FoundryOrchestrator | Agentes publicados en Azure AI Foundry |
 | **Approval** | DataModifier | Agente con aprobación humana antes de ejecutar |
-| **Workflow** | 13 agentes especializados | Colaboran en orquestaciones de negocio |
+| **Workflow** | 17 agentes especializados | Colaboran en orquestaciones de negocio |
 
 ### Patrones de orquestación
 
@@ -112,8 +111,8 @@ SE-AgentFramework.sln
 ### 1. Clonar el repositorio
 
 ```bash
-git clone https://github.com/tu-usuario/SE-AgentFramework.git
-cd SE-AgentFramework
+git clone https://github.com/JordanReyesLeger/agent-framework-web-chat.git
+cd agent-framework-web-chat
 ```
 
 ### 2. Configurar secretos
