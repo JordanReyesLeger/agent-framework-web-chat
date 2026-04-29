@@ -1,0 +1,125 @@
+@using Microsoft.Extensions.Options
+@using AFWebChat.Models
+@inject IOptions<AppBrandingSettings> BrandingOptions
+@{
+    var branding = BrandingOptions.Value;
+}
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="@branding.Theme">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - @branding.Title</title>
+    <!-- Bootstrap 5.3 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+    <!-- Highlight.js theme (matches branding) -->
+    @if (branding.Theme == "light")
+    {
+        <link href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github.min.css" rel="stylesheet" />
+    }
+    else
+    {
+        <link href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" rel="stylesheet" />
+    }
+    <!-- Custom styles -->
+    <link href="~/css/site.css" rel="stylesheet" asp-append-version="true" />
+    <style>
+        :root {
+            --app-primary-color: @branding.PrimaryColor;
+            --app-secondary-color: @branding.SecondaryColor;
+            --app-background-color: @branding.BackgroundColor;
+            --app-navbar-color: @branding.NavbarColor;
+            --app-text-color: @branding.TextColor;
+            --app-accent-color: @branding.AccentColor;
+            --app-surface-color: color-mix(in srgb, @branding.BackgroundColor 70%, @branding.NavbarColor);
+            --app-border-color: color-mix(in srgb, @branding.NavbarColor 60%, @branding.PrimaryColor 40%);
+            --app-muted-color: color-mix(in srgb, @branding.TextColor 55%, transparent);
+            --app-success-color: @branding.SuccessColor;
+            --app-error-color: @branding.ErrorColor;
+            --app-code-bg: color-mix(in srgb, @branding.BackgroundColor 95%, black);
+            --app-shape1-from: @branding.Shape1ColorFrom;
+            --app-shape1-to:   @branding.Shape1ColorTo;
+            --app-shape2-from: @branding.Shape2ColorFrom;
+            --app-shape2-to:   @branding.Shape2ColorTo;
+            --app-shape3-from: @branding.Shape3ColorFrom;
+            --app-shape3-to:   @branding.Shape3ColorTo;
+            --app-shape-duration: @(branding.ShapeAnimationSeconds)s;
+            /* Light theme adaptive values */
+            --app-overlay-light: @(branding.Theme == "light" ? "rgba(0,0,0," : "rgba(255,255,255,");
+            --app-overlay-contrast: @(branding.Theme == "light" ? "rgba(0,0,0," : "rgba(255,255,255,");
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm @(branding.Theme == "light" ? "navbar-light" : "navbar-dark")">
+            <div class="container-fluid">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                    @if (!string.IsNullOrEmpty(branding.LogoUrl))
+                    {
+                        <img src="@branding.LogoUrl" alt="@branding.Title" class="brand-logo" />
+                    }
+                    else
+                    {
+                        <i class="bi @branding.LogoIcon me-2"></i>
+                    }
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse"
+                        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">
+                                <i class="bi bi-house-door me-1"></i>@branding.Title
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Chat">
+                                <i class="bi bi-chat-dots me-1"></i>Chat de Agentes
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Documents">
+                                <i class="bi bi-file-earmark-text me-1"></i>Documentos
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Notifications">
+                                <i class="bi bi-bell me-1"></i>Notificaciones
+                            </a>
+                        </li>
+                    </ul>
+                    <div class="d-flex align-items-center gap-2" id="navbarChatActions"></div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="main-content">
+        <main role="main">
+            @RenderBody()
+        </main>
+    </div>
+
+    @if (!string.IsNullOrEmpty(branding.FooterText))
+    {
+        <footer class="app-footer" id="appFooter">
+            <div class="container">@branding.FooterText</div>
+        </footer>
+    }
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Marked.js for markdown -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
+    <!-- DOMPurify for XSS-safe HTML sanitization -->
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+    <!-- Highlight.js -->
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/highlight.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

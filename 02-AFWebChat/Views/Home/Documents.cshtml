@@ -1,0 +1,493 @@
+@{
+    ViewData["Title"] = "Document Management";
+}
+
+<!-- Styles moved to site.css (.document-panel, .upload-area, etc.) -->
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="bi bi-file-earmark-text me-2"></i>
+                    Document Management
+                </h2>
+                <div id="clientBadge" class="d-flex align-items-center gap-2">
+                    <span class="badge bg-info text-dark" style="font-size: 0.85rem;">
+                        <i class="bi bi-building me-1"></i>
+                        Cliente: <strong id="clientIdDisplay">...</strong>
+                    </span>
+                    <span class="badge bg-secondary" style="font-size: 0.85rem;">
+                        <i class="bi bi-search me-1"></i>
+                        Índice: <strong id="indexNameDisplay">...</strong>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Upload Section -->
+        <div class="col-lg-6 mb-4">
+            <div class="document-panel">
+                <h4 class="mb-3">
+                    <i class="bi bi-cloud-upload me-2"></i>
+                    Upload Documents
+                </h4>
+
+                <div id="uploadArea" class="upload-area mb-3">
+                    <i class="bi bi-cloud-arrow-up" style="font-size: 3rem; color: #888;"></i>
+                    <p class="mt-3 mb-2" style="font-size: 1.1rem;">Drag & Drop files here or click to browse</p>
+                    <p class="text-muted small">Supported formats: PDF, DOCX, TXT &mdash; Max 50 MB per file</p>
+                    <input type="file" id="fileInput" multiple accept=".pdf,.docx,.txt" style="display: none;">
+                </div>
+
+                <!-- Selected files preview -->
+                <div id="selectedFilesPreview" style="display: none;" class="mb-3">
+                    <h6 class="mb-2"><i class="bi bi-files me-1"></i>Archivos seleccionados</h6>
+                    <div id="selectedFilesList"></div>
+                </div>
+
+                <div id="metadataForm" style="display: none;">
+                    <h5 class="mb-3">Document Metadata</h5>
+
+                    <div class="mb-3">
+                        <label for="expedienteId" class="form-label">Expediente ID <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control metadata-input" id="expedienteId" placeholder="e.g., EXP001">
+                        <div class="invalid-feedback">El Expediente ID es obligatorio</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="documentoId" class="form-label">Documento ID <span class="text-muted">(opcional)</span></label>
+                        <input type="text" class="form-control metadata-input" id="documentoId" placeholder="Se genera automáticamente si no se proporciona">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="tipoDocumento" class="form-label">Tipo de Documento <span class="text-danger">*</span></label>
+                        <select class="form-select metadata-input" id="tipoDocumento">
+                            <option value="">Seleccionar tipo...</option>
+                            <option value="contrato">Contrato</option>
+                            <option value="factura">Factura</option>
+                            <option value="reporte">Reporte</option>
+                            <option value="acta">Acta</option>
+                            <option value="certificado">Certificado</option>
+                            <option value="poliza">Póliza</option>
+                            <option value="convenio">Convenio</option>
+                            <option value="general">General</option>
+                        </select>
+                        <div class="invalid-feedback">El Tipo de Documento es obligatorio</div>
+                    </div>
+
+                    <!-- Upload progress -->
+                    <div id="uploadProgressContainer" style="display: none;" class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small id="uploadProgressLabel">Subiendo...</small>
+                            <small id="uploadProgressPercent">0%</small>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div id="uploadProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button id="uploadBtn" class="btn btn-primary flex-grow-1">
+                            <i class="bi bi-upload me-2"></i>Subir Documentos
+                        </button>
+                        <button id="cancelBtn" class="btn btn-secondary">
+                            <i class="bi bi-x-circle me-2"></i>Cancelar
+                        </button>
+                    </div>
+                </div>
+
+                <div id="uploadStatus" class="mt-3"></div>
+            </div>
+
+            <!-- Setup Index Section -->
+            <div class="document-panel mt-4">
+                <h4 class="mb-3">
+                    <i class="bi bi-gear me-2"></i>
+                    Index Configuration
+                </h4>
+                <p class="text-muted mb-3">
+                    Initialize the Azure Search index with the required schema, skillset, and indexer.
+                </p>
+                <div class="d-flex gap-2">
+                    <button id="setupIndexBtn" class="btn btn-warning">
+                        <i class="bi bi-magic me-2"></i>Setup Index
+                    </button>
+                    <button id="runIndexerBtn" class="btn btn-info">
+                        <i class="bi bi-play-circle me-2"></i>Run Indexer
+                    </button>
+                </div>
+                <div id="setupStatus" class="mt-3"></div>
+            </div>
+        </div>
+
+        <!-- Document List Section -->
+        <div class="col-lg-6 mb-4">
+            <div class="document-panel">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="mb-0">
+                        <i class="bi bi-file-earmark-text me-2"></i>
+                        Documentos del Cliente
+                        <span id="docCount" class="badge bg-secondary ms-2" style="font-size: 0.7rem;">0</span>
+                    </h4>
+                    <button id="refreshBtn" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-arrow-clockwise me-1"></i>Actualizar
+                    </button>
+                </div>
+
+                <!-- Search/filter -->
+                <div class="mb-3">
+                    <input type="text" class="form-control metadata-input" id="docSearchInput" placeholder="Buscar documentos...">
+                </div>
+
+                <div id="documentList" class="mt-3">
+                    <div class="text-center text-muted py-5">
+                        <i class="bi bi-folder2-open" style="font-size: 3rem;"></i>
+                        <p class="mt-3">No hay documentos aún. ¡Sube tu primer documento!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let selectedFiles = [];
+        let allDocuments = [];
+        const MAX_FILE_SIZE_MB = 50;
+        const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadClientInfo();
+            loadDocuments();
+
+            document.getElementById('uploadArea').addEventListener('click', () =>
+                document.getElementById('fileInput').click());
+
+            document.getElementById('fileInput').addEventListener('change', e =>
+                handleFileSelect(e.target.files));
+
+            const uploadArea = document.getElementById('uploadArea');
+            uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+            uploadArea.addEventListener('dragleave', e => { e.preventDefault(); uploadArea.classList.remove('dragover'); });
+            uploadArea.addEventListener('drop', e => {
+                e.preventDefault(); uploadArea.classList.remove('dragover');
+                handleFileSelect(e.dataTransfer.files);
+            });
+
+            document.getElementById('uploadBtn').addEventListener('click', uploadDocuments);
+            document.getElementById('cancelBtn').addEventListener('click', resetUploadForm);
+            document.getElementById('refreshBtn').addEventListener('click', loadDocuments);
+            document.getElementById('setupIndexBtn').addEventListener('click', setupIndex);
+            document.getElementById('runIndexerBtn').addEventListener('click', runIndexer);
+
+            document.getElementById('docSearchInput').addEventListener('input', filterDocuments);
+        });
+
+        async function loadClientInfo() {
+            try {
+                const resp = await fetch('/api/document/client-info');
+                const data = await resp.json();
+                document.getElementById('clientIdDisplay').textContent = data.clientId || 'N/A';
+                document.getElementById('indexNameDisplay').textContent = data.indexName || 'N/A';
+            } catch {
+                document.getElementById('clientIdDisplay').textContent = 'Error';
+            }
+        }
+
+        function getFileIcon(fileName) {
+            const ext = fileName.split('.').pop().toLowerCase();
+            switch (ext) {
+                case 'pdf': return '<i class="bi bi-file-earmark-pdf text-danger me-2"></i>';
+                case 'docx': case 'doc': return '<i class="bi bi-file-earmark-word text-primary me-2"></i>';
+                case 'txt': return '<i class="bi bi-file-earmark-text text-secondary me-2"></i>';
+                default: return '<i class="bi bi-file-earmark me-2"></i>';
+            }
+        }
+
+        function formatFileSize(bytes) {
+            if (!bytes) return '—';
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '—';
+            const d = new Date(dateStr);
+            return d.toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        function handleFileSelect(files) {
+            const fileArray = Array.from(files);
+            const validFiles = [];
+            const rejectedFiles = [];
+
+            for (const file of fileArray) {
+                if (file.size > MAX_FILE_SIZE_BYTES) {
+                    rejectedFiles.push(`${file.name} (${formatFileSize(file.size)} - excede ${MAX_FILE_SIZE_MB} MB)`);
+                } else {
+                    validFiles.push(file);
+                }
+            }
+
+            selectedFiles = validFiles;
+
+            if (rejectedFiles.length > 0) {
+                showError(`Archivos rechazados por tamaño:<br>${rejectedFiles.join('<br>')}`);
+            }
+
+            if (selectedFiles.length > 0) {
+                document.getElementById('metadataForm').style.display = 'block';
+                document.getElementById('selectedFilesPreview').style.display = 'block';
+
+                const listHtml = selectedFiles.map(f => `
+                    <div class="file-list-item" style="padding: 0.5rem 0.75rem; margin-bottom: 0.25rem;">
+                        ${getFileIcon(f.name)}
+                        <span>${escapeHtml(f.name)}</span>
+                        <span class="text-muted ms-auto small">${formatFileSize(f.size)}</span>
+                    </div>
+                `).join('');
+                document.getElementById('selectedFilesList').innerHTML = listHtml;
+
+                if (rejectedFiles.length === 0) {
+                    document.getElementById('uploadStatus').innerHTML = `
+                        <div class="alert alert-info py-2">
+                            <i class="bi bi-info-circle me-2"></i>
+                            ${selectedFiles.length} archivo(s) seleccionado(s). Completa los metadatos para subir.
+                        </div>`;
+                }
+            } else {
+                document.getElementById('metadataForm').style.display = 'none';
+                document.getElementById('selectedFilesPreview').style.display = 'none';
+            }
+        }
+
+        function resetUploadForm() {
+            selectedFiles = [];
+            document.getElementById('fileInput').value = '';
+            document.getElementById('metadataForm').style.display = 'none';
+            document.getElementById('selectedFilesPreview').style.display = 'none';
+            document.getElementById('uploadStatus').innerHTML = '';
+            document.getElementById('uploadProgressContainer').style.display = 'none';
+            document.getElementById('expedienteId').classList.remove('is-invalid');
+            document.getElementById('tipoDocumento').classList.remove('is-invalid');
+        }
+
+        async function uploadDocuments() {
+            const expedienteId = document.getElementById('expedienteId').value.trim();
+            const documentoId = document.getElementById('documentoId').value.trim();
+            const tipoDocumento = document.getElementById('tipoDocumento').value;
+
+            // Validation with visual feedback
+            let valid = true;
+            if (!expedienteId) {
+                document.getElementById('expedienteId').classList.add('is-invalid');
+                valid = false;
+            } else {
+                document.getElementById('expedienteId').classList.remove('is-invalid');
+            }
+            if (!tipoDocumento) {
+                document.getElementById('tipoDocumento').classList.add('is-invalid');
+                valid = false;
+            } else {
+                document.getElementById('tipoDocumento').classList.remove('is-invalid');
+            }
+            if (!valid) return;
+
+            const btn = document.getElementById('uploadBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Subiendo...';
+
+            const progressContainer = document.getElementById('uploadProgressContainer');
+            const progressBar = document.getElementById('uploadProgressBar');
+            const progressLabel = document.getElementById('uploadProgressLabel');
+            const progressPercent = document.getElementById('uploadProgressPercent');
+            progressContainer.style.display = 'block';
+
+            let successCount = 0, errorCount = 0;
+            const total = selectedFiles.length;
+
+            for (let i = 0; i < selectedFiles.length; i++) {
+                const file = selectedFiles[i];
+                const pct = Math.round(((i) / total) * 100);
+                progressBar.style.width = pct + '%';
+                progressPercent.textContent = pct + '%';
+                progressLabel.textContent = `Subiendo ${i + 1}/${total}: ${file.name}`;
+
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('expedienteId', expedienteId);
+                formData.append('documentoId', documentoId || '');
+                formData.append('tipoDocumento', tipoDocumento);
+
+                try {
+                    const response = await fetch('/api/document/upload', { method: 'POST', body: formData });
+                    const data = await response.json();
+                    data.success ? successCount++ : errorCount++;
+                } catch { errorCount++; }
+            }
+
+            progressBar.style.width = '100%';
+            progressPercent.textContent = '100%';
+            progressLabel.textContent = 'Completado';
+            progressBar.classList.remove('progress-bar-animated');
+
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-upload me-2"></i>Subir Documentos';
+
+            if (successCount > 0) {
+                showSuccess(`${successCount} documento(s) subido(s) exitosamente.`);
+                loadDocuments();
+                setTimeout(resetUploadForm, 2000);
+            }
+            if (errorCount > 0) showError(`Error al subir ${errorCount} documento(s).`);
+        }
+
+        async function loadDocuments() {
+            const list = document.getElementById('documentList');
+            list.innerHTML = '<div class="text-center py-3"><div class="spinner-border spinner-border-sm" role="status"></div> Cargando...</div>';
+
+            try {
+                const response = await fetch('/api/document/list');
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+
+                if (data.clientId) {
+                    document.getElementById('clientIdDisplay').textContent = data.clientId;
+                }
+
+                if (data.success && data.documents && data.documents.length > 0) {
+                    allDocuments = data.documents;
+                    document.getElementById('docCount').textContent = allDocuments.length;
+                    renderDocumentList(allDocuments);
+                } else {
+                    allDocuments = [];
+                    document.getElementById('docCount').textContent = '0';
+                    list.innerHTML = `<div class="text-center text-muted py-5">
+                        <i class="bi bi-folder2-open" style="font-size: 3rem;"></i>
+                        <p class="mt-3">No hay documentos para este cliente. ¡Sube tu primer documento!</p>
+                    </div>`;
+                }
+            } catch (err) {
+                allDocuments = [];
+                document.getElementById('docCount').textContent = '0';
+                list.innerHTML = `<div class="text-center text-muted py-4">
+                    <i class="bi bi-exclamation-triangle text-warning" style="font-size: 2rem;"></i>
+                    <p class="mt-2">Error al cargar los documentos. Verifica la conexión con Azure Storage.</p>
+                    <button class="btn btn-sm btn-outline-primary" onclick="loadDocuments()">
+                        <i class="bi bi-arrow-clockwise me-1"></i>Reintentar
+                    </button>
+                </div>`;
+            }
+        }
+
+        function renderDocumentList(docs) {
+            const list = document.getElementById('documentList');
+            if (docs.length === 0) {
+                list.innerHTML = `<div class="text-center text-muted py-3"><p>No se encontraron documentos con ese filtro.</p></div>`;
+                return;
+            }
+
+            list.innerHTML = docs.map(doc => {
+                const name = escapeHtml(doc.name);
+                const size = formatFileSize(doc.size);
+                const date = formatDate(doc.lastModified);
+                const tipo = doc.metadata?.TipoDocumento || doc.metadata?.tipoDocumento || '—';
+                const expediente = doc.metadata?.ExpedienteId || doc.metadata?.expedienteId || '—';
+
+                return `
+                <div class="file-list-item" style="flex-direction: column; align-items: stretch;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center" style="min-width: 0;">
+                            ${getFileIcon(doc.name)}
+                            <strong class="text-truncate">${name}</strong>
+                        </div>
+                        <button class="btn btn-sm btn-outline-danger ms-2 flex-shrink-0" onclick="deleteDocument('${escapeHtml(doc.name).replace(/'/g, "\\'")}')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                    <div class="d-flex gap-3 mt-1 small text-muted" style="padding-left: 1.75rem;">
+                        <span><i class="bi bi-hdd me-1"></i>${size}</span>
+                        <span><i class="bi bi-calendar me-1"></i>${date}</span>
+                        <span><i class="bi bi-tag me-1"></i>${escapeHtml(tipo)}</span>
+                        <span><i class="bi bi-folder me-1"></i>${escapeHtml(expediente)}</span>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function filterDocuments() {
+            const query = document.getElementById('docSearchInput').value.toLowerCase().trim();
+            if (!query) {
+                renderDocumentList(allDocuments);
+                return;
+            }
+            const filtered = allDocuments.filter(doc =>
+                doc.name.toLowerCase().includes(query) ||
+                (doc.metadata?.TipoDocumento || '').toLowerCase().includes(query) ||
+                (doc.metadata?.ExpedienteId || '').toLowerCase().includes(query)
+            );
+            renderDocumentList(filtered);
+        }
+
+        async function deleteDocument(blobName) {
+            if (!confirm(`¿Eliminar "${blobName}"?`)) return;
+            try {
+                const resp = await fetch(`/api/document/${encodeURI(blobName)}`, { method: 'DELETE' });
+                const data = await resp.json();
+                data.success ? (showSuccess('Documento eliminado'), loadDocuments()) : showError('Error al eliminar');
+            } catch { showError('Error al eliminar'); }
+        }
+
+        async function setupIndex() {
+            const btn = document.getElementById('setupIndexBtn');
+            btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Configurando...';
+            try {
+                const resp = await fetch('/api/document/setup-index', { method: 'POST' });
+                const data = await resp.json();
+                btn.disabled = false; btn.innerHTML = '<i class="bi bi-magic me-2"></i>Setup Index';
+                document.getElementById('setupStatus').innerHTML = data.success
+                    ? `<div class="alert alert-success"><i class="bi bi-check-circle me-2"></i>${escapeHtml(data.message)}</div>`
+                    : `<div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i>${escapeHtml(data.error)}</div>`;
+            } catch {
+                btn.disabled = false; btn.innerHTML = '<i class="bi bi-magic me-2"></i>Setup Index';
+                document.getElementById('setupStatus').innerHTML = '<div class="alert alert-danger">Error al configurar el índice</div>';
+            }
+        }
+
+        async function runIndexer() {
+            const btn = document.getElementById('runIndexerBtn');
+            btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Ejecutando...';
+            try {
+                const resp = await fetch('/api/document/run-indexer', { method: 'POST' });
+                const data = await resp.json();
+                btn.disabled = false; btn.innerHTML = '<i class="bi bi-play-circle me-2"></i>Run Indexer';
+                document.getElementById('setupStatus').innerHTML = data.success
+                    ? `<div class="alert alert-success"><i class="bi bi-check-circle me-2"></i>${escapeHtml(data.message)}</div>`
+                    : `<div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i>${escapeHtml(data.error)}</div>`;
+            } catch {
+                btn.disabled = false; btn.innerHTML = '<i class="bi bi-play-circle me-2"></i>Run Indexer';
+                document.getElementById('setupStatus').innerHTML = '<div class="alert alert-danger">Error al ejecutar el indexer</div>';
+            }
+        }
+
+        function showSuccess(msg) {
+            document.getElementById('uploadStatus').innerHTML =
+                `<div class="alert alert-success py-2"><i class="bi bi-check-circle me-2"></i>${msg}</div>`;
+        }
+        function showError(msg) {
+            document.getElementById('uploadStatus').innerHTML =
+                `<div class="alert alert-danger py-2"><i class="bi bi-exclamation-triangle me-2"></i>${msg}</div>`;
+        }
+    </script>
+}

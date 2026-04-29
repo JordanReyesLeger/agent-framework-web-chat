@@ -1,0 +1,294 @@
+@using Microsoft.Extensions.Options
+@using AFWebChat.Models
+@inject IOptions<AppBrandingSettings> BrandingOptions
+@{
+    ViewData["Title"] = "Notificaciones";
+    var branding = BrandingOptions.Value;
+}
+
+<div class="notifications-page">
+    <!-- Animated Background Shapes -->
+    <div class="animated-background">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
+
+    <div class="container-fluid py-4" style="position:relative; z-index:1;">
+        <!-- Hero header -->
+        <div class="text-center mb-4">
+            <i class="bi bi-bell-fill" style="font-size:2.5rem; color:var(--app-accent-color);"></i>
+            <h2 class="mt-2">Centro de Notificaciones</h2>
+            <p class="text-muted">Envía notificaciones proactivas a usuarios conectados vía Teams o WebChat</p>
+        </div>
+
+        <div class="row g-4">
+            <!-- Left Column -->
+            <div class="col-lg-5">
+                <!-- Connected Conversations -->
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-people-fill me-2"></i>Conversaciones Conectadas</h5>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="loadConversations()">
+                            <i class="bi bi-arrow-clockwise"></i> Actualizar
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div id="conversationsList" class="list-group list-group-flush">
+                            <div class="text-center text-muted py-4">
+                                <i class="bi bi-inbox display-4 d-block mb-2"></i>
+                                Cargando conversaciones...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- How it works -->
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>¿Cómo Funciona?</h6>
+                    </div>
+                    <div class="card-body small">
+                        <ol class="mb-0">
+                            <li>Un usuario interactúa con el bot en Teams o WebChat</li>
+                            <li>El bot almacena una <strong>Referencia de Conversación</strong></li>
+                            <li>Tu sistema puede enviar mensajes al usuario en cualquier momento</li>
+                            <li>Los mensajes se envían como <strong>Adaptive Cards</strong> con formato enriquecido</li>
+                        </ol>
+                        <hr>
+                        <p class="mb-0 text-muted">
+                            <i class="bi bi-lightbulb text-warning"></i>
+                            Casos de uso: alertas, recordatorios, actualizaciones de estado, solicitudes de aprobación, reportes programados.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="col-lg-7">
+                <!-- Send Notification Form -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-send-fill me-2"></i>Enviar Notificación</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="notificationForm" onsubmit="sendNotification(event)">
+                            <div class="mb-3">
+                                <label for="targetSelect" class="form-label">Destino</label>
+                                <select id="targetSelect" class="form-select" required>
+                                    <option value="" disabled selected>Selecciona una conversación...</option>
+                                    <option value="__ALL__">📢 Enviar a todas las conversaciones</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="notifTitle" class="form-label">Título</label>
+                                <input type="text" id="notifTitle" class="form-control"
+                                    placeholder="ej. Despliegue completado" required maxlength="200">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="notifSeverity" class="form-label">Severidad</label>
+                                <div class="btn-group w-100" role="group">
+                                    <input type="radio" class="btn-check" name="severity" id="sev-info" value="info" checked>
+                                    <label class="btn btn-outline-info" for="sev-info">🔔 Info</label>
+                                    <input type="radio" class="btn-check" name="severity" id="sev-success" value="success">
+                                    <label class="btn btn-outline-success" for="sev-success">✅ Éxito</label>
+                                    <input type="radio" class="btn-check" name="severity" id="sev-warning" value="warning">
+                                    <label class="btn btn-outline-warning" for="sev-warning">⚠️ Advertencia</label>
+                                    <input type="radio" class="btn-check" name="severity" id="sev-error" value="error">
+                                    <label class="btn btn-outline-danger" for="sev-error">🚨 Error</label>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="notifMessage" class="form-label">Mensaje</label>
+                                <textarea id="notifMessage" class="form-control"
+                                    rows="4" placeholder="Escribe el mensaje de notificación..." required maxlength="4096"></textarea>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100" id="sendBtn">
+                                <i class="bi bi-send me-2"></i>Enviar Notificación
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Notification History -->
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="bi bi-clock-history me-2"></i>Historial de Envíos</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div id="notificationHistory" class="list-group list-group-flush" style="max-height: 300px; overflow-y: auto;">
+                            <div class="text-center text-muted py-3 small">
+                                Aún no se han enviado notificaciones.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Adaptive Card Preview -->
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="bi bi-eye me-2"></i>Vista Previa del Adaptive Card (JSON)</h6>
+                    </div>
+                    <div class="card-body">
+                        <pre id="cardPreview" class="p-3 rounded small" style="max-height: 250px; overflow-y: auto;">
+{
+  "type": "AdaptiveCard",
+  "version": "1.5",
+  "body": [
+    {
+      "type": "Container",
+      "style": "emphasis",
+      "items": [
+        {
+          "type": "TextBlock",
+          "text": "🔔 Título de tu notificación aquí",
+          "weight": "Bolder",
+          "size": "Medium"
+        }
+      ]
+    },
+    {
+      "type": "TextBlock",
+      "text": "Tu mensaje de notificación aquí...",
+      "wrap": true
+    }
+  ],
+  "actions": [
+    {
+      "type": "Action.Submit",
+      "title": "👍 Confirmar"
+    }
+  ]
+}
+                    </pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    document.addEventListener('DOMContentLoaded', loadConversations);
+
+    async function loadConversations() {
+        try {
+            const resp = await fetch('/api/proactive/conversations');
+            const conversations = await resp.json();
+
+            const list = document.getElementById('conversationsList');
+            const select = document.getElementById('targetSelect');
+
+            // Clear existing options except the first two
+            while (select.options.length > 2) select.remove(2);
+
+            if (conversations.length === 0) {
+                list.innerHTML = `
+                    <div class="text-center text-muted py-4">
+                        <i class="bi bi-inbox display-4 d-block mb-2"></i>
+                        No conversations yet.<br>
+                        <small>Users must first interact with the bot in Teams or WebChat.</small>
+                    </div>`;
+                return;
+            }
+
+            list.innerHTML = conversations.map(c => `
+                <div class="list-group-item list-group-item-action bg-dark text-light border-secondary">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong><i class="bi bi-person-circle me-1"></i>${escapeHtml(c.userName)}</strong>
+                            <span class="badge bg-secondary ms-2">${escapeHtml(c.channelId)}</span>
+                        </div>
+                        <small class="text-muted">${new Date(c.lastActivity).toLocaleString()}</small>
+                    </div>
+                    <small class="text-muted">Key: ${escapeHtml(c.key).substring(0, 30)}...</small>
+                </div>`).join('');
+
+            conversations.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.key;
+                opt.textContent = `${c.userName} (${c.channelId})`;
+                select.appendChild(opt);
+            });
+        } catch (err) {
+            console.error('Error loading conversations:', err);
+        }
+    }
+
+    async function sendNotification(e) {
+        e.preventDefault();
+        const btn = document.getElementById('sendBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sending...';
+
+        const target = document.getElementById('targetSelect').value;
+        const title = document.getElementById('notifTitle').value;
+        const message = document.getElementById('notifMessage').value;
+        const severity = document.querySelector('input[name="severity"]:checked').value;
+
+        try {
+            let resp;
+            if (target === '__ALL__') {
+                resp = await fetch('/api/proactive/broadcast', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: `🔔 ${title}: ${message}` })
+                });
+            } else {
+                resp = await fetch('/api/proactive/notify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        conversationKey: target,
+                        title: title,
+                        message: message,
+                        severity: severity,
+                        sendToAll: false
+                    })
+                });
+            }
+
+            const result = await resp.json();
+            addToHistory(title, message, severity, result);
+        } catch (err) {
+            addToHistory(title, message, 'error', { error: err.message });
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-send me-2"></i>Send Notification';
+        }
+    }
+
+    function addToHistory(title, message, severity, result) {
+        const history = document.getElementById('notificationHistory');
+        if (history.querySelector('.text-muted')) history.innerHTML = '';
+
+        const iconMap = { info: '🔔', success: '✅', warning: '⚠️', error: '🚨' };
+        const badgeMap = { info: 'bg-info', success: 'bg-success', warning: 'bg-warning text-dark', error: 'bg-danger' };
+        const success = result.sent !== undefined ? result.sent > 0 : false;
+
+        const entry = document.createElement('div');
+        entry.className = 'list-group-item bg-dark text-light border-secondary';
+        entry.innerHTML = `
+            <div class="d-flex justify-content-between">
+                <strong>${iconMap[severity] || '🔔'} ${escapeHtml(title)}</strong>
+                <span class="badge ${success ? 'bg-success' : 'bg-danger'}">
+                    ${success ? `Sent: ${result.sent}` : 'Failed'}
+                </span>
+            </div>
+            <small class="text-muted">${new Date().toLocaleTimeString()} — ${escapeHtml(message).substring(0, 80)}...</small>`;
+
+        history.prepend(entry);
+    }
+
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+</script>
+}

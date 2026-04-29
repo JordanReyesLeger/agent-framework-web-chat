@@ -1,0 +1,53 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>AFWebChat</RootNamespace>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Agent Framework Core -->
+    <PackageReference Include="AdaptiveCards" Version="3.1.0" />
+    <PackageReference Include="Azure.AI.Projects" Version="2.0.0" />
+    <PackageReference Include="Azure.AI.Projects.Agents" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Agents.AI.Foundry" Version="1.1.0" />
+    <PackageReference Include="Microsoft.Agents.AI.OpenAI" Version="1.0.0-rc5" />
+    <PackageReference Include="Microsoft.Agents.AI.Workflows" Version="1.0.0-rc5" />
+
+    <!-- Azure OpenAI SDK -->
+    <PackageReference Include="Azure.AI.OpenAI" Version="2.9.0-beta.1" />
+
+    <!-- Auth -->
+    <PackageReference Include="Azure.Identity" Version="1.20.0" />
+
+    <!-- Azure AI Search (RAG) -->
+    <PackageReference Include="Azure.Search.Documents" Version="11.8.0-beta.1" />
+
+    <!-- Azure Document Intelligence (OCR) -->
+    <PackageReference Include="Azure.AI.DocumentIntelligence" Version="1.0.0" />
+
+    <!-- Azure Blob Storage -->
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.26.0" />
+    <PackageReference Include="Microsoft.Agents.Authentication.Msal" Version="1.4.83" />
+    <PackageReference Include="Microsoft.Agents.Hosting.AspNetCore" Version="1.4.83" />
+
+    <!-- MCP (Model Context Protocol) -->
+    <PackageReference Include="ModelContextProtocol" Version="1.0.0" />
+
+    <!-- SQL -->
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.1" />
+
+    <!-- Docker tools -->
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.23.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="Agents\INEGI\bundle_censo_2020_ageb\ontologia\ontologia_censo_2020.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,2865 @@
+/* =============================================
+   AF-WebChat — Chat Page CSS (agent-chat.css)
+   Chat-specific styles scoped to .chat-page-wrapper
+   Uses --app-* variables from _Layout for consistency
+   ============================================= */
+
+:root {
+    --af-bg: var(--app-background-color, #0d1117);
+    --af-surface: var(--app-navbar-color, #1a1a2e);
+    --af-surface-2: var(--app-surface-color, #161b22);
+    --af-accent: var(--app-accent-color, #C9A227);
+    --af-highlight: var(--app-secondary-color, #58a6ff);
+    --af-text: var(--app-text-color, #e0e0e0);
+    --af-text-dim: var(--app-muted-color, #8b949e);
+    --af-border: var(--app-border-color, #333);
+    --af-success: var(--app-success-color, #238636);
+    --af-error: var(--app-error-color, #f85149);
+    --af-code-bg: var(--app-code-bg, color-mix(in srgb, var(--app-background-color, #0d1117) 95%, black));
+    --af-input-bg: color-mix(in srgb, var(--app-background-color, #0d1117) 90%, black);
+    --af-msg-user: color-mix(in srgb, var(--app-accent-color, #C9A227) 20%, var(--app-background-color, #0d1117));
+    --af-msg-agent: var(--app-surface-color, #161b22);
+    --af-sidebar-width: 260px;
+    --af-info-width: 260px;
+}
+
+/* Scope all chat styles inside the wrapper */
+.chat-page-wrapper {
+    position: relative;
+    height: calc(100vh - 46px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Hide footer on chat page — it overlaps the input */
+.chat-page-wrapper ~ footer,
+body:has(.chat-page-wrapper) .app-footer {
+    display: none !important;
+}
+
+/* Chat toolbar — merged into navbar, kept for legacy compat */
+.af-chat-toolbar {
+    display: none;
+}
+
+/* 3-Panel Layout */
+.af-layout {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    position: relative;
+}
+
+/* Left Sidebar */
+.af-sidebar {
+    width: var(--af-sidebar-width);
+    min-width: var(--af-sidebar-width);
+    background: transparent;
+    border-right: 1px solid rgba(51, 51, 51, 0.3);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    z-index: 1;
+}
+
+.af-section-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--af-text-dim);
+    padding-top: 0.75rem;
+    padding-bottom: 0.25rem;
+    text-transform: uppercase;
+}
+
+.af-agent-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: background 0.15s;
+    margin-bottom: 2px;
+    color: var(--af-text);
+    text-decoration: none;
+}
+
+.af-agent-item:hover {
+    background: var(--af-accent);
+    text-decoration: none;
+}
+
+.af-agent-item.active {
+    background: var(--af-accent);
+    border-left: 3px solid var(--af-highlight);
+}
+
+.af-agent-icon {
+    font-size: 1.2rem;
+    width: 28px;
+    text-align: center;
+}
+
+/* Chat Area */
+.af-chat-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    position: relative;
+    z-index: 1;
+}
+
+.af-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.af-welcome {
+    margin: auto;
+    color: var(--af-text-dim);
+}
+
+/* Message bubbles */
+.af-msg {
+    max-width: 85%;
+    padding: 10px 14px;
+    border-radius: 12px;
+    line-height: 1.5;
+    word-break: break-word;
+}
+
+.af-msg-user {
+    background: var(--af-msg-user);
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+}
+
+.af-msg-agent {
+    background: var(--af-msg-agent);
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+}
+
+.af-msg-agent .af-msg-header {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--af-highlight);
+    margin-bottom: 4px;
+}
+
+.af-msg-agent .af-msg-content { color: var(--af-text); }
+.af-msg-agent .af-msg-content p:last-child { margin-bottom: 0; }
+
+/* ── Headings ── */
+.af-msg-agent .af-msg-content h1 { font-size: 1.4rem; font-weight: 700; margin: 16px 0 8px; border-bottom: 1px solid var(--af-border); padding-bottom: 6px; }
+.af-msg-agent .af-msg-content h2 { font-size: 1.2rem; font-weight: 700; margin: 14px 0 6px; border-bottom: 1px solid var(--af-border); padding-bottom: 4px; }
+.af-msg-agent .af-msg-content h3 { font-size: 1.05rem; font-weight: 600; margin: 12px 0 4px; }
+.af-msg-agent .af-msg-content h4 { font-size: 0.95rem; font-weight: 600; margin: 10px 0 4px; }
+.af-msg-agent .af-msg-content h5,
+.af-msg-agent .af-msg-content h6 { font-size: 0.9rem; font-weight: 600; margin: 8px 0 4px; }
+
+/* ── Lists ── */
+.af-msg-agent .af-msg-content ul,
+.af-msg-agent .af-msg-content ol { padding-left: 1.5em; margin: 6px 0; }
+.af-msg-agent .af-msg-content li { margin-bottom: 3px; }
+.af-msg-agent .af-msg-content li > p { margin-bottom: 2px; }
+
+/* ── Blockquotes ── */
+.af-msg-agent .af-msg-content blockquote {
+    border-left: 3px solid var(--af-accent);
+    margin: 8px 0;
+    padding: 6px 12px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 0 6px 6px 0;
+    color: var(--af-muted, inherit);
+    font-style: italic;
+}
+.af-msg-agent .af-msg-content blockquote p:last-child { margin-bottom: 0; }
+
+/* ── Tables ── */
+.af-msg-agent .af-msg-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 8px 0;
+    font-size: 0.85rem;
+    overflow-x: auto;
+    display: block;
+}
+.af-msg-agent .af-msg-content thead { border-bottom: 2px solid var(--af-border); }
+.af-msg-agent .af-msg-content th {
+    padding: 6px 10px;
+    text-align: left;
+    font-weight: 600;
+    background: rgba(255,255,255,0.06);
+    white-space: nowrap;
+}
+.af-msg-agent .af-msg-content td {
+    padding: 5px 10px;
+    border-bottom: 1px solid var(--af-border);
+}
+.af-msg-agent .af-msg-content tr:hover td {
+    background: rgba(255,255,255,0.03);
+}
+
+/* ── Horizontal Rules ── */
+.af-msg-agent .af-msg-content hr {
+    border: none;
+    border-top: 1px solid var(--af-border);
+    margin: 12px 0;
+}
+
+/* ── Links ── */
+.af-msg-agent .af-msg-content a {
+    color: var(--af-accent);
+    text-decoration: none;
+}
+.af-msg-agent .af-msg-content a:hover {
+    text-decoration: underline;
+    opacity: 0.85;
+}
+
+/* ── Images ── */
+.af-msg-agent .af-msg-content img {
+    max-width: 100%;
+    border-radius: 6px;
+    margin: 6px 0;
+}
+
+/* ── Strong / Emphasis ── */
+.af-msg-agent .af-msg-content strong { font-weight: 700; }
+.af-msg-agent .af-msg-content em { font-style: italic; }
+
+/* ── Code blocks with copy button ── */
+.af-msg-agent .af-msg-content pre {
+    background: var(--af-code-bg);
+    padding: 12px;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin: 8px 0;
+    position: relative;
+}
+
+.af-msg-agent .af-msg-content pre .af-copy-btn {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: var(--af-text);
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 0.7rem;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+.af-msg-agent .af-msg-content pre:hover .af-copy-btn { opacity: 1; }
+.af-msg-agent .af-msg-content pre .af-copy-btn:hover { background: rgba(255,255,255,0.2); }
+
+.af-msg-agent .af-msg-content code {
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+}
+
+.af-msg-agent .af-msg-content code:not(pre code) {
+    background: rgba(255,255,255,0.08);
+    padding: 2px 5px;
+    border-radius: 3px;
+}
+
+/* ── Task lists (checkboxes) ── */
+.af-msg-agent .af-msg-content input[type="checkbox"] {
+    margin-right: 4px;
+    pointer-events: none;
+}
+
+/* Streaming cursor */
+.af-streaming::after {
+    content: '\2588';
+    animation: af-blink 0.8s infinite;
+    color: var(--af-highlight);
+}
+
+@keyframes af-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+/* Tool call cards */
+.af-tool-card {
+    background: color-mix(in srgb, var(--af-accent) 10%, var(--af-surface));
+    border: 1px solid var(--af-border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin: 4px 0;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.af-tool-card .af-tool-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--af-highlight);
+    font-weight: 600;
+}
+
+.af-tool-card .af-tool-body {
+    display: none;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--af-border);
+}
+
+.af-tool-card.expanded .af-tool-body { display: block; }
+
+.af-tool-card pre {
+    background: var(--af-code-bg);
+    padding: 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    margin: 4px 0;
+}
+
+/* Input Area */
+.af-input-area {
+    padding: 12px 24px 16px;
+    border-top: 1px solid rgba(51, 51, 51, 0.3);
+    background: transparent;
+    flex-shrink: 0;
+}
+
+.af-input {
+    background: var(--af-input-bg) !important;
+    border: 1px solid var(--af-border) !important;
+    color: var(--af-text) !important;
+}
+
+.af-input:focus {
+    border-color: var(--af-accent) !important;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--af-accent) 30%, transparent) !important;
+}
+
+.af-btn-send {
+    background: var(--af-accent);
+    color: white;
+    border: none;
+    padding: 6px 16px;
+    border-radius: 6px;
+    transition: background 0.15s;
+}
+
+.af-btn-send:hover { background: color-mix(in srgb, var(--af-accent) 80%, white); color: white; }
+.af-btn-send:disabled { opacity: 0.5; }
+
+/* Right Info Panel */
+.af-info-panel {
+    width: var(--af-info-width);
+    min-width: var(--af-info-width);
+    background: transparent;
+    border-left: 1px solid rgba(51, 51, 51, 0.3);
+    overflow-y: auto;
+    position: relative;
+    z-index: 1;
+}
+
+.af-info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    font-size: 0.8rem;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.af-info-label { color: var(--af-text-dim); }
+
+/* Execution flow */
+.af-exec-flow { font-size: 0.8rem; }
+
+.af-exec-step {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 0;
+}
+
+.af-exec-step .bi { font-size: 0.85rem; }
+
+.af-exec-line {
+    border-left: 2px solid var(--af-border);
+    margin-left: 7px;
+    height: 14px;
+}
+
+/* Modals */
+.af-modal {
+    background: rgba(26, 26, 46, 0.92);
+    border: 1px solid rgba(51, 51, 51, 0.6);
+}
+
+.af-code-block {
+    background: var(--af-code-bg);
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    overflow-x: auto;
+}
+
+/* Drop zone */
+.af-drop-zone {
+    border: 2px dashed var(--af-border);
+    border-radius: 8px;
+    padding: 32px;
+    text-align: center;
+    color: var(--af-text-dim);
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.af-drop-zone:hover, .af-drop-zone.drag-over {
+    border-color: var(--af-highlight);
+    color: var(--af-text);
+}
+
+/* Scrollbar */
+.chat-page-wrapper ::-webkit-scrollbar { width: 6px; }
+.chat-page-wrapper ::-webkit-scrollbar-track { background: transparent; }
+.chat-page-wrapper ::-webkit-scrollbar-thumb { background: var(--af-border); border-radius: 3px; }
+.chat-page-wrapper ::-webkit-scrollbar-thumb:hover { background: var(--af-accent); }
+
+/* =============================================
+   Agent Context Header (ChatGPT-style)
+   ============================================= */
+.af-agent-context {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 1.5rem 1rem 1rem 1rem;
+    background: transparent;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.af-agent-context-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    color: var(--af-text);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.af-agent-context-name {
+    color: var(--af-text);
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.af-agent-context-desc {
+    color: var(--af-text-dim);
+    font-size: 0.9rem;
+    margin: 0.25rem 0 0 0;
+    line-height: 1.4;
+    max-width: 420px;
+}
+
+.af-agent-context-tools {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+    margin-top: 0.25rem;
+}
+
+.af-agent-context-tools .tool-badge {
+    background: color-mix(in srgb, var(--af-accent) 15%, transparent);
+    border: 1px solid color-mix(in srgb, var(--af-accent) 30%, transparent);
+    color: var(--af-highlight);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+}
+
+/* =============================================
+   Example Prompts (Prompt Chips)
+   ============================================= */
+.af-example-prompts {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 0 1rem 1rem 1rem;
+    flex-shrink: 0;
+}
+
+.af-prompt-chip {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 0.65rem 1.1rem;
+    color: var(--af-text);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    max-width: 280px;
+    text-align: center;
+    line-height: 1.4;
+}
+
+.af-prompt-chip:hover {
+    background: color-mix(in srgb, var(--af-accent) 25%, transparent);
+    border-color: color-mix(in srgb, var(--af-accent) 50%, transparent);
+    transform: translateY(-1px);
+}
+
+.af-prompt-chip:active {
+    transform: translateY(0);
+}
+
+/* =============================================
+   Attached File Info (inline)
+   ============================================= */
+.af-attached-file {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+    margin-top: 8px;
+    font-size: 0.85rem;
+    color: var(--af-text);
+}
+
+.af-attached-file i {
+    color: var(--af-highlight);
+    font-size: 1rem;
+}
+
+.af-attached-file .af-remove-attach {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: var(--af-text-dim);
+    cursor: pointer;
+    padding: 0 4px;
+    font-size: 0.8rem;
+}
+
+.af-attached-file .af-remove-attach:hover {
+    color: var(--af-text);
+}
+
+/* =============================================
+   Agent Card (enhanced sidebar - SkWebChat style)
+   ============================================= */
+.af-agent-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid transparent;
+    border-radius: 8px;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: 4px;
+}
+
+.af-agent-card:hover {
+    border-color: color-mix(in srgb, var(--af-accent) 40%, transparent);
+    background: rgba(255, 255, 255, 0.06);
+    transform: translateY(-1px);
+}
+
+.af-agent-card.active {
+    border-color: var(--af-accent);
+    background: color-mix(in srgb, var(--af-accent) 15%, transparent);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--af-accent) 20%, transparent);
+}
+
+.af-agent-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.af-agent-card-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.af-agent-card-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.af-agent-card-name {
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: var(--af-text);
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.af-agent-card-desc {
+    font-size: 0.7rem;
+    color: var(--af-text-dim);
+    margin: 2px 0 0 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.af-agent-card-category {
+    font-size: 0.6rem;
+    color: var(--af-accent);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 4px;
+}
+
+/* =============================================
+   Message Avatars
+   ============================================= */
+.af-msg-with-avatar {
+    display: flex;
+    gap: 10px;
+    max-width: 85%;
+}
+
+.af-msg-with-avatar.af-msg-user {
+    flex-direction: row-reverse;
+    align-self: flex-end;
+    background: none;
+    padding: 0;
+}
+
+.af-msg-with-avatar.af-msg-agent {
+    align-self: flex-start;
+    background: none;
+    padding: 0;
+}
+
+.af-msg-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+    color: white;
+    margin-top: 2px;
+}
+
+.af-msg-bubble {
+    padding: 10px 14px;
+    border-radius: 12px;
+    line-height: 1.5;
+    word-break: break-word;
+    flex: 1;
+    min-width: 0;
+}
+
+.af-msg-user .af-msg-bubble {
+    background: var(--af-msg-user);
+    border-bottom-right-radius: 4px;
+}
+
+.af-msg-agent .af-msg-bubble {
+    background: var(--af-msg-agent);
+    border-bottom-left-radius: 4px;
+}
+
+/* =============================================
+   Workflow Flow Diagram
+   ============================================= */
+.af-wf-flow {
+    background: rgba(22, 27, 34, 0.7);
+    border-bottom: 1px solid rgba(51, 51, 51, 0.6);
+    padding: 1rem 1.5rem;
+    flex-shrink: 0;
+}
+
+.af-wf-flow-header {
+    text-align: center;
+    margin-bottom: 0.75rem;
+}
+
+.af-wf-flow-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: var(--af-text);
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.af-wf-flow-title i {
+    color: var(--af-accent);
+}
+
+.af-wf-flow-pattern {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--af-accent) 20%, transparent);
+    color: var(--af-accent);
+    border: 1px solid color-mix(in srgb, var(--af-accent) 35%, transparent);
+}
+
+.af-wf-flow-desc {
+    color: var(--af-text-dim);
+    font-size: 0.8rem;
+    margin: 0.25rem 0 0 0;
+    text-align: center;
+}
+
+/* Flow Canvas (common) */
+.af-wf-flow-canvas {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    padding: 0.75rem 0 0.25rem 0;
+    overflow-x: auto;
+    min-height: 70px;
+}
+
+/* Flow Node */
+.af-wf-node {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 2px solid var(--af-border);
+    border-radius: 10px;
+    color: var(--af-text);
+    font-size: 0.8rem;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: all 0.3s ease;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.af-wf-node-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.af-wf-node-name {
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* Node States */
+.af-wf-node.idle {
+    border-color: var(--af-border);
+    opacity: 0.8;
+}
+
+.af-wf-node.running {
+    border-color: var(--af-accent);
+    background: color-mix(in srgb, var(--af-accent) 15%, transparent);
+    box-shadow: 0 0 16px color-mix(in srgb, var(--af-accent) 30%, transparent);
+    opacity: 1;
+    animation: wf-pulse 1.5s ease-in-out infinite;
+}
+
+.af-wf-node.completed {
+    border-color: var(--af-success);
+    background: color-mix(in srgb, var(--af-success) 15%, transparent);
+    opacity: 1;
+}
+
+.af-wf-node.completed::after {
+    content: '\2713';
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 18px;
+    height: 18px;
+    background: var(--af-success);
+    color: white;
+    border-radius: 50%;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+}
+
+@keyframes wf-pulse {
+    0%, 100% { box-shadow: 0 0 8px color-mix(in srgb, var(--af-accent) 20%, transparent); }
+    50%      { box-shadow: 0 0 20px color-mix(in srgb, var(--af-accent) 40%, transparent); }
+}
+
+/* Arrow Connector */
+.af-wf-arrow {
+    display: flex;
+    align-items: center;
+    color: var(--af-text-dim);
+    font-size: 1.1rem;
+    padding: 0 4px;
+    flex-shrink: 0;
+}
+
+.af-wf-arrow i {
+    opacity: 0.6;
+}
+
+/* Vertical Arrow (for fan-out / conditional) */
+.af-wf-arrow-down {
+    display: flex;
+    justify-content: center;
+    color: var(--af-text-dim);
+    font-size: 1rem;
+    padding: 4px 0;
+}
+
+/* Pattern: Sequential — horizontal chain */
+.af-wf-canvas-sequential {
+    flex-direction: row;
+}
+
+/* Pattern: Conditional — classifier on top, branches below */
+.af-wf-canvas-conditional {
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.af-wf-cond-router {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.af-wf-cond-branches {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 12px;
+    position: relative;
+}
+
+.af-wf-cond-branches::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: 20%;
+    right: 20%;
+    height: 2px;
+    background: var(--af-border);
+}
+
+.af-wf-cond-branch {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.af-wf-cond-branch-line {
+    width: 2px;
+    height: 10px;
+    background: var(--af-border);
+}
+
+/* Conditional/Handoff — enhanced visuals */
+.af-wf-cond-explain-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--af-accent) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--af-accent) 20%, transparent);
+    font-size: 0.72rem;
+    color: var(--af-text-dim);
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.af-wf-cond-explain-bar i {
+    color: var(--af-accent);
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.af-wf-cond-explain-bar strong {
+    color: var(--af-accent);
+}
+
+.af-wf-cond-router-badge {
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--af-accent);
+    background: color-mix(in srgb, var(--af-accent) 15%, transparent);
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid color-mix(in srgb, var(--af-accent) 30%, transparent);
+    margin-bottom: 4px;
+}
+
+.af-wf-cond-decision-diamond {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    color: var(--af-accent);
+    font-size: 1.1rem;
+    opacity: 0.7;
+}
+
+.af-wf-cond-branch-tag {
+    font-size: 0.58rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    background: rgba(255,255,255,0.06);
+    color: var(--af-text-dim);
+    margin-bottom: 2px;
+}
+
+/* How it works box */
+.af-wf-cond-how-box {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    margin-bottom: 12px;
+}
+
+.af-wf-cond-how-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--af-text-dim);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.af-wf-cond-how-title i {
+    color: var(--af-accent);
+    font-size: 0.75rem;
+}
+
+.af-wf-cond-how-steps {
+    list-style: none;
+    counter-reset: how-step;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.af-wf-cond-how-steps li {
+    counter-increment: how-step;
+    font-size: 0.68rem;
+    color: var(--af-text-dim);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.af-wf-cond-how-steps li::before {
+    content: counter(how-step);
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--af-accent) 15%, transparent);
+    color: var(--af-accent);
+    font-size: 0.6rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.af-wf-cond-how-steps li strong {
+    color: var(--af-text);
+}
+
+.af-wf-cond-router-badge i {
+    font-size: 0.55rem;
+}
+
+/* Pattern: FanOut — parallel agents, then synthesizer */
+.af-wf-canvas-fanout {
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.af-wf-fanout-parallel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+.af-wf-fanout-merge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.af-wf-fanout-lines {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+}
+
+.af-wf-fanout-line {
+    width: 2px;
+    height: 10px;
+    background: var(--af-border);
+}
+
+/* Pattern: Iterative — loop arrows */
+.af-wf-canvas-iterative {
+    flex-direction: row;
+    gap: 0;
+}
+
+.af-wf-loop-label {
+    font-size: 0.65rem;
+    color: var(--af-text-dim);
+    text-align: center;
+    padding: 2px 8px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px dashed var(--af-border);
+    border-radius: 4px;
+}
+
+/* Pattern: GroupChat — round layout */
+.af-wf-canvas-groupchat {
+    flex-direction: row;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.af-wf-groupchat-label {
+    width: 100%;
+    text-align: center;
+    font-size: 0.7rem;
+    color: var(--af-text-dim);
+    padding-top: 4px;
+}
+
+/* Workflow sidebar card */
+.af-wf-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid transparent;
+    border-radius: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: 4px;
+}
+
+.af-wf-card:hover {
+    border-color: color-mix(in srgb, var(--af-accent) 40%, transparent);
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.af-wf-card.active {
+    border-color: var(--af-accent);
+    background: color-mix(in srgb, var(--af-accent) 15%, transparent);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--af-accent) 20%, transparent);
+}
+
+.af-wf-card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.af-wf-card-icon {
+    color: var(--af-accent);
+    font-size: 1rem;
+    width: 24px;
+    text-align: center;
+}
+
+.af-wf-card-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.af-wf-card-name {
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: var(--af-text);
+}
+
+.af-wf-card-pattern {
+    font-size: 0.65rem;
+    color: var(--af-text-dim);
+}
+
+.af-wf-card-agents {
+    display: flex;
+    gap: 3px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+}
+
+.af-wf-card-agent-pip {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6rem;
+    color: white;
+}
+
+/* =============================================
+   Sidebar Tabs
+   ============================================= */
+.af-side-tabs {
+    display: flex;
+    flex-shrink: 0;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.af-side-tab {
+    flex: 1;
+    padding: 8px 4px;
+    border: none;
+    background: transparent;
+    color: rgba(255,255,255,0.4);
+    font-size: 0.68rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    border-bottom: 2px solid transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.af-side-tab:hover { color: rgba(255,255,255,0.7); }
+.af-side-tab.active {
+    color: var(--af-accent);
+    border-bottom-color: var(--af-accent);
+}
+
+.af-side-panel {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+}
+
+/* Catalog sub-tabs */
+.af-cat-subtabs {
+    display: flex;
+    padding: 6px 8px;
+    gap: 0;
+}
+
+.af-cat-sub {
+    flex: 1;
+    padding: 5px 6px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: transparent;
+    color: rgba(255,255,255,0.5);
+    font-size: 0.68rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.af-cat-sub:first-child { border-radius: 5px 0 0 5px; }
+.af-cat-sub:last-child { border-radius: 0 5px 5px 0; border-left: none; }
+.af-cat-sub:hover { color: rgba(255,255,255,0.8); }
+.af-cat-sub.active {
+    background: rgba(201,162,39,0.15);
+    border-color: rgba(201,162,39,0.4);
+    color: var(--af-accent);
+}
+
+/* Builder labels */
+.af-bld-label {
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    color: rgba(255,255,255,0.35);
+    text-transform: uppercase;
+    padding: 6px 10px 3px;
+}
+
+/* Builder agent picker */
+.af-bld-picker {
+    max-height: 280px;
+    overflow-y: auto;
+}
+
+.af-bld-pick {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 6px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.12s;
+    margin-bottom: 1px;
+}
+.af-bld-pick:hover { background: rgba(255,255,255,0.06); }
+
+.af-bld-pick-icon {
+    width: 22px; height: 22px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    flex-shrink: 0;
+}
+
+.af-bld-pick-name {
+    font-size: 0.72rem;
+    color: rgba(255,255,255,0.8);
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.af-bld-pick-add {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: transparent;
+    color: var(--af-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.15s;
+}
+.af-bld-pick-add:hover {
+    background: var(--af-accent);
+    color: #fff;
+    border-color: var(--af-accent);
+}
+
+/* =============================================
+   Workflow Builder
+   ============================================= */
+.af-wf-tabs {
+    padding-top: 0.5rem;
+    padding-bottom: 0.25rem;
+}
+
+.af-wf-tabs .af-section-title {
+    margin-bottom: 0 !important;
+    padding: 0 !important;
+}
+
+.af-wf-tabs .btn-xs {
+    padding: 2px 8px;
+    font-size: 0.65rem;
+    line-height: 1.3;
+    border-radius: 4px;
+}
+
+.af-wf-tabs .btn-outline-secondary.active {
+    background: var(--af-accent);
+    border-color: var(--af-accent);
+    color: var(--af-text);
+}
+
+/* Pattern Selector */
+.af-builder-patterns {
+    display: flex;
+    gap: 4px;
+    padding: 8px 0;
+    justify-content: center;
+}
+
+.af-builder-pat {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 2px solid var(--af-border);
+    background: transparent;
+    color: var(--af-text-dim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.af-builder-pat:hover {
+    border-color: color-mix(in srgb, var(--af-accent) 60%, transparent);
+    color: var(--af-text);
+}
+
+.af-builder-pat.active {
+    border-color: var(--af-accent);
+    background: color-mix(in srgb, var(--af-accent) 20%, transparent);
+    color: var(--af-accent);
+}
+
+/* Builder Agent Area */
+.af-builder-agents {
+    min-height: 60px;
+    background: rgba(0, 0, 0, 0.15);
+    border: 1px dashed var(--af-border);
+    border-radius: 8px;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.af-builder-placeholder {
+    text-align: center;
+    color: var(--af-text-dim);
+    font-size: 0.75rem;
+    margin: auto;
+    padding: 8px;
+    opacity: 0.6;
+}
+
+.af-builder-placeholder i {
+    display: block;
+    font-size: 1rem;
+    margin-bottom: 4px;
+}
+
+/* Agent chip in builder */
+.af-builder-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--af-border);
+    border-radius: 6px;
+    padding: 4px 6px;
+    font-size: 0.75rem;
+    color: var(--af-text);
+    cursor: grab;
+}
+
+.af-builder-chip:active {
+    cursor: grabbing;
+}
+
+.af-builder-chip-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.af-builder-chip-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 500;
+}
+
+.af-builder-chip-order {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.af-builder-chip-order button {
+    background: none;
+    border: none;
+    color: var(--af-text-dim);
+    padding: 0;
+    font-size: 0.55rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.af-builder-chip-order button:hover:not(:disabled) {
+    color: var(--af-accent);
+}
+
+.af-builder-chip-order button:disabled {
+    opacity: 0.25;
+    cursor: default;
+}
+
+.af-builder-chip-remove {
+    background: none;
+    border: none;
+    color: var(--af-text-dim);
+    font-size: 0.6rem;
+    padding: 0 2px;
+    cursor: pointer;
+    transition: color 0.15s;
+}
+
+.af-builder-chip-remove:hover {
+    color: var(--af-error);
+}
+
+/* Add button on agent cards */
+.af-agent-add-btn {
+    background: color-mix(in srgb, var(--af-accent) 20%, transparent);
+    border: 1px solid color-mix(in srgb, var(--af-accent) 40%, transparent);
+    color: var(--af-accent);
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    cursor: pointer;
+    flex-shrink: 0;
+    margin-left: auto;
+    transition: all 0.15s;
+}
+
+.af-agent-add-btn:hover {
+    background: var(--af-accent);
+    color: var(--af-text);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .af-info-panel { display: none; }
+}
+
+@media (max-width: 768px) {
+    .af-sidebar {
+        position: fixed;
+        left: -260px;
+        top: 56px;
+        height: calc(100vh - 56px);
+        z-index: 100;
+        transition: left 0.3s;
+    }
+    .af-sidebar.open { left: 0; }
+}
+
+/* =============================================
+   Session History Drawer
+   ============================================= */
+.af-session-drawer {
+    background: rgba(26, 26, 46, 0.92) !important;
+    color: var(--af-text) !important;
+    border-right: 1px solid rgba(51, 51, 51, 0.6) !important;
+    width: 320px !important;
+}
+
+.af-session-drawer .offcanvas-header {
+    background: rgba(0, 0, 0, 0.2);
+    border-bottom-color: var(--af-border) !important;
+    padding: 12px 16px;
+}
+
+.af-session-drawer .offcanvas-title {
+    color: var(--af-text);
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.af-session-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.af-session-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+    color: var(--af-text-dim);
+    gap: 0.5rem;
+}
+
+.af-session-empty i {
+    font-size: 2rem;
+    opacity: 0.5;
+}
+
+.af-session-empty p {
+    margin: 0;
+    font-size: 0.85rem;
+}
+
+.af-session-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: background 0.15s;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.af-session-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.af-session-item.active {
+    background: color-mix(in srgb, var(--af-accent) 15%, transparent);
+    border-left: 3px solid var(--af-accent);
+}
+
+.af-session-item-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.af-session-item-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.af-session-item-title {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--af-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.af-session-item-meta {
+    display: flex;
+    gap: 4px;
+    font-size: 0.65rem;
+    color: var(--af-text-dim);
+    margin-top: 2px;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.af-session-item-delete {
+    background: none;
+    border: none;
+    color: var(--af-text-dim);
+    padding: 4px 6px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    opacity: 0;
+    transition: all 0.15s;
+    flex-shrink: 0;
+}
+
+.af-session-item:hover .af-session-item-delete {
+    opacity: 1;
+}
+
+.af-session-item-delete:hover {
+    color: var(--af-error);
+    background: color-mix(in srgb, var(--af-error) 15%, transparent);
+}
+
+/* =============================================
+   Agent Studio — Create Agent & Design Flow
+   ============================================= */
+
+/* Studio sub-tabs */
+.af-studio-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.af-studio-tab {
+    flex: 1;
+    background: none;
+    border: none;
+    padding: 8px 6px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--af-text-dim);
+    cursor: pointer;
+    transition: all 0.2s;
+    border-bottom: 2px solid transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.af-studio-tab:hover {
+    color: var(--af-text);
+    background: rgba(255,255,255,0.03);
+}
+
+.af-studio-tab.active {
+    color: var(--af-accent);
+    border-bottom-color: var(--af-accent);
+    background: rgba(201,162,39,0.06);
+}
+
+.af-studio-tab i {
+    font-size: 0.8rem;
+}
+
+/* Studio Panel */
+.af-studio-panel {
+    display: flex;
+    flex-direction: column;
+    height: calc(100% - 38px);
+    overflow-y: auto;
+}
+
+.af-studio-section {
+    padding: 8px;
+    flex: 1;
+}
+
+.af-studio-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    color: rgba(255,255,255,0.5);
+    text-transform: uppercase;
+    margin-top: 8px;
+    margin-bottom: 4px;
+    display: block;
+}
+
+.af-studio-label .af-studio-hint {
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    opacity: 0.6;
+}
+
+/* Preview Card */
+.af-studio-preview {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(201,162,39,0.08), rgba(88,166,255,0.08));
+    border: 1px solid rgba(201,162,39,0.15);
+    margin-bottom: 8px;
+}
+
+.af-studio-preview-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: white;
+    flex-shrink: 0;
+    transition: all 0.3s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.af-studio-preview-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.af-studio-preview-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--af-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.af-studio-preview-cat {
+    font-size: 0.65rem;
+    color: var(--af-accent);
+    opacity: 0.8;
+}
+
+/* Icon Picker */
+.af-studio-icon-picker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.af-icon-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 2px solid transparent;
+    background: rgba(255,255,255,0.04);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.af-icon-btn:hover {
+    background: rgba(255,255,255,0.1);
+    transform: scale(1.15);
+}
+
+.af-icon-btn.active {
+    border-color: var(--af-accent);
+    background: rgba(201,162,39,0.15);
+    box-shadow: 0 0 8px rgba(201,162,39,0.3);
+}
+
+/* Color Picker */
+.af-studio-color-picker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.af-color-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+    padding: 0;
+}
+
+.af-color-btn:hover {
+    transform: scale(1.2);
+    box-shadow: 0 0 8px rgba(255,255,255,0.2);
+}
+
+.af-color-btn.active {
+    border-color: white;
+    box-shadow: 0 0 10px rgba(255,255,255,0.3);
+    transform: scale(1.15);
+}
+
+/* Row layout for pickers */
+.af-studio-row {
+    display: flex;
+    gap: 12px;
+}
+
+.af-studio-col {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Textarea */
+.af-studio-textarea {
+    font-size: 0.75rem !important;
+    line-height: 1.4;
+    resize: vertical;
+    min-height: 60px;
+    font-family: 'Cascadia Code', 'Fira Code', monospace;
+}
+
+.af-studio-char-count {
+    text-align: right;
+    font-size: 0.6rem;
+    color: var(--af-text-dim);
+    margin-top: 2px;
+}
+
+/* Tool List */
+.af-studio-tools {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-height: 120px;
+    overflow-y: auto;
+    padding: 4px;
+    background: rgba(0,0,0,0.12);
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.06);
+}
+
+.af-studio-tool-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 6px;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    color: var(--af-text);
+    cursor: pointer;
+    transition: background 0.12s;
+    margin: 0;
+}
+
+.af-studio-tool-item:hover {
+    background: rgba(255,255,255,0.06);
+}
+
+.af-studio-tool-item input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+    accent-color: var(--af-accent);
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.af-studio-tool-item i {
+    color: var(--af-accent);
+    font-size: 0.7rem;
+}
+
+/* Example Prompts */
+.af-studio-prompts {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.af-studio-prompt-row {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.af-studio-prompt-row input {
+    font-size: 0.72rem !important;
+}
+
+.af-studio-prompt-remove {
+    background: none;
+    border: none;
+    color: var(--af-text-dim);
+    cursor: pointer;
+    font-size: 0.75rem;
+    padding: 2px;
+    border-radius: 4px;
+    flex-shrink: 0;
+    transition: all 0.12s;
+}
+
+.af-studio-prompt-remove:hover {
+    color: var(--af-error);
+    background: rgba(248,81,73,0.12);
+}
+
+.af-studio-add-prompt {
+    background: none;
+    border: 1px dashed rgba(255,255,255,0.12);
+    border-radius: 4px;
+    color: var(--af-text-dim);
+    font-size: 0.68rem;
+    padding: 3px 8px;
+    cursor: pointer;
+    margin-top: 4px;
+    transition: all 0.12s;
+    text-align: center;
+}
+
+.af-studio-add-prompt:hover {
+    border-color: var(--af-accent);
+    color: var(--af-accent);
+    background: rgba(201,162,39,0.06);
+}
+
+/* Action Buttons */
+.af-studio-actions {
+    display: flex;
+    gap: 8px;
+    padding: 8px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    background: rgba(0,0,0,0.12);
+}
+
+/* Toast notification */
+.af-studio-toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    padding: 10px 20px;
+    border-radius: 8px;
+    color: white;
+    font-size: 0.82rem;
+    font-weight: 500;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+}
+
+.af-studio-toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+
+
+/* =============================================
+   Visual Flow Builder — Patterns, Canvas, Steps
+   ============================================= */
+
+/* Pattern Selector Cards */
+.af-flow-patterns {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 10px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.af-flow-pat {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    background: rgba(255,255,255,0.03);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.af-flow-pat:hover {
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(255,255,255,0.1);
+}
+
+.af-flow-pat.active {
+    background: color-mix(in srgb, var(--af-accent) 12%, transparent);
+    border-color: var(--af-accent);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--af-accent) 15%, transparent);
+}
+
+.af-flow-pat-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    background: rgba(255,255,255,0.06);
+    color: var(--af-text-dim);
+    flex-shrink: 0;
+    transition: all 0.2s;
+}
+
+.af-flow-pat.active .af-flow-pat-icon {
+    background: var(--af-accent);
+    color: white;
+}
+
+.af-flow-pat-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.af-flow-pat-name {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--af-text);
+}
+
+.af-flow-pat-desc {
+    font-size: 0.65rem;
+    color: var(--af-text-dim);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Inline Flow Canvas */
+.af-flow-inline-canvas {
+    background: rgba(0,0,0,0.25);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    min-height: 100px;
+    max-height: 280px;
+    overflow-y: auto;
+    padding: 12px;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.af-flow-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    color: var(--af-text-dim);
+    font-size: 0.75rem;
+    opacity: 0.6;
+}
+
+.af-flow-empty-state i {
+    font-size: 1.6rem;
+    opacity: 0.4;
+}
+
+/* Inline Flow Nodes */
+.af-iflow-node {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    background: rgba(255,255,255,0.04);
+    border: 2px solid var(--af-border);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.af-iflow-node.running {
+    border-color: var(--af-accent);
+    background: color-mix(in srgb, var(--af-accent) 15%, transparent);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--af-accent) 25%, transparent);
+    animation: wf-pulse 1.5s ease-in-out infinite;
+}
+
+.af-iflow-node.completed {
+    border-color: var(--af-success);
+    background: color-mix(in srgb, var(--af-success) 12%, transparent);
+}
+
+.af-iflow-node.completed::after {
+    content: '\2713';
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 16px;
+    height: 16px;
+    background: var(--af-success);
+    color: white;
+    border-radius: 50%;
+    font-size: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+}
+
+.af-iflow-node-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.af-iflow-node-name {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--af-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100px;
+}
+
+.af-iflow-node-status {
+    display: none;
+}
+
+/* Inline Flow Connectors */
+.af-iflow-connector {
+    display: flex;
+    justify-content: center;
+    color: var(--af-text-dim);
+    font-size: 0.8rem;
+    padding: 2px 0;
+    opacity: 0.5;
+}
+
+/* Sequential layout */
+.af-iflow-seq {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    width: 100%;
+}
+
+/* Parallel / Concurrent layout */
+.af-iflow-parallel {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    padding: 6px 0;
+}
+
+/* Labels */
+.af-iflow-label {
+    font-size: 0.68rem;
+    font-weight: 500;
+    color: var(--af-text-dim);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.04);
+    border: 1px dashed rgba(255,255,255,0.1);
+}
+
+/* Conditional / Handoff branches */
+.af-iflow-router {
+    border-color: var(--af-accent) !important;
+    background: color-mix(in srgb, var(--af-accent) 8%, transparent) !important;
+}
+
+.af-iflow-cond-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    margin-bottom: 6px;
+    width: 100%;
+}
+
+.af-iflow-cond-badge {
+    font-size: 0.62rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    padding: 2px 10px;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--af-accent) 15%, transparent);
+    color: var(--af-accent);
+    border: 1px solid color-mix(in srgb, var(--af-accent) 25%, transparent);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.af-iflow-cond-explain {
+    font-size: 0.58rem;
+    color: var(--af-text-dim);
+    text-align: center;
+    line-height: 1.3;
+    max-width: 200px;
+    opacity: 0.75;
+}
+
+.af-iflow-cond-decision {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    font-size: 0.6rem;
+    font-weight: 600;
+    color: var(--af-accent);
+    padding: 3px 10px;
+    margin: 4px 0 2px 0;
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--af-accent) 10%, transparent);
+    border: 1px dashed color-mix(in srgb, var(--af-accent) 30%, transparent);
+}
+
+.af-iflow-cond-decision i {
+    font-size: 0.65rem;
+}
+
+.af-iflow-cond-lines {
+    width: 60%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--af-border), var(--af-border), transparent);
+    margin: 0 auto;
+}
+
+.af-iflow-branches {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding: 4px 0;
+}
+
+.af-iflow-branch {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.af-iflow-branch-label {
+    font-size: 0.55rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    background: rgba(255,255,255,0.06);
+    color: var(--af-text-dim);
+}
+
+.af-iflow-branch-line {
+    width: 2px;
+    height: 8px;
+    background: var(--af-border);
+}
+
+.af-iflow-cond-footer {
+    font-size: 0.56rem;
+    color: var(--af-text-dim);
+    text-align: center;
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    opacity: 0.65;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.02);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   LIGHT THEME OVERRIDES for Chat UI
+   Inverts all rgba(255,255,255,X) → rgba(0,0,0,X) for light backgrounds
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Sidebar ── */
+[data-bs-theme="light"] .af-sidebar {
+    border-right: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+[data-bs-theme="light"] .af-side-tab {
+    color: rgba(0, 0, 0, 0.5);
+}
+
+[data-bs-theme="light"] .af-side-tab:hover {
+    color: rgba(0, 0, 0, 0.8);
+}
+
+[data-bs-theme="light"] .af-side-tab.active {
+    color: var(--af-accent);
+    border-bottom-color: var(--af-accent);
+}
+
+[data-bs-theme="light"] .af-agent-card {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+[data-bs-theme="light"] .af-agent-card:hover,
+[data-bs-theme="light"] .af-agent-card.active {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+/* ── Catalog tabs ── */
+[data-bs-theme="light"] .af-cat-sub {
+    color: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+[data-bs-theme="light"] .af-cat-sub:hover {
+    color: rgba(0, 0, 0, 0.8);
+}
+
+[data-bs-theme="light"] .af-cat-sub.active {
+    background: color-mix(in srgb, var(--af-accent) 12%, transparent);
+    color: var(--af-accent);
+    border-color: var(--af-accent);
+}
+
+/* ── Prompt chips ── */
+[data-bs-theme="light"] .af-prompt-chip {
+    background: rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+[data-bs-theme="light"] .af-prompt-chip:hover {
+    background: color-mix(in srgb, var(--af-accent) 12%, transparent);
+    border-color: color-mix(in srgb, var(--af-accent) 40%, transparent);
+}
+
+/* ── Message bubbles ── */
+[data-bs-theme="light"] .af-msg-user .af-msg-bubble {
+    background: color-mix(in srgb, var(--af-accent) 10%, white);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+[data-bs-theme="light"] .af-msg-agent .af-msg-bubble {
+    background: white;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* ── Markdown content in messages ── */
+[data-bs-theme="light"] .af-msg-agent .af-msg-content code:not(pre code) {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+[data-bs-theme="light"] .af-msg-agent .af-msg-content pre {
+    background: rgba(0, 0, 0, 0.04);
+}
+
+[data-bs-theme="light"] .af-msg-agent .af-msg-content pre .af-copy-btn {
+    background: rgba(0, 0, 0, 0.06);
+    border-color: rgba(0, 0, 0, 0.1);
+    color: var(--af-text);
+}
+
+[data-bs-theme="light"] .af-msg-agent .af-msg-content pre:hover .af-copy-btn {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+[data-bs-theme="light"] .af-msg-agent .af-msg-content blockquote {
+    background: rgba(0, 0, 0, 0.03);
+    border-left-color: var(--af-accent);
+}
+
+[data-bs-theme="light"] .af-msg-agent .af-msg-content th {
+    background: rgba(0, 0, 0, 0.04);
+}
+
+[data-bs-theme="light"] .af-msg-agent .af-msg-content tr:hover td {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+[data-bs-theme="light"] .af-msg-agent .af-msg-content td {
+    border-bottom-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-bs-theme="light"] .af-msg-agent .af-msg-content thead {
+    border-bottom-color: rgba(0, 0, 0, 0.15);
+}
+
+/* ── Tool cards ── */
+[data-bs-theme="light"] .af-tool-card {
+    background: rgba(0, 0, 0, 0.03);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* ── Input area ── */
+[data-bs-theme="light"] .af-input-area {
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+[data-bs-theme="light"] .af-input-area .af-input {
+    background: white;
+    border-color: rgba(0, 0, 0, 0.15);
+}
+
+/* ── Attached file ── */
+[data-bs-theme="light"] .af-attached-file {
+    background: rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* ── Right panel ── */
+[data-bs-theme="light"] .af-info-panel {
+    border-left: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+[data-bs-theme="light"] .af-info-row {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* ── Builder / Flow ── */
+[data-bs-theme="light"] .af-flow-pat {
+    background: rgba(0, 0, 0, 0.03);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+[data-bs-theme="light"] .af-flow-pat.active {
+    background: color-mix(in srgb, var(--af-accent) 8%, transparent);
+    border-color: var(--af-accent);
+}
+
+[data-bs-theme="light"] .af-flow-step {
+    background: rgba(0, 0, 0, 0.03);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+[data-bs-theme="light"] .af-flow-drop-zone {
+    border: 2px dashed rgba(0, 0, 0, 0.12);
+}
+
+[data-bs-theme="light"] .af-flow-inline-canvas {
+    background: rgba(0, 0, 0, 0.02);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+[data-bs-theme="light"] .af-bld-pick:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+[data-bs-theme="light"] .af-studio-tab {
+    color: rgba(0, 0, 0, 0.5);
+}
+
+[data-bs-theme="light"] .af-studio-tab.active {
+    color: var(--af-accent);
+    background: color-mix(in srgb, var(--af-accent) 6%, transparent);
+}
+
+/* ── Studio sections ── */
+[data-bs-theme="light"] .af-studio-section {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+[data-bs-theme="light"] .af-studio-preview {
+    background: rgba(0, 0, 0, 0.03);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* ── Inline flow nodes ── */
+[data-bs-theme="light"] .af-iflow-node {
+    background: white;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+[data-bs-theme="light"] .af-iflow-node.highlight {
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.15);
+}
+
+/* ── Orchestration cards ── */
+[data-bs-theme="light"] .af-orch-card {
+    background: rgba(0, 0, 0, 0.03);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+[data-bs-theme="light"] .af-orch-card:hover {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+/* ── Session drawer ── */
+[data-bs-theme="light"] .af-session-drawer {
+    background: rgba(255, 255, 255, 0.97);
+    backdrop-filter: blur(12px);
+}
+
+[data-bs-theme="light"] .af-session-item {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+[data-bs-theme="light"] .af-session-item:hover {
+    background: rgba(0, 0, 0, 0.04);
+}
+
+/* ── Execution flow badges ── */
+[data-bs-theme="light"] .af-exec-step {
+    background: rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* ── Scrollbar ── */
+[data-bs-theme="light"] .chat-page-wrapper ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+}
+
+[data-bs-theme="light"] .chat-page-wrapper ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.25);
+}
+
+/* ── Welcome section ── */
+[data-bs-theme="light"] .af-welcome h2,
+[data-bs-theme="light"] .af-welcome h4,
+[data-bs-theme="light"] .af-welcome p {
+    color: var(--af-text);
+}
+
+/* Group Chat layout */
+.af-iflow-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+}
+
+.af-iflow-group-ring {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+    padding: 8px;
+    border: 2px dashed rgba(255,255,255,0.1);
+    border-radius: 16px;
+    width: 100%;
+}
+
+.af-iflow-group-label {
+    font-size: 0.65rem;
+    color: var(--af-text-dim);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Iterative / Loop layout */
+.af-iflow-loop {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.af-iflow-loop-arrow {
+    color: var(--af-text-dim);
+    font-size: 0.85rem;
+}
+
+.af-iflow-loop-back {
+    font-size: 0.65rem;
+    color: var(--af-accent);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--af-accent) 10%, transparent);
+    border: 1px dashed color-mix(in srgb, var(--af-accent) 30%, transparent);
+}
+
+
+/* ── Pipeline Steps (sidebar agent list) ── */
+.af-flow-pipeline {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 10px;
+    max-height: 200px;
+    overflow-y: auto;
+    min-height: 50px;
+}
+
+.af-flow-drop-zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 16px;
+    border: 2px dashed rgba(255,255,255,0.1);
+    border-radius: 10px;
+    color: var(--af-text-dim);
+    font-size: 0.72rem;
+    opacity: 0.6;
+    transition: all 0.2s;
+}
+
+.af-flow-drop-zone i {
+    font-size: 1.2rem;
+}
+
+.af-flow-step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    transition: all 0.3s ease;
+}
+
+.af-flow-step.running {
+    border-color: var(--af-accent);
+    background: color-mix(in srgb, var(--af-accent) 12%, transparent);
+    animation: wf-pulse 1.5s ease-in-out infinite;
+}
+
+.af-flow-step.completed {
+    border-color: var(--af-success);
+    background: color-mix(in srgb, var(--af-success) 10%, transparent);
+}
+
+.af-flow-step-number {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6rem;
+    font-weight: 700;
+    background: rgba(255,255,255,0.08);
+    color: var(--af-text-dim);
+    flex-shrink: 0;
+}
+
+.af-flow-step.running .af-flow-step-number {
+    background: var(--af-accent);
+    color: white;
+}
+
+.af-flow-step.completed .af-flow-step-number {
+    background: var(--af-success);
+    color: white;
+}
+
+.af-flow-step-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.af-flow-step-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+}
+
+.af-flow-step-name {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--af-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.af-flow-step-role {
+    font-size: 0.6rem;
+    color: var(--af-accent);
+    opacity: 0.7;
+}
+
+.af-flow-step-actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+}
+
+.af-flow-step-actions button {
+    background: none;
+    border: none;
+    color: var(--af-text-dim);
+    font-size: 0.65rem;
+    padding: 2px 4px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+    line-height: 1;
+}
+
+.af-flow-step-actions button:hover:not(:disabled) {
+    background: rgba(255,255,255,0.1);
+    color: var(--af-text);
+}
+
+.af-flow-step-actions button:disabled {
+    opacity: 0.3;
+    cursor: default;
+}
+
+.af-flow-step-remove:hover {
+    color: var(--af-danger) !important;
+    background: color-mix(in srgb, var(--af-danger) 15%, transparent) !important;
+}
+
+.af-flow-step-count {
+    font-size: 0.6rem;
+    min-width: 18px;
+    height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9px;
+    background: color-mix(in srgb, var(--af-accent) 20%, transparent);
+    color: var(--af-accent);
+    font-weight: 700;
+    margin-left: 4px;
+}
+
+
+/* ── Flow Actions ── */
+.af-flow-actions {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+
+/* ── Flow Progress Tracker ── */
+.af-flow-progress {
+    margin-bottom: 12px;
+    padding: 10px;
+    border-radius: 10px;
+    background: rgba(0,0,0,0.2);
+    border: 1px solid rgba(255,255,255,0.06);
+}
+
+.af-flow-progress-bar {
+    width: 100%;
+    height: 6px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.af-flow-progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--af-accent), var(--af-accent-hover));
+    transition: width 0.5s ease, background 0.5s ease;
+}
+
+.af-flow-steps-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.af-flow-timeline-step {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 0;
+    opacity: 0.5;
+    transition: all 0.3s;
+}
+
+.af-flow-timeline-step.running {
+    opacity: 1;
+}
+
+.af-flow-timeline-step.completed {
+    opacity: 0.9;
+}
+
+.af-flow-timeline-indicator {
+    font-size: 0.7rem;
+    flex-shrink: 0;
+    width: 16px;
+    display: flex;
+    justify-content: center;
+}
+
+.af-flow-timeline-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.af-flow-timeline-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.af-flow-timeline-name {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--af-text);
+}
+
+.af-flow-timeline-status {
+    font-size: 0.58rem;
+    color: var(--af-text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.af-flow-timeline-step.running .af-flow-timeline-status {
+    color: var(--af-accent);
+}
+
+.af-flow-timeline-step.completed .af-flow-timeline-status {
+    color: var(--af-success);
+}

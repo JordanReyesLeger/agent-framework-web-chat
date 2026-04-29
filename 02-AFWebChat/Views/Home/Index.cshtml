@@ -1,0 +1,120 @@
+@using Microsoft.Extensions.Options
+@using AFWebChat.Models
+@inject IOptions<AppBrandingSettings> BrandingOptions
+@{
+    ViewData["Title"] = "Home";
+    var branding = BrandingOptions.Value;
+}
+
+<div class="index-page">
+    <!-- Animated Background Shapes -->
+    <div class="animated-background">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
+
+    <div class="hero-section">
+        <div class="hero-content">
+            <div class="hero-icon">
+                @if (!string.IsNullOrEmpty(branding.LogoUrl))
+                {
+                    <img src="@branding.LogoUrl" alt="@branding.Title" />
+                }
+                else
+                {
+                    <i class="bi @branding.LogoIcon"></i>
+                }
+            </div>
+            <h1 class="display-4 hero-title">@branding.Subtitle</h1>
+            <p class="lead hero-subtitle">
+                @branding.WelcomeMessage
+            </p>
+            <div class="hero-cta">
+                <a asp-controller="Home" asp-action="Chat" class="btn btn-primary btn-lg">
+                    <i class="bi bi-chat-dots me-2"></i> Comenzar a Chatear
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="features-section">
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon feature-icon--blue">
+                        <i class="bi bi-robot"></i>
+                    </div>
+                    <h5>Gestión de Agentes</h5>
+                    <p>
+                        Interactúa con agentes de IA construidos con Microsoft Agent Framework, con herramientas y proveedores de contexto personalizados.
+                    </p>
+                    <div class="feature-gradient feature-gradient--blue"></div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon feature-icon--green">
+                        <i class="bi bi-diagram-3"></i>
+                    </div>
+                    <h5>Flujos de Orquestación</h5>
+                    <p>
+                        Diseña flujos secuenciales, paralelos, condicionales, iterativos o de grupo y visualiza la interacción entre agentes en tiempo real.
+                    </p>
+                    <div class="feature-gradient feature-gradient--green"></div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon feature-icon--purple">
+                        <i class="bi bi-clock-history"></i>
+                    </div>
+                    <h5>Historial de Ejecución</h5>
+                    <p>
+                        Visualiza el historial completo de interacciones de agentes con timestamps, llamadas a herramientas y flujos de ejecución.
+                    </p>
+                    <div class="feature-gradient feature-gradient--purple"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mt-2">
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon feature-icon--orange">
+                        <i class="bi bi-file-earmark-text"></i>
+                    </div>
+                    <h5>Documentos RAG</h5>
+                    <p>
+                        Sube documentos, indéxalos en Azure AI Search y permite que los agentes respondan preguntas usando tus datos.
+                    </p>
+                    <div class="feature-gradient feature-gradient--orange"></div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon feature-icon--teal">
+                        <i class="bi bi-shield-check"></i>
+                    </div>
+                    <h5>Aprobación de Herramientas</h5>
+                    <p>
+                        Los agentes con herramientas sensibles (INSERT, UPDATE, DELETE) requieren aprobación humana explícita antes de ejecutarse.
+                    </p>
+                    <div class="feature-gradient feature-gradient--teal"></div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon feature-icon--red">
+                        <i class="bi bi-database"></i>
+                    </div>
+                    <h5>SQL y Herramientas MCP</h5>
+                    <p>
+                        Consulta bases de datos con lenguaje natural, conéctate a servidores MCP y extiende agentes con plugins personalizados.
+                    </p>
+                    <div class="feature-gradient feature-gradient--red"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

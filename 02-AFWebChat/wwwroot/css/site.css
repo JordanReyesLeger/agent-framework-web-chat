@@ -1,0 +1,656 @@
+/* =============================================
+   AF-WebChat — Global Styles (site.css)
+   Branding, hero, features, animated background
+   Colors from CSS variables set in _Layout.cshtml
+   ============================================= */
+
+html {
+    font-size: 14px;
+    position: relative;
+    min-height: 100%;
+}
+
+@media (min-width: 768px) {
+    html { font-size: 16px; }
+}
+
+/* Animated Gradient Background */
+body {
+    background: linear-gradient(
+        -45deg,
+        var(--app-background-color, #0d1117),
+        var(--app-surface-color, #161b22),
+        color-mix(in srgb, var(--app-background-color, #0d1117) 25%, var(--app-background-color, #0d1117)),
+        color-mix(in srgb, var(--app-accent-color, #C9A227) 15%, var(--app-background-color, #0d1117))
+    );
+    background-size: 400% 400%;
+    animation: gradientShift 15s ease infinite;
+    color: var(--app-text-color, #fff);
+    min-height: 100vh;
+}
+
+@keyframes gradientShift {
+    0%   { background-position: 0% 50%; }
+    25%  { background-position: 100% 0%; }
+    50%  { background-position: 100% 100%; }
+    75%  { background-position: 0% 100%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Animated Background Shapes */
+.animated-background {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    overflow: hidden;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.shape {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(40px);
+    opacity: 0.15;
+    animation: float var(--app-shape-duration, 10s) infinite ease-in-out;
+}
+
+.shape-1 {
+    width: 400px; height: 400px;
+    background: linear-gradient(135deg, var(--app-shape1-from, #0078d4) 0%, var(--app-shape1-to, #00bcf2) 100%);
+    top: 10%; left: 10%;
+    animation-delay: 0s;
+}
+
+.shape-2 {
+    width: 300px; height: 300px;
+    background: linear-gradient(135deg, var(--app-shape2-from, #8764b8) 0%, var(--app-shape2-to, #e81123) 100%);
+    top: 50%; right: 10%;
+    animation-delay: 3s;
+}
+
+.shape-3 {
+    width: 350px; height: 350px;
+    background: linear-gradient(135deg, var(--app-shape3-from, #107c10) 0%, var(--app-shape3-to, #ff8c00) 100%);
+    bottom: 10%; left: 30%;
+    animation-delay: 6s;
+}
+
+@keyframes float {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    25%      { transform: translate(50px, 50px) scale(1.1); }
+    50%      { transform: translate(-30px, 80px) scale(0.9); }
+    75%      { transform: translate(30px, -50px) scale(1.05); }
+}
+
+/* Navbar */
+.navbar {
+    background-color: transparent !important;
+    border-bottom: none !important;
+    box-shadow: none !important;
+    padding-top: 0.4rem !important;
+    padding-bottom: 0.4rem !important;
+}
+
+.navbar-brand {
+    color: var(--app-primary-color, #fff) !important;
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: -0.3px;
+}
+
+.navbar-brand:hover { color: var(--app-accent-color, #C9A227) !important; }
+
+.nav-link {
+    color: rgba(255, 255, 255, 0.6) !important;
+    font-weight: 500;
+    font-size: 0.85rem;
+    padding: 6px 12px !important;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.nav-link:hover {
+    color: var(--app-text-color, #fff) !important;
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.nav-item .nav-link.active,
+.nav-link[aria-current="page"] {
+    color: var(--app-accent-color, #C9A227) !important;
+    background: rgba(255, 255, 255, 0.04);
+}
+
+/* Navbar chat action buttons */
+.af-nav-btn {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.78rem;
+    padding: 4px 10px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.af-nav-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.af-nav-session-badge {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.7rem;
+    font-family: 'Cascadia Code', monospace;
+}
+
+.navbar-toggler { border-color: var(--app-border-color, #333); }
+.navbar-toggler-icon { filter: invert(1); }
+
+/* Main Content */
+.main-content {
+    padding: 0;
+}
+
+.main-content > main {
+    padding: 0;
+}
+
+/* Container */
+.container { background-color: transparent; }
+
+/* Index Page */
+.index-page,
+.notifications-page {
+    position: relative;
+    overflow: hidden;
+    min-height: calc(100vh - 56px);
+}
+
+/* Hero Section */
+.hero-section {
+    position: relative;
+    z-index: 1;
+    padding: 80px 20px;
+    text-align: center;
+}
+
+.hero-content {
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.hero-icon {
+    font-size: 64px;
+    color: var(--app-secondary-color, #58a6ff);
+    margin-bottom: 24px;
+}
+
+.hero-icon img { height: 80px; }
+
+.hero-title {
+    color: var(--app-primary-color, #fff) !important;
+    font-weight: 700;
+    margin-bottom: 16px;
+}
+
+.hero-subtitle {
+    color: var(--app-muted-color, #8b949e);
+    max-width: 600px;
+    margin: 0 auto 32px;
+}
+
+.hero-cta { margin-top: 32px; }
+
+.hero-cta .btn {
+    background: linear-gradient(180deg, var(--app-primary-color, #fff) 0%, color-mix(in srgb, var(--app-primary-color, #fff) 80%, white) 90%);
+    border: none;
+    padding: 14px 28px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    color: #000 !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hero-cta .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* Feature Cards */
+.features-section {
+    position: relative;
+    z-index: 1;
+    padding: 60px 20px;
+}
+
+.feature-card {
+    background: var(--app-surface-color, #161b22);
+    border: 1px solid var(--app-border-color, #333);
+    border-radius: 12px;
+    padding: 32px;
+    height: 100%;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.feature-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    border-color: var(--app-accent-color, #C9A227);
+}
+
+.feature-icon {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.feature-icon i { font-size: 24px; color: white; }
+
+.feature-icon--blue   { background: linear-gradient(135deg, #0078d4 0%, #00bcf2 100%); }
+.feature-icon--green  { background: linear-gradient(135deg, #238636 0%, #2ea043 100%); }
+.feature-icon--purple { background: linear-gradient(135deg, #8764b8 0%, #b392f0 100%); }
+.feature-icon--orange { background: linear-gradient(135deg, #d18616 0%, #ff8c00 100%); }
+.feature-icon--teal   { background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%); }
+.feature-icon--red    { background: linear-gradient(135deg, #e94560 0%, #c93a52 100%); }
+
+.feature-card h5 {
+    color: var(--app-primary-color, #fff);
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+.feature-card p {
+    color: var(--app-muted-color, #8b949e);
+    font-size: 14px;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.feature-gradient {
+    position: absolute;
+    top: 0; right: 0;
+    width: 100px; height: 100px;
+    border-radius: 0 12px 0 100%;
+    opacity: 0.15;
+}
+
+.feature-gradient--blue   { background: linear-gradient(135deg, #0078d4 0%, transparent 100%); }
+.feature-gradient--green  { background: linear-gradient(135deg, #238636 0%, transparent 100%); }
+.feature-gradient--purple { background: linear-gradient(135deg, #8764b8 0%, transparent 100%); }
+.feature-gradient--orange { background: linear-gradient(135deg, #d18616 0%, transparent 100%); }
+.feature-gradient--teal   { background: linear-gradient(135deg, #0d9488 0%, transparent 100%); }
+.feature-gradient--red    { background: linear-gradient(135deg, #e94560 0%, transparent 100%); }
+
+/* Buttons */
+.btn-primary {
+    background: linear-gradient(180deg, var(--app-primary-color, #fff) 0%, color-mix(in srgb, var(--app-primary-color, #fff) 80%, black) 90%);
+    border: 1px solid var(--app-primary-color, #fff);
+    color: #000 !important;
+    font-weight: 600;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--app-primary-color, #fff) 80%, white) 0%, var(--app-primary-color, #fff) 90%);
+    border-color: var(--app-accent-color, #C9A227);
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 { color: var(--app-primary-color, #fff); }
+.display-4 { color: var(--app-primary-color, #fff) !important; font-weight: 600; }
+.lead { color: var(--app-muted-color, #8b949e); }
+.text-muted { color: var(--app-muted-color, #8b949e) !important; }
+
+/* Cards */
+.card {
+    background-color: var(--app-surface-color, #161b22);
+    border: 1px solid var(--app-border-color, #333);
+    border-radius: 6px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Links */
+a { color: var(--app-accent-color, #C9A227); text-decoration: none; }
+a:hover { color: color-mix(in srgb, var(--app-accent-color, #C9A227) 70%, white); }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--app-border-color, #333); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--app-accent-color, #C9A227); }
+
+/* ══════════════════════════════════════════════════════════════
+   Layout Components (moved from inline _Layout.cshtml)
+   ══════════════════════════════════════════════════════════════ */
+.app-footer {
+    background-color: var(--app-navbar-color);
+    border-top: 1px solid var(--app-border-color);
+    color: var(--app-text-color);
+    text-align: center;
+    font-size: 0.875rem;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+}
+
+.brand-logo { height: 40px; margin-right: 10px; }
+
+/* ══════════════════════════════════════════════════════════════
+   LIGHT THEME OVERRIDES
+   Activated when data-bs-theme="light" is set on <html>
+   ALL light-mode fixes in one place for quick changes.
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Body & Background ── */
+[data-bs-theme="light"] body {
+    color: var(--app-text-color);
+    background: var(--app-background-color) !important;
+    animation: none !important;
+}
+
+/* ── Navbar ── */
+[data-bs-theme="light"] .navbar {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    background-color: var(--app-navbar-color) !important;
+}
+
+[data-bs-theme="light"] .navbar .nav-link {
+    color: rgba(0, 0, 0, 0.65) !important;
+}
+
+[data-bs-theme="light"] .navbar .nav-link:hover,
+[data-bs-theme="light"] .navbar .nav-link.active {
+    color: rgba(0, 0, 0, 0.9) !important;
+}
+
+[data-bs-theme="light"] .navbar-brand {
+    color: var(--app-text-color) !important;
+}
+
+[data-bs-theme="light"] .navbar-brand i {
+    color: var(--app-accent-color);
+}
+
+/* ── Cards (Documents, Notifications, Home features) ── */
+[data-bs-theme="light"] .card {
+    background-color: #ffffff !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    color: var(--app-text-color);
+}
+
+[data-bs-theme="light"] .card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+[data-bs-theme="light"] .card .card-body,
+[data-bs-theme="light"] .card .card-header,
+[data-bs-theme="light"] .card .card-footer {
+    background-color: transparent !important;
+    color: var(--app-text-color);
+}
+
+[data-bs-theme="light"] .card h5,
+[data-bs-theme="light"] .card h6,
+[data-bs-theme="light"] .card .card-title {
+    color: var(--app-accent-color) !important;
+}
+
+[data-bs-theme="light"] .card p,
+[data-bs-theme="light"] .card li,
+[data-bs-theme="light"] .card span,
+[data-bs-theme="light"] .card label {
+    color: var(--app-text-color) !important;
+}
+
+/* ── Form controls ── */
+[data-bs-theme="light"] .form-control,
+[data-bs-theme="light"] .form-select {
+    background-color: #ffffff !important;
+    border-color: rgba(0, 0, 0, 0.15) !important;
+    color: var(--app-text-color) !important;
+}
+
+[data-bs-theme="light"] .form-control::placeholder {
+    color: rgba(0, 0, 0, 0.4) !important;
+}
+
+[data-bs-theme="light"] .form-control:focus,
+[data-bs-theme="light"] .form-select:focus {
+    border-color: var(--app-accent-color) !important;
+    box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--app-accent-color) 25%, transparent) !important;
+}
+
+/* ── Buttons ── */
+[data-bs-theme="light"] .btn-primary {
+    color: #fff !important;
+}
+
+[data-bs-theme="light"] .btn-outline-secondary {
+    color: var(--app-text-color) !important;
+    border-color: rgba(0, 0, 0, 0.2) !important;
+}
+
+[data-bs-theme="light"] .btn-outline-secondary:hover {
+    background: rgba(0, 0, 0, 0.06) !important;
+}
+
+/* ── Feature cards (Home page) ── */
+[data-bs-theme="light"] .feature-card {
+    background-color: #ffffff !important;
+    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+[data-bs-theme="light"] .feature-card h5 {
+    color: var(--app-text-color) !important;
+}
+
+[data-bs-theme="light"] .feature-card p {
+    color: rgba(0, 0, 0, 0.6) !important;
+}
+
+[data-bs-theme="light"] .feature-icon i {
+    color: white;
+}
+
+/* ── Drop zone (Documents page) ── */
+[data-bs-theme="light"] .drop-zone,
+[data-bs-theme="light"] [class*="drop"] {
+    background: rgba(0, 0, 0, 0.02) !important;
+    border-color: rgba(0, 0, 0, 0.15) !important;
+    color: var(--app-text-color) !important;
+}
+
+/* ── Code blocks / Pre (Notifications JSON preview) ── */
+[data-bs-theme="light"] pre,
+[data-bs-theme="light"] code {
+    background: rgba(0, 0, 0, 0.04) !important;
+    color: var(--app-text-color) !important;
+}
+
+/* ── Hero section (Home page) ── */
+[data-bs-theme="light"] .hero-title,
+[data-bs-theme="light"] .display-4 {
+    color: var(--app-text-color) !important;
+}
+
+[data-bs-theme="light"] .hero-subtitle,
+[data-bs-theme="light"] .lead {
+    color: rgba(0, 0, 0, 0.6) !important;
+}
+
+/* ── Text utilities ── */
+[data-bs-theme="light"] .text-muted,
+[data-bs-theme="light"] .text-secondary {
+    color: rgba(0, 0, 0, 0.5) !important;
+}
+
+[data-bs-theme="light"] h1, [data-bs-theme="light"] h2,
+[data-bs-theme="light"] h3, [data-bs-theme="light"] h4,
+[data-bs-theme="light"] h5, [data-bs-theme="light"] h6 {
+    color: var(--app-text-color);
+}
+
+/* ── Footer ── */
+[data-bs-theme="light"] .app-footer {
+    background-color: #ffffff !important;
+    border-top: 1px solid rgba(0, 0, 0, 0.1) !important;
+    color: rgba(0, 0, 0, 0.6);
+}
+
+/* ── Animated background shapes (subtle on light) ── */
+[data-bs-theme="light"] .shape {
+    opacity: 0.08;
+}
+
+/* ── Links ── */
+[data-bs-theme="light"] a {
+    color: var(--app-accent-color);
+}
+
+[data-bs-theme="light"] a:hover {
+    color: color-mix(in srgb, var(--app-accent-color) 70%, black);
+}
+
+/* ── Radio buttons / btn-check labels ── */
+[data-bs-theme="light"] .btn-check + .btn {
+    color: var(--app-text-color) !important;
+    border-color: rgba(0, 0, 0, 0.15) !important;
+    background: white !important;
+}
+
+[data-bs-theme="light"] .btn-check:checked + .btn {
+    background: color-mix(in srgb, var(--app-accent-color) 15%, white) !important;
+    border-color: var(--app-accent-color) !important;
+}
+
+/* ── Force bg-dark cards to adapt in light theme (Notifications, etc.) ── */
+[data-bs-theme="light"] .bg-dark {
+    background-color: #ffffff !important;
+    color: var(--app-text-color) !important;
+}
+
+[data-bs-theme="light"] .border-secondary {
+    border-color: rgba(0, 0, 0, 0.12) !important;
+}
+
+[data-bs-theme="light"] .text-muted {
+    color: rgba(0, 0, 0, 0.5) !important;
+}
+
+[data-bs-theme="light"] .btn-outline-light {
+    color: var(--app-text-color) !important;
+    border-color: rgba(0, 0, 0, 0.2) !important;
+}
+
+[data-bs-theme="light"] .btn-outline-light:hover {
+    background: rgba(0, 0, 0, 0.06) !important;
+    color: var(--app-text-color) !important;
+}
+
+[data-bs-theme="light"] .list-group-flush .list-group-item {
+    background: transparent !important;
+    color: var(--app-text-color) !important;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   DOCUMENT PAGE STYLES (moved from Documents.cshtml inline)
+   ══════════════════════════════════════════════════════════════ */
+.document-panel {
+    background: var(--app-surface-color, rgba(22, 27, 34, 0.8));
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.upload-area {
+    border: 2px dashed var(--app-border-color, #444);
+    border-radius: 8px;
+    padding: 3rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    background: color-mix(in srgb, var(--app-background-color) 80%, var(--app-navbar-color));
+}
+
+.upload-area:hover {
+    border-color: var(--app-accent-color);
+    background: color-mix(in srgb, var(--app-accent-color) 10%, transparent);
+}
+
+.upload-area.dragover {
+    border-color: var(--app-accent-color);
+    background: color-mix(in srgb, var(--app-accent-color) 20%, transparent);
+}
+
+.file-list-item {
+    background: color-mix(in srgb, var(--app-background-color) 80%, var(--app-navbar-color));
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background 0.2s ease;
+}
+
+.file-list-item:hover {
+    background: color-mix(in srgb, var(--app-background-color) 60%, var(--app-navbar-color));
+}
+
+.metadata-input {
+    background: color-mix(in srgb, var(--app-background-color) 80%, var(--app-navbar-color));
+    border: 1px solid var(--app-border-color, #444);
+    color: var(--app-text-color);
+    border-radius: 4px;
+    padding: 0.5rem;
+}
+
+.metadata-input:focus {
+    background: color-mix(in srgb, var(--app-background-color) 60%, var(--app-navbar-color));
+    border-color: var(--app-accent-color);
+    outline: none;
+    box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--app-accent-color) 25%, transparent);
+}
+
+/* ── Document page light overrides ── */
+[data-bs-theme="light"] .document-panel {
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+[data-bs-theme="light"] .upload-area {
+    background: rgba(0, 0, 0, 0.02);
+    border-color: rgba(0, 0, 0, 0.2);
+}
+
+[data-bs-theme="light"] .file-list-item {
+    background: rgba(0, 0, 0, 0.03);
+}
+
+[data-bs-theme="light"] .file-list-item:hover {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+[data-bs-theme="light"] .metadata-input {
+    background: white;
+    border-color: rgba(0, 0, 0, 0.15);
+    color: var(--app-text-color);
+}

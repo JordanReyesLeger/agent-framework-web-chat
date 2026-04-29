@@ -1,0 +1,411 @@
+@{
+    ViewData["Title"] = "Agent Chat";
+}
+@using Microsoft.Extensions.Options
+@using AFWebChat.Models
+@inject IOptions<AppBrandingSettings> BrandingOptions
+@{
+    var branding = BrandingOptions.Value;
+}
+
+<link rel="stylesheet" href="~/css/agent-chat.css" asp-append-version="true" />
+
+<div class="chat-page-wrapper"
+     data-welcome-title="@branding.ChatWelcomeTitle"
+     data-welcome-subtitle="@branding.ChatWelcomeSubtitle">
+
+<!-- Main 3-Panel Layout -->
+<div class="af-layout">
+    <!-- Animated Background (inside layout so rgba panels show shapes) -->
+    <div class="animated-background">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
+
+    <!-- LEFT: Sidebar with Tabs -->
+    <aside class="af-sidebar" id="sidebarPanel">
+        <!-- Tab Bar -->
+        <div class="af-side-tabs">
+            <button class="af-side-tab active" data-tab="agents" onclick="switchSidebarTab('agents')" title="Agentes">
+                <i class="bi bi-cpu"></i> Agentes
+            </button>
+            <button class="af-side-tab" data-tab="catalog" onclick="switchSidebarTab('catalog')" title="Catálogo">
+                <i class="bi bi-collection"></i> Catálogo
+            </button>
+            <button class="af-side-tab" data-tab="builder" onclick="switchSidebarTab('builder')" title="Constructor">
+                <i class="bi bi-tools"></i> Constructor
+            </button>
+        </div>
+
+        <!-- ═══ TAB: Agents ═══ -->
+        <div class="af-side-panel" id="tabPanelAgents">
+            <div class="p-2">
+                <input type="text" class="form-control form-control-sm af-input" id="agentFilter" placeholder="Filtrar agentes..." />
+            </div>
+            <div class="px-2" id="agentList"></div>
+        </div>
+
+        <!-- ═══ TAB: Catalog ═══ -->
+        <div class="af-side-panel" id="tabPanelCatalog" style="display:none;">
+            <div class="af-cat-subtabs">
+                <button class="af-cat-sub active" data-sub="orch" onclick="switchCatalogSub('orch')">Orquestaciones</button>
+                <button class="af-cat-sub" data-sub="wf" onclick="switchCatalogSub('wf')">Flujos de Trabajo</button>
+            </div>
+            <div id="subOrch">
+                <ul class="list-unstyled px-2" id="orchestrationList"></ul>
+            </div>
+            <div id="subWf" style="display:none;">
+                <ul class="list-unstyled px-2" id="workflowList"></ul>
+            </div>
+        </div>
+
+        <!-- ═══ TAB: Builder (Agent Studio) ═══ -->
+        <div class="af-side-panel" id="tabPanelBuilder" style="display:none;">
+            <!-- Studio sub-tabs -->
+            <div class="af-studio-tabs">
+                <button class="af-studio-tab active" data-studio="create" onclick="switchStudioTab('create')">
+                    <i class="bi bi-plus-circle"></i> Create
+                </button>
+                <button class="af-studio-tab" data-studio="flow" onclick="switchStudioTab('flow')">
+                    <i class="bi bi-diagram-3"></i> Flow
+                </button>
+            </div>
+
+            <!-- ── SUB: Create Agent ── -->
+            <div class="af-studio-panel" id="studioCreate">
+                <div class="af-studio-section">
+                    <!-- Agent Preview Card -->
+                    <div class="af-studio-preview" id="studioPreviewCard">
+                        <div class="af-studio-preview-icon" id="studioPreviewIcon" style="background:#0078d4;">🤖</div>
+                        <div class="af-studio-preview-info">
+                            <span class="af-studio-preview-name" id="studioPreviewName">New Agent</span>
+                            <span class="af-studio-preview-cat" id="studioPreviewCat">Custom</span>
+                        </div>
+                    </div>
+
+                    <!-- Name -->
+                    <label class="af-studio-label">Name</label>
+                    <input type="text" class="form-control form-control-sm af-input" id="studioAgentName"
+                           placeholder="MyAgent" maxlength="50" oninput="updateStudioPreview()" />
+
+                    <!-- Description -->
+                    <label class="af-studio-label">Description</label>
+                    <input type="text" class="form-control form-control-sm af-input" id="studioAgentDesc"
+                           placeholder="What does this agent do?" maxlength="200" />
+
+                    <!-- Icon & Color Picker Row -->
+                    <div class="af-studio-row">
+                        <div class="af-studio-col">
+                            <label class="af-studio-label">Icon</label>
+                            <div class="af-studio-icon-picker" id="studioIconPicker">
+                                <button class="af-icon-btn active" data-icon="🤖" onclick="selectStudioIcon(this)">🤖</button>
+                                <button class="af-icon-btn" data-icon="🦾" onclick="selectStudioIcon(this)">🦾</button>
+                                <button class="af-icon-btn" data-icon="🧠" onclick="selectStudioIcon(this)">🧠</button>
+                                <button class="af-icon-btn" data-icon="⚡" onclick="selectStudioIcon(this)">⚡</button>
+                                <button class="af-icon-btn" data-icon="🔮" onclick="selectStudioIcon(this)">🔮</button>
+                                <button class="af-icon-btn" data-icon="🎯" onclick="selectStudioIcon(this)">🎯</button>
+                                <button class="af-icon-btn" data-icon="🛡️" onclick="selectStudioIcon(this)">🛡️</button>
+                                <button class="af-icon-btn" data-icon="📊" onclick="selectStudioIcon(this)">📊</button>
+                                <button class="af-icon-btn" data-icon="🔬" onclick="selectStudioIcon(this)">🔬</button>
+                                <button class="af-icon-btn" data-icon="💡" onclick="selectStudioIcon(this)">💡</button>
+                                <button class="af-icon-btn" data-icon="🌐" onclick="selectStudioIcon(this)">🌐</button>
+                                <button class="af-icon-btn" data-icon="🎨" onclick="selectStudioIcon(this)">🎨</button>
+                                <button class="af-icon-btn" data-icon="📝" onclick="selectStudioIcon(this)">📝</button>
+                                <button class="af-icon-btn" data-icon="🔍" onclick="selectStudioIcon(this)">🔍</button>
+                                <button class="af-icon-btn" data-icon="⚙️" onclick="selectStudioIcon(this)">⚙️</button>
+                                <button class="af-icon-btn" data-icon="🚀" onclick="selectStudioIcon(this)">🚀</button>
+                            </div>
+                        </div>
+                        <div class="af-studio-col">
+                            <label class="af-studio-label">Color</label>
+                            <div class="af-studio-color-picker" id="studioColorPicker">
+                                <button class="af-color-btn active" data-color="#0078d4" style="background:#0078d4" onclick="selectStudioColor(this)"></button>
+                                <button class="af-color-btn" data-color="#C9A227" style="background:#C9A227" onclick="selectStudioColor(this)"></button>
+                                <button class="af-color-btn" data-color="#238636" style="background:#238636" onclick="selectStudioColor(this)"></button>
+                                <button class="af-color-btn" data-color="#f85149" style="background:#f85149" onclick="selectStudioColor(this)"></button>
+                                <button class="af-color-btn" data-color="#a371f7" style="background:#a371f7" onclick="selectStudioColor(this)"></button>
+                                <button class="af-color-btn" data-color="#58a6ff" style="background:#58a6ff" onclick="selectStudioColor(this)"></button>
+                                <button class="af-color-btn" data-color="#f778ba" style="background:#f778ba" onclick="selectStudioColor(this)"></button>
+                                <button class="af-color-btn" data-color="#e09b13" style="background:#e09b13" onclick="selectStudioColor(this)"></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Instructions (System Prompt) -->
+                    <label class="af-studio-label">
+                        Instructions <span class="af-studio-hint">(System Prompt)</span>
+                    </label>
+                    <textarea class="form-control form-control-sm af-input af-studio-textarea" id="studioInstructions"
+                              rows="4" maxlength="8192"
+                              placeholder="You are a helpful assistant that..."></textarea>
+                    <div class="af-studio-char-count"><span id="studioInstructionsCount">0</span>/8192</div>
+
+                    <!-- Tools -->
+                    <label class="af-studio-label">Tools</label>
+                    <div class="af-studio-tools" id="studioToolList">
+                        <span class="text-secondary" style="font-size:0.7rem;">Loading tools...</span>
+                    </div>
+
+                    <!-- Example Prompts -->
+                    <label class="af-studio-label">Example Prompts</label>
+                    <div class="af-studio-prompts" id="studioExamplePrompts">
+                        <div class="af-studio-prompt-row">
+                            <input type="text" class="form-control form-control-sm af-input" placeholder="Example prompt 1..." />
+                            <button class="af-studio-prompt-remove" onclick="removeStudioPrompt(this)"><i class="bi bi-x"></i></button>
+                        </div>
+                    </div>
+                    <button class="af-studio-add-prompt" onclick="addStudioPrompt()">
+                        <i class="bi bi-plus"></i> Add prompt
+                    </button>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="af-studio-actions">
+                    <button class="btn btn-sm btn-outline-secondary flex-fill" onclick="resetStudioForm()">
+                        <i class="bi bi-arrow-counterclockwise"></i> Reset
+                    </button>
+                    <button class="btn btn-sm af-btn-send flex-fill" id="btnCreateAgent" onclick="createStudioAgent()">
+                        <i class="bi bi-rocket-takeoff"></i> Create & Use
+                    </button>
+                </div>
+            </div>
+
+            <!-- ── SUB: Design Flow (Orchestration Builder) ── -->
+            <div class="af-studio-panel" id="studioFlow" style="display:none;">
+                <div class="af-studio-section">
+
+                    <!-- ── Flow Name ── -->
+                    <label class="af-studio-label">Flow Name</label>
+                    <input type="text" class="form-control form-control-sm af-input" id="flowName"
+                           placeholder="My Custom Flow" maxlength="80" value="Custom Flow" oninput="updateFlowPreview()" />
+
+                    <!-- ── Pattern Selector with descriptions ── -->
+                    <label class="af-studio-label">Pattern</label>
+                    <div class="af-flow-patterns" id="patternSelector">
+                        <div class="af-flow-pat active" data-pattern="Sequential" onclick="selectBuilderPattern('Sequential')">
+                            <div class="af-flow-pat-icon"><i class="bi bi-arrow-right"></i></div>
+                            <div class="af-flow-pat-info">
+                                <span class="af-flow-pat-name">Sequential</span>
+                                <span class="af-flow-pat-desc">Agents run one after another</span>
+                            </div>
+                        </div>
+                        <div class="af-flow-pat" data-pattern="Concurrent" onclick="selectBuilderPattern('Concurrent')">
+                            <div class="af-flow-pat-icon"><i class="bi bi-diagram-3"></i></div>
+                            <div class="af-flow-pat-info">
+                                <span class="af-flow-pat-name">Concurrent</span>
+                                <span class="af-flow-pat-desc">Agents run in parallel</span>
+                            </div>
+                        </div>
+                        <div class="af-flow-pat" data-pattern="Conditional" onclick="selectBuilderPattern('Conditional')">
+                            <div class="af-flow-pat-icon"><i class="bi bi-shuffle"></i></div>
+                            <div class="af-flow-pat-info">
+                                <span class="af-flow-pat-name">Conditional</span>
+                                <span class="af-flow-pat-desc">AI picks the best agent for each message</span>
+                            </div>
+                        </div>
+                        <div class="af-flow-pat" data-pattern="Handoff" onclick="selectBuilderPattern('Handoff')">
+                            <div class="af-flow-pat-icon"><i class="bi bi-signpost-split"></i></div>
+                            <div class="af-flow-pat-info">
+                                <span class="af-flow-pat-name">Handoff</span>
+                                <span class="af-flow-pat-desc">AI triage sends to the right specialist</span>
+                            </div>
+                        </div>
+                        <div class="af-flow-pat" data-pattern="GroupChat" onclick="selectBuilderPattern('GroupChat')">
+                            <div class="af-flow-pat-icon"><i class="bi bi-people"></i></div>
+                            <div class="af-flow-pat-info">
+                                <span class="af-flow-pat-name">GroupChat</span>
+                                <span class="af-flow-pat-desc">Round-robin conversation</span>
+                            </div>
+                        </div>
+                        <div class="af-flow-pat" data-pattern="Iterative" onclick="selectBuilderPattern('Iterative')">
+                            <div class="af-flow-pat-icon"><i class="bi bi-arrow-repeat"></i></div>
+                            <div class="af-flow-pat-info">
+                                <span class="af-flow-pat-name">Iterative</span>
+                                <span class="af-flow-pat-desc">Loop until goal is met</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ── Inline Flow Canvas (live preview) ── -->
+                    <label class="af-studio-label">
+                        <i class="bi bi-eye"></i> Vista Previa
+                    </label>
+                    <div class="af-flow-inline-canvas" id="flowInlineCanvas">
+                        <div class="af-flow-empty-state">
+                            <i class="bi bi-diagram-3"></i>
+                            <span>Agrega agentes abajo para construir tu flujo</span>
+                        </div>
+                    </div>
+
+                    <!-- ── Step Progress Tracker (shown during execution) ── -->
+                    <div class="af-flow-progress" id="flowProgressTracker" style="display:none;">
+                        <label class="af-studio-label"><i class="bi bi-activity"></i> Progreso de Ejecución</label>
+                        <div class="af-flow-progress-bar">
+                            <div class="af-flow-progress-fill" id="flowProgressFill" style="width:0%"></div>
+                        </div>
+                        <div class="af-flow-steps-timeline" id="flowStepsTimeline"></div>
+                    </div>
+
+                    <!-- ── Pipeline Steps (selected agents) ── -->
+                    <label class="af-studio-label">
+                        Pasos del Pipeline <span class="af-flow-step-count" id="flowStepCount">0</span>
+                    </label>
+                    <div class="af-flow-pipeline" id="builderAgents">
+                        <div class="af-flow-drop-zone" id="builderPlaceholder">
+                            <i class="bi bi-plus-circle-dotted"></i>
+                            <span>Agrega agentes para comenzar</span>
+                        </div>
+                    </div>
+
+                    <!-- ── Action Buttons ── -->
+                    <div class="af-flow-actions">
+                        <button class="btn btn-sm btn-outline-secondary flex-fill" onclick="clearBuilder()">
+                            <i class="bi bi-trash3"></i> Limpiar
+                        </button>
+                        <button class="btn btn-sm af-btn-send flex-fill" id="btnUseCustomWf" onclick="activateCustomWorkflow()" disabled>
+                            <i class="bi bi-play-fill"></i> Ejecutar Flujo
+                        </button>
+                    </div>
+
+                    <!-- ── Available Agents ── -->
+                    <label class="af-studio-label">
+                        <i class="bi bi-cpu"></i> Agentes Disponibles
+                    </label>
+                    <div class="pb-1">
+                        <input type="text" class="form-control form-control-sm af-input" id="builderAgentFilter" placeholder="Buscar agentes..." oninput="renderBuilderAgentPicker()" />
+                    </div>
+                    <div class="af-bld-picker" id="builderAgentPicker"></div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- CENTER: Chat Area -->
+    <main class="af-chat-area">
+        <!-- Workflow Flow Diagram (top, shown when workflow selected) -->
+        <div id="workflowFlow" class="af-wf-flow" style="display: none;">
+            <div class="af-wf-flow-header">
+                <div class="af-wf-flow-title">
+                    <i class="bi bi-diagram-3"></i>
+                    <span id="wfFlowName"></span>
+                    <span class="af-wf-flow-pattern" id="wfFlowPattern"></span>
+                </div>
+                <p class="af-wf-flow-desc" id="wfFlowDesc"></p>
+            </div>
+            <div class="af-wf-flow-canvas" id="wfFlowCanvas">
+                <!-- Flow nodes rendered by JS -->
+            </div>
+        </div>
+
+        <!-- Agent Context Header -->
+        <div id="agentContext" class="af-agent-context" style="display: none;">
+            <div class="af-agent-context-icon" id="agentContextIcon"></div>
+            <h5 class="af-agent-context-name" id="agentContextName"></h5>
+            <p class="af-agent-context-desc" id="agentContextDesc"></p>
+            <div class="af-agent-context-tools" id="agentContextTools"></div>
+        </div>
+
+        <!-- Example Prompts -->
+        <div id="examplePrompts" class="af-example-prompts" style="display: none;"></div>
+
+        <!-- Messages -->
+        <div class="af-messages" id="chatMessages">
+            <div class="af-welcome text-center py-5">
+                <i class="bi bi-chat-dots" style="font-size:3rem;color:var(--af-accent);"></i>
+                <h4 class="mt-3">@branding.ChatWelcomeTitle</h4>
+                <p class="text-secondary">@branding.ChatWelcomeSubtitle</p>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="af-input-area">
+            <form id="chatForm" class="d-flex gap-2">
+                <input type="file" class="d-none" id="documentInput" accept=".pdf,.txt,.docx,.csv,.json,.md" />
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="btnAttach" title="Adjuntar archivo">
+                    <i class="bi bi-paperclip"></i>
+                </button>
+                <input type="text" class="form-control af-input" id="messageInput" placeholder="Escribe un mensaje..." autocomplete="off" />
+                <button type="submit" class="btn af-btn-send" id="btnSend">
+                    <i class="bi bi-send-fill"></i>
+                </button>
+            </form>
+            <div id="attachedFileInfo" class="af-attached-file" style="display: none;">
+                <i class="bi bi-file-earmark"></i>
+                <span id="attachedFileName"></span>
+                <button type="button" class="af-remove-attach" id="removeAttachmentBtn" title="Remove">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- RIGHT: Execution Flow & Info -->
+    <aside class="af-info-panel" id="infoPanel">
+        <!-- Execution Flow -->
+        <div class="af-section-title px-3 pt-2">FLUJO DE EJECUCIÓN</div>
+        <div class="af-exec-flow px-3" id="executionFlow">
+            <p class="text-secondary small">Sin flujo activo</p>
+        </div>
+
+        <hr class="mx-3 my-1 border-secondary" />
+
+        <!-- Agent Info -->
+        <div class="af-section-title px-3">INFO DEL AGENTE</div>
+        <div class="px-3" id="agentInfoPanel">
+            <div class="af-info-row"><span class="af-info-label">Nombre</span><span id="infoAgentName">—</span></div>
+            <div class="af-info-row"><span class="af-info-label">Modelo</span><span id="infoAgentModel">—</span></div>
+            <div class="af-info-row"><span class="af-info-label">Herramientas</span><span id="infoAgentTools">—</span></div>
+            <div class="af-info-row"><span class="af-info-label">Proveedor</span><span id="infoAgentProvider">—</span></div>
+            <div class="af-info-row"><span class="af-info-label">Middleware</span><span id="infoAgentMiddleware">—</span></div>
+        </div>
+
+        <hr class="mx-3 my-1 border-secondary" />
+
+        <!-- Session Info -->
+        <div class="af-section-title px-3">SESIÓN</div>
+        <div class="px-3" id="sessionInfoPanel">
+            <div class="af-info-row"><span class="af-info-label">ID</span><span id="infoSessionId">—</span></div>
+            <div class="af-info-row"><span class="af-info-label">Mensajes</span><span id="infoMsgCount">0</span></div>
+            <div class="af-info-row"><span class="af-info-label">Tokens</span><span id="infoTokens">0</span></div>
+        </div>
+    </aside>
+</div>
+
+<!-- Tool Approval Modal -->
+<div class="modal fade" id="approvalModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content af-modal">
+            <div class="modal-header border-0">
+                <h5 class="modal-title"><i class="bi bi-shield-exclamation text-warning"></i> Aprobación de Herramienta Requerida</h5>
+            </div>
+            <div class="modal-body">
+                <p id="approvalToolName" class="fw-bold"></p>
+                <pre class="af-code-block"><code id="approvalArgs"></code></pre>
+            </div>
+            <div class="modal-footer border-0">
+                <button class="btn btn-outline-secondary" id="btnReject">Rechazar</button>
+                <button class="btn af-btn-send" id="btnApprove">Aprobar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Session History Offcanvas -->
+<div class="offcanvas offcanvas-start af-session-drawer" tabindex="-1" id="sessionDrawer" data-bs-scroll="true">
+    <div class="offcanvas-header border-bottom border-secondary">
+        <h6 class="offcanvas-title"><i class="bi bi-clock-history me-2"></i>Historial de Sesiones</h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body p-0">
+        <div id="sessionHistoryList" class="af-session-list"></div>
+    </div>
+</div>
+
+
+</div>
+
+@section Scripts {
+    <script src="~/js/chat.js" asp-append-version="true"></script>
+}
