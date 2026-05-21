@@ -1,0 +1,39 @@
+# ─────────────────────────────────────────────
+# terraform.tfvars.sample
+# Copy this file to terraform.tfvars and fill in your values.
+# cp terraform.tfvars.sample terraform.tfvars
+# ─────────────────────────────────────────────
+
+# ── REQUIRED ─────────────────────────────────
+subscription_id  = "00000000-0000-0000-0000-000000000000"  # Your Azure Subscription ID
+
+# ── OPTIONAL – Override defaults ─────────────
+# location         = "eastus2"
+# environment_name = "dev"
+# project_name     = "afweb"
+# app_service_sku  = "B1"
+
+# ── OpenAI Models ────────────────────────────
+# openai_chat_model_name     = "gpt-4o"
+# openai_chat_model_version  = "2024-11-20"
+# openai_chat_capacity       = 30
+# openai_embedding_model_name    = "text-embedding-3-large"
+# openai_embedding_model_version = "1"
+# openai_embedding_capacity      = 30
+
+# ── Optional Features ────────────────────────
+# enable_ai_search           = true
+# ai_search_sku              = "basic"
+# enable_cosmos_db           = false
+# enable_document_intelligence = false
+# enable_sql_database        = false
+# enable_bing_search         = false
+# enable_bot_service         = false
+
+# ── SQL (only if enable_sql_database = true) ─
+# sql_admin_login    = "sqladmin"
+# sql_admin_password = "CHANGE-ME-strong-password-123!"
+
+# ── Bot (only if enable_bot_service = true) ──
+# bot_app_client_id     = ""
+# bot_app_client_secret = ""

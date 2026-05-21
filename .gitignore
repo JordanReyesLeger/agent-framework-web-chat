@@ -363,3 +363,16 @@ MigrationBackup/
 FodyWeavers.xsd
 appsettings.Development.json
 AZURE_POLICY_FIX.md
+
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfvars
+!*.tfvars.sample
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraform.lock.hcl

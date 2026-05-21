@@ -41,6 +41,226 @@ SE-AgentFramework.sln
 
 ---
 
+## Arquitectura de la solución
+
+### Diagrama de arquitectura de alto nivel
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                              CLIENTES / CANALES                                 │
+│                                                                                 │
+│   ┌─────────────┐    ┌─────────────────┐    ┌──────────────┐    ┌───────────┐  │
+│   │  Web Chat   │    │ Microsoft Teams │    │   REST API   │    │  Foundry  │  │
+│   │  (Browser)  │    │  (Bot Framework)│    │  (HTTP/JSON) │    │  Agents   │  │
+│   │  SSE Stream │    │ Adaptive Cards  │    │              │    │  Service  │  │
+│   └──────┬──────┘    └───────┬─────────┘    └──────┬───────┘    └─────┬─────┘  │
+│          │                   │                     │                  │         │
+└──────────┼───────────────────┼─────────────────────┼──────────────────┼─────────┘
+           │                   │                     │                  │
+           ▼                   ▼                     ▼                  ▼
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│              AF-WebChat (.NET 9 / ASP.NET Core — Azure App Service)             │
+│                                                                                 │
+│  ┌──────────────────────────────────────────────────────────────────────────┐   │
+│  │                        CAPA DE ENTRADA (Controllers)                     │   │
+│  │  ChatController │ HomeController │ DocumentController │ ProactiveCtrl    │   │
+│  │  SessionController │ AgentWorkflowController │ TeamsBotAgent            │   │
+│  └────────────────────────────────┬─────────────────────────────────────────┘   │
+│                                   │                                             │
+│  ┌──────────────────────────────────────────────────────────────────────────┐   │
+│  │                     CAPA DE MIDDLEWARE (Cross-cutting)                    │   │
+│  │  AuditMiddleware │ LoggingMiddleware │ MetricsMiddleware                  │   │
+│  └────────────────────────────────┬─────────────────────────────────────────┘   │
+│                                   │                                             │
+│  ┌──────────────────────────────────────────────────────────────────────────┐   │
+│  │                   CAPA DE ORQUESTACIÓN (Services)                        │   │
+│  │                                                                          │   │
+│  │  AgentOrchestrationService ── OrchestrationFactory ── WorkflowFactory    │   │
+│  │        │                                                                 │   │
+│  │        ├── Agente Individual (1:1 con ChatClient)                        │   │
+│  │        ├── Sequential / Concurrent (multi-agente en cadena o paralelo)   │   │
+│  │        ├── GroupChat Round-Robin / AI Moderator                          │   │
+│  │        ├── Handoff (delegación dinámica)                                 │   │
+│  │        └── Workflows: Iterative / Conditional / FanOut                   │   │
+│  └────────────────────────────────┬─────────────────────────────────────────┘   │
+│                                   │                                             │
+│  ┌──────────────────────────────────────────────────────────────────────────┐   │
+│  │                      CAPA DE AGENTES (Agent Registry)                    │   │
+│  │                                                                          │   │
+│  │  ┌──────────┐ ┌──────────┐ ┌───────────┐ ┌────────────┐ ┌────────────┐  │   │
+│  │  │ Básicos  │ │  Tools   │ │  Dominio  │ │ Enterprise │ │ Structured │  │   │
+│  │  │ 3 agents │ │ 6 agents │ │ 9 agents  │ │  2 agents  │ │  2 agents  │  │   │
+│  │  └──────────┘ └──────────┘ └───────────┘ └────────────┘ └────────────┘  │   │
+│  │  ┌──────────┐ ┌──────────┐ ┌───────────┐ ┌────────────┐                 │   │
+│  │  │   MCP    │ │ Foundry  │ │ Multimodal│ │  Workflow  │                 │   │
+│  │  │ 1 agent  │ │ 2 agents │ │  1 agent  │ │ 17 agents  │                 │   │
+│  │  └──────────┘ └──────────┘ └───────────┘ └────────────┘                 │   │
+│  └────────────────────────────────┬─────────────────────────────────────────┘   │
+│                                   │                                             │
+│  ┌──────────────────────────────────────────────────────────────────────────┐   │
+│  │                     CAPA DE HERRAMIENTAS (Plugins)                        │   │
+│  │                                                                          │   │
+│  │  SqlPlugin │ AzureSearchPlugin │ BingGroundingPlugin │ McpServerPlugin   │   │
+│  │  WebScrapingPlugin │ LegalIndexPlugin │ SkillIndexPlugin │ WeatherPlugin │   │
+│  │  LightsPlugin │ FileManagerPlugin │ EmailDataPlugin │ OrderPlugins       │   │
+│  └────────────────────────────────┬─────────────────────────────────────────┘   │
+│                                   │                                             │
+│  ┌──────────────────────────────────────────────────────────────────────────┐   │
+│  │                   CAPA DE SERVICIOS INTERNOS                              │   │
+│  │                                                                          │   │
+│  │  ChatClientFactory │ SessionService │ DocumentService                    │   │
+│  │  BlobStorageService │ DocumentIndexingService │ StreamEventService       │   │
+│  └──────────────────────────────────────────────────────────────────────────┘   │
+│                                                                                 │
+└─────────────────────────────────────────────┬───────────────────────────────────┘
+                                              │
+                                              ▼
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                          SERVICIOS DE AZURE                                     │
+│                                                                                 │
+│  ┌────────────────┐  ┌──────────────────┐  ┌───────────────────────────────┐   │
+│  │ ★ Azure App   │  │  Azure OpenAI    │  │  Azure AI Foundry             │   │
+│  │  Service       │  │  (GPT-4o,        │  │  (Agentes versionados,        │   │
+│  │  (HOST)        │  │   Embeddings)    │  │   Agent Service)              │   │
+│  └────────────────┘  └──────────────────┘  └───────────────────────────────┘   │
+│                                                                                 │
+│  ┌────────────────┐  ┌──────────────────┐  ┌───────────────────────────────┐   │
+│  │ Azure AI       │  │ Azure Blob       │  │  Azure Document Intelligence  │   │
+│  │ Search (RAG,   │  │ Storage          │  │  (OCR, extracción de texto    │   │
+│  │ Sem., Vectors) │  │ (Documentos)     │  │   de PDFs/imágenes)           │   │
+│  └────────────────┘  └──────────────────┘  └───────────────────────────────┘   │
+│                                                                                 │
+│  ┌────────────────┐  ┌──────────────────┐  ┌───────────────────────────────┐   │
+│  │ Azure Bot      │  │ Azure Cosmos DB  │  │  Microsoft Entra ID           │   │
+│  │ Service        │  │ (Sesiones        │  │  (Autenticación)              │   │
+│  │ (Teams)        │  │  persistentes)   │  │                               │   │
+│  └────────────────┘  └──────────────────┘  └───────────────────────────────┘   │
+│                                                                                 │
+│  ┌───────────────────────────────────────────────────────────────────────────┐  │
+│  │  ⚙️ Opcionales: Azure SQL Database · Bing Search API                     │  │
+│  │    (solo si se habilitan los agentes SqlAzure / BingGrounding)            │  │
+│  └───────────────────────────────────────────────────────────────────────────┘  │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Flujo de una petición
+
+```
+Usuario ─► Canal (Web/Teams/API) ─► Controller ─► Middleware (Audit/Log/Metrics)
+    │
+    ▼
+AgentOrchestrationService
+    │
+    ├── Agente Individual ──► ChatClientFactory ──► Azure OpenAI
+    │
+    ├── Orquestación (Sequential/GroupChat/Handoff)
+    │       └── N agentes coordinados ──► Azure OpenAI
+    │
+    └── Workflow (Iterative/Conditional/FanOut)
+            └── Agentes especializados ──► Azure OpenAI + Plugins
+                                                │
+                                                ├── SqlPlugin ──► Azure SQL Database
+                                                ├── AzureSearchPlugin ──► Azure AI Search
+                                                ├── BingGroundingPlugin ──► Bing Search API
+                                                ├── McpServerPlugin ──► MCP Server externo
+                                                └── DocumentService ──► Blob Storage + Doc Intelligence
+```
+
+1. El usuario envía un mensaje desde Web Chat, Teams o API REST
+2. El `AgentOrchestrationService` determina el tipo de ejecución (individual, orquestación o workflow)
+3. Cada agente usa `ChatClientFactory` para comunicarse con **Azure OpenAI**
+4. Los agentes invocan **plugins** durante la ejecución para acceder a datos y servicios externos
+5. La respuesta se retorna como stream SSE (web) o Adaptive Card (Teams)
+
+---
+
+## Servicios de Azure utilizados
+
+### Servicios principales (requeridos)
+
+| Servicio | SKU / Modelo | Propósito en la solución | Componentes que lo usan |
+|---|---|---|---|
+| **Azure App Service** | B1+ / P1v3 (producción) | Hospeda la aplicación web ASP.NET Core. Es el recurso principal de cómputo donde vive la solución | Toda la aplicación (AF-WebChat) |
+| **Azure OpenAI** | `gpt-4o`, `text-embedding-3-large` | Motor de inferencia central para todos los agentes. Genera respuestas, ejecuta function calling, genera embeddings para RAG | `ChatClientFactory`, todos los agentes |
+| **Microsoft Entra ID** | — | Autenticación y autorización. Soporta `DefaultAzureCredential` para acceso sin API keys | `Azure.Identity`, Bot Framework, todos los servicios Azure |
+
+### Servicios opcionales (habilitan funcionalidades avanzadas)
+
+| Servicio | Propósito en la solución | Componentes que lo usan | Configuración |
+|---|---|---|---|
+| **Azure AI Search** | Retrieval Augmented Generation (RAG) con búsqueda semántica, vectorial e híbrida sobre documentos indexados | `AzureSearchPlugin`, `AzureSearchRAGProvider`, `DocumentIndexingService`, `LegalIndexPlugin`, `SkillIndexPlugin` | `AzureSearch:Endpoint`, `AzureSearch:IndexName` |
+| **Azure SQL Database** ⚙️ | Consultas a bases de datos empresariales. Los agentes pueden explorar esquemas y ejecutar queries SELECT de solo lectura. **No se requiere si no se usan los agentes de SQL** | `SqlPlugin`, `GetSchemaPlugin`, `QuerySqlPlugin`, `EmailDataPlugin` | `ConnectionStrings:SqlServer` |
+| **Azure Blob Storage** | Almacenamiento de documentos subidos por usuarios. Sirve como data source para el indexador de Azure AI Search | `BlobStorageService`, `DocumentService` | `AzureStorage:AccountName`, `BlobStorage:ConnectionString` |
+| **Azure Document Intelligence** | OCR y extracción inteligente de texto de PDFs, imágenes y documentos escaneados | `DocumentService` | `AzureDocumentIntelligence:Endpoint` |
+| **Azure AI Foundry** | Publicación de agentes como servicios versionados con RBAC, trazabilidad y gestión del ciclo de vida | `FoundrySimpleBotAgent`, `FoundryOrchestratorAgent` | `AzureOpenAI:EndpointProject` |
+| **Azure Cosmos DB** | Persistencia duradera de sesiones de conversación (alternativa al almacenamiento en memoria) | `SessionService` (configuración opcional) | `CosmosDB:ConnectionString`, `CosmosDB:DatabaseName` |
+| **Azure Bot Service** | Canal de comunicación con Microsoft Teams. Gestiona el registro del bot, autenticación y enrutamiento de mensajes | `TeamsBotAgent`, `ConversationReferenceStore` | `Connections:ServiceConnection`, `TokenValidation` |
+| **Bing Search API** ⚙️ | Grounding con búsqueda web en tiempo real. Permite a los agentes acceder a información actualizada de internet. **No se requiere si no se usa el agente BingGrounding** | `BingGroundingPlugin` | `BingSearch:ApiKey` |
+
+> ⚙️ = Completamente opcional. La aplicación funciona sin este servicio; solo se necesita si se habilitan los agentes que lo consumen.
+
+### Diagrama de recursos Azure
+
+```
+                        ┌──────────────────────┐
+                        │   Azure Subscription  │
+                        └──────────┬───────────┘
+                                   │
+                    ┌──────────────┼──────────────┐
+                    │              │              │
+                    ▼              ▼              ▼
+          ┌─────────────┐ ┌─────────────┐ ┌─────────────┐
+          │ Resource     │ │ Microsoft   │ │ Azure Bot   │
+          │ Group        │ │ Entra ID    │ │ Service     │
+          │ (af-webchat) │ │ (Tenant)    │ │ (Teams)     │
+          └──────┬──────┘ └─────────────┘ └─────────────┘
+                 │
+                 ▼
+        ┌────────────────┐
+        │ ★ Azure App    │
+        │   Service      │   ◄── Recurso principal (HOST)
+        │   (Web App)    │
+        └───────┬────────┘
+                │
+    ┌───────────┼───────────┬────────────┬────────────┐
+    │           │           │            │            │
+    ▼           ▼           ▼            ▼            ▼
+┌────────┐ ┌────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐
+│ Azure  │ │ Azure  │ │ Azure    │ │ Azure    │ │ Azure    │
+│ OpenAI │ │ AI     │ │ SQL DB   │ │ Blob     │ │ Cosmos   │
+│        │ │ Search │ │ (opt)    │ │ Storage  │ │ DB       │
+│ gpt-4o │ │ (RAG)  │ │          │ │ (Docs)   │ │(Sessions)│
+│ embed  │ │ Vector │ │          │ │          │ │          │
+└────────┘ └────────┘ └──────────┘ └──────────┘ └──────────┘
+    │            │
+    │            │
+    ▼            ▼
+┌────────┐ ┌──────────┐ ┌───────────┐
+│ Azure  │ │ Azure    │ │ Bing      │
+│ AI     │ │ Document │ │ Search    │
+│Foundry │ │ Intel.   │ │ API (opt) │
+│(Agents)│ │ (OCR)    │ │           │
+└────────┘ └──────────┘ └───────────┘
+                              ▲
+                         (opcional)
+
+★ = Azure App Service es el recurso principal donde vive la aplicación
+```
+
+### Autenticación y seguridad
+
+La solución soporta dos modos de autenticación hacia los servicios de Azure:
+
+| Modo | Configuración | Recomendación |
+|---|---|---|
+| **DefaultAzureCredential** | No se configura `ApiKey` — se usa `az login` o Managed Identity | ✅ Recomendado para producción |
+| **API Key** | Se configura `ApiKey` en `appsettings.Development.json` | Solo para desarrollo local rápido |
+
+La autenticación con Bot Framework (Teams) usa **Microsoft Entra ID** con `ClientId`, `ClientSecret` y `TenantId` configurados en la sección `Connections`.
+
+---
+
 ## Capacidades principales
 
 ### Agentes de IA (35+)
