@@ -1,0 +1,115 @@
+@{
+    ViewData["Title"] = "Live Avatar";
+}
+
+<link rel="stylesheet" href="~/css/voice-agent.css" asp-append-version="true" />
+<style>
+    .live-avatar-wrapper { min-height: calc(100vh - 80px); padding: 1.5rem; color: #fff; }
+    .live-avatar-grid { display: grid; grid-template-columns: 1fr 380px; gap: 1.25rem; height: calc(100vh - 110px); }
+    @@media (max-width: 992px) { .live-avatar-grid { grid-template-columns: 1fr; height: auto; } }
+    .avatar-stage { position: relative; background: #000; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,.4); display:flex; align-items:center; justify-content:center; }
+    .avatar-stage video { width: 100%; height: 100%; object-fit: cover; background: linear-gradient(135deg,#1a1a2e,#0d1117); }
+    .avatar-stage .stage-placeholder { position:absolute; color:#888; text-align:center; pointer-events:none; }
+    .avatar-stage .stage-placeholder i { font-size: 4rem; display:block; margin-bottom:.5rem; opacity:.4; }
+    .stage-overlay { position:absolute; left:0; right:0; bottom:0; padding: 1rem 1.25rem; background: linear-gradient(to top, rgba(0,0,0,.75), rgba(0,0,0,0)); }
+    .stage-status { display:flex; align-items:center; gap:.5rem; font-size:.9rem; }
+    .stage-status .dot { width:10px; height:10px; border-radius:50%; background:#888; }
+    .stage-status.is-listening .dot { background:#22c55e; box-shadow:0 0 8px #22c55e; animation: pulse 1.4s infinite; }
+    .stage-status.is-speaking .dot  { background:#58a6ff; box-shadow:0 0 8px #58a6ff; animation: pulse 0.8s infinite; }
+    .stage-status.is-thinking .dot  { background:#C9A227; box-shadow:0 0 8px #C9A227; animation: pulse 1.0s infinite; }
+    .stage-status.is-error .dot     { background:#f85149; box-shadow:0 0 8px #f85149; }
+    @@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.3)} }
+    .caption-bar { margin-top:.5rem; min-height:1.4em; font-size:1rem; color:#e6edf3; }
+    .side-panel { background:#161b22; border:1px solid #30363d; border-radius:16px; display:flex; flex-direction:column; overflow:hidden; }
+    .side-panel header { padding:.9rem 1rem; border-bottom:1px solid #30363d; font-weight:600; display:flex; align-items:center; gap:.5rem; }
+    .side-panel .controls { padding:1rem; border-bottom:1px solid #30363d; display:flex; flex-direction:column; gap:.6rem; }
+    .side-panel .transcript { flex:1; overflow-y:auto; padding:1rem; }
+    .msg { padding:.6rem .8rem; border-radius:10px; margin-bottom:.6rem; font-size:.92rem; line-height:1.4; }
+    .msg.user { background:#1f6feb22; border-left:3px solid #58a6ff; }
+    .msg.assistant { background:#23863622; border-left:3px solid #2ea043; }
+    .msg .role { font-size:.72rem; text-transform:uppercase; opacity:.7; margin-bottom:.2rem; }
+    .config-group { display:flex; flex-direction:column; gap:.3rem; font-size:.85rem; }
+    .config-group label { opacity:.8; }
+    .config-group input, .config-group select, .config-group textarea { background:#0d1117; color:#e6edf3; border:1px solid #30363d; border-radius:6px; padding:.4rem .5rem; font-size:.85rem; }
+    .btn-row { display:flex; gap:.5rem; flex-wrap:wrap; }
+    .btn-live { padding:.55rem .9rem; border-radius:8px; border:1px solid #30363d; background:#21262d; color:#fff; cursor:pointer; font-size:.85rem; display:inline-flex; align-items:center; gap:.4rem; }
+    .btn-live:hover { background:#30363d; }
+    .btn-live.primary { background:#1f6feb; border-color:#1f6feb; }
+    .btn-live.primary:hover { background:#388bfd; }
+    .btn-live.danger { background:#da3633; border-color:#da3633; }
+    .btn-live:disabled { opacity:.5; cursor:not-allowed; }
+</style>
+
+<div class="live-avatar-wrapper">
+    <div class="live-avatar-grid">
+        <div class="avatar-stage" id="avatarStage">
+            <div class="stage-placeholder" id="stagePlaceholder">
+                <i class="bi bi-person-video3"></i>
+                <div>Pulsa <strong>Conectar</strong> para iniciar el avatar en vivo</div>
+            </div>
+            <video id="avatarVideo" autoplay playsinline muted hidden></video>
+            <audio id="avatarAudio" autoplay></audio>
+            <div class="stage-overlay">
+                <div class="stage-status" id="stageStatus">
+                    <span class="dot"></span>
+                    <span class="text" id="stageStatusText">Desconectado</span>
+                </div>
+                <div class="caption-bar" id="captionBar"></div>
+            </div>
+        </div>
+
+        <aside class="side-panel">
+            <header><i class="bi bi-sliders"></i> Live Avatar</header>
+            <div class="controls">
+                <div class="btn-row">
+                    <button class="btn-live primary" id="btnConnect"><i class="bi bi-broadcast"></i> Conectar</button>
+                    <button class="btn-live danger" id="btnDisconnect" disabled><i class="bi bi-x-circle"></i> Desconectar</button>
+                </div>
+                <div class="btn-row">
+                    <button class="btn-live" id="btnMic" disabled><i class="bi bi-mic"></i> Iniciar micrófono</button>
+                    <button class="btn-live" id="btnStop" disabled><i class="bi bi-stop-circle"></i> Interrumpir</button>
+                </div>
+                <div class="config-group">
+                    <label>Avatar</label>
+                    <select id="avatarCharacter">
+                        <option value="lisa">lisa</option>
+                        <option value="harry">harry</option>
+                        <option value="jeff">jeff</option>
+                        <option value="lori">lori</option>
+                        <option value="meg">meg</option>
+                        <option value="max">max</option>
+                    </select>
+                </div>
+                <div class="config-group">
+                    <label>Estilo</label>
+                    <select id="avatarStyle">
+                        <option value="casual-sitting">casual-sitting</option>
+                        <option value="graceful-sitting">graceful-sitting</option>
+                        <option value="graceful-standing">graceful-standing</option>
+                        <option value="technical-sitting">technical-sitting</option>
+                        <option value="technical-standing">technical-standing</option>
+                        <option value="business">business</option>
+                        <option value="youthful">youthful</option>
+                        <option value="formal">formal</option>
+                    </select>
+                </div>
+                <div class="config-group">
+                    <label>Voz</label>
+                    <input type="text" id="voiceName" value="es-MX-DaliaNeural" />
+                </div>
+                <div class="config-group">
+                    <label>Prompt del sistema</label>
+                    <textarea id="systemPrompt" rows="3">Eres un asistente conversacional. Responde de forma breve, natural y útil (máx. 2-3 oraciones).</textarea>
+                </div>
+            </div>
+            <div class="transcript" id="transcript">
+                <div class="text-muted small">La transcripción aparecerá aquí.</div>
+            </div>
+        </aside>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://aka.ms/csspeech/jsbrowserpackageraw"></script>
+    <script src="~/js/live-avatar.js" asp-append-version="true"></script>
+}

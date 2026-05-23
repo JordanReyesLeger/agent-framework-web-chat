@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azure Voice AI — Dos Caminos para Agentes de Voz</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=Source+Sans+3:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --brand-primary: #0078D4;
+            --brand-primary-dark: #003A6C;
+            --brand-primary-light: #50E6FF;
+            --brand-secondary: #00188F;
+            --brand-accent: #50E6FF;
+            --brand-primary-rgb: 0, 120, 212;
+            --bg-dark: #0a0f1e;
+            --bg-card: #131b2e;
+            --bg-card-alt: #1a2540;
+            --bg-light: #f4f7fb;
+            --bg-white: #ffffff;
+            --text-primary: #1a202c;
+            --text-secondary: #4a5568;
+            --text-light: #94a3b8;
+            --text-white: #ffffff;
+            --text-dim: rgba(255,255,255,0.65);
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6;
+            --gradient-brand: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-secondary) 100%);
+            --gradient-hero: linear-gradient(160deg, #0a0f1e 0%, #0d1a3a 40%, #003A6C 100%);
+            --gradient-accent: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-accent) 100%);
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+            --shadow-md: 0 4px 14px rgba(0,0,0,0.1);
+            --shadow-lg: 0 20px 40px rgba(0,0,0,0.08);
+            --shadow-xl: 0 25px 50px rgba(0,0,0,0.15);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+            --radius-pill: 50px;
+            --font-display: "Plus Jakarta Sans", sans-serif;
+            --font-body: "Source Sans 3", sans-serif;
+            --font-mono: "JetBrains Mono", monospace;
+            --space-xs: 0.25rem;
+            --space-sm: 0.5rem;
+            --space-md: 1rem;
+            --space-lg: 2rem;
+            --space-xl: 4rem;
+            --space-2xl: 6rem;
+            --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+            --duration-fast: 200ms;
+            --duration-normal: 350ms;
+            --duration-slow: 600ms;
+        }
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body { font-family: var(--font-body); color: var(--text-primary); line-height: 1.65; overflow-x: hidden; background: var(--bg-white); }
+        h1,h2,h3,h4,h5,h6 { font-family: var(--font-display); line-height: 1.15; letter-spacing: -0.03em; }
+        a { text-decoration: none; color: inherit; }
+
+        /* NAV */
+        nav { position: fixed; top: 0; width: 100%; z-index: 1000; padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between; transition: all 0.4s var(--ease-out); background: transparent; }
+        nav.scrolled { background: rgba(10,15,30,0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); padding: 0.6rem 2rem; border-bottom: 1px solid rgba(0,120,212,0.15); }
+        .nav-logo { display: flex; align-items: center; gap: 0.75rem; color: white; font-family: var(--font-display); font-weight: 600; font-size: 1rem; }
+        .nav-logo svg { flex-shrink: 0; }
+        .nav-links { display: flex; gap: 1.5rem; list-style: none; }
+        .nav-links a { color: rgba(255,255,255,0.7); font-size: 0.85rem; font-weight: 500; transition: color var(--duration-fast); font-family: var(--font-display); }
+        .nav-links a:hover { color: var(--brand-accent); }
+        @media (max-width: 768px) { .nav-links { display: none; } }
+
+        /* SECTION UTILS */
+        section { position: relative; overflow: hidden; }
+        .section-label { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--brand-primary); margin-bottom: var(--space-md); font-weight: 600; }
+        .section-label--light { color: var(--brand-accent); }
+        .section-title { font-size: clamp(1.8rem, 3.5vw, 2.8rem); font-weight: 800; margin-bottom: var(--space-md); }
+        .section-subtitle { font-size: clamp(0.95rem, 1.3vw, 1.1rem); max-width: 650px; line-height: 1.7; }
+        .section-subtitle--dark { color: var(--text-dim); }
+
+        /* HERO */
+        .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: var(--space-2xl) var(--space-lg); background: var(--gradient-hero); position: relative; }
+        .hero::before { content: ""; position: absolute; width: 800px; height: 800px; border-radius: 50%; background: radial-gradient(circle, rgba(0,120,212,0.12) 0%, transparent 70%); top: -300px; right: -200px; pointer-events: none; animation: float 20s ease-in-out infinite; }
+        .hero::after { content: ""; position: absolute; width: 500px; height: 500px; border-radius: 50%; background: radial-gradient(circle, rgba(80,230,255,0.08) 0%, transparent 70%); bottom: -200px; left: -150px; pointer-events: none; animation: float 25s ease-in-out infinite reverse; }
+        @keyframes float { 0%,100% { transform: translateY(0) rotate(0deg); } 33% { transform: translateY(-30px) rotate(3deg); } 66% { transform: translateY(15px) rotate(-2deg); } }
+        .hero-badge { display: inline-block; padding: 0.4rem 1.2rem; border: 1px solid rgba(80,230,255,0.3); border-radius: var(--radius-pill); font-family: var(--font-mono); font-size: 0.75rem; color: var(--brand-accent); letter-spacing: 0.1em; margin-bottom: var(--space-lg); backdrop-filter: blur(10px); }
+        .hero h1 { font-size: clamp(2.5rem, 6vw, 4.5rem); font-weight: 900; color: white; margin-bottom: var(--space-md); letter-spacing: -0.04em; position: relative; z-index: 2; }
+        .hero h1 .accent { background: linear-gradient(135deg, var(--brand-accent) 0%, #a0e8ff 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .hero p { font-size: clamp(1rem, 1.5vw, 1.2rem); color: var(--text-dim); max-width: 600px; margin: 0 auto; line-height: 1.7; position: relative; z-index: 2; }
+        .hero-grid { display: flex; gap: var(--space-xl); margin-top: var(--space-xl); position: relative; z-index: 2; flex-wrap: wrap; justify-content: center; }
+        .hero-stat { text-align: center; }
+        .hero-stat .value { font-family: var(--font-display); font-size: clamp(1.5rem, 3vw, 2.2rem); font-weight: 800; color: white; }
+        .hero-stat .label { font-size: 0.8rem; color: var(--text-dim); margin-top: 0.25rem; }
+
+        /* SPLIT DIAGONAL */
+        .split-diag { display: grid; grid-template-columns: 1fr 1fr; min-height: 85vh; }
+        .split-left, .split-right { padding: var(--space-2xl) var(--space-xl); display: flex; flex-direction: column; justify-content: center; }
+        .split-left { background: var(--bg-dark); color: white; position: relative; }
+        .split-left::after { content: ""; position: absolute; right: -40px; top: 0; bottom: 0; width: 80px; background: var(--bg-dark); clip-path: polygon(0 0, 100% 10%, 100% 90%, 0 100%); z-index: 2; }
+        .split-right { background: var(--bg-light); color: var(--text-primary); padding-left: calc(var(--space-xl) + 40px); }
+        .split-badge { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.35rem 1rem; border-radius: var(--radius-pill); font-family: var(--font-mono); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: var(--space-lg); width: fit-content; }
+        .badge-a { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+        .badge-b { background: rgba(0,120,212,0.1); color: var(--brand-primary); border: 1px solid rgba(0,120,212,0.25); }
+        .split-title { font-size: clamp(1.6rem, 3vw, 2.4rem); font-weight: 800; margin-bottom: var(--space-md); }
+        .split-desc { font-size: 1rem; line-height: 1.7; margin-bottom: var(--space-lg); }
+        .split-desc--dark { color: var(--text-dim); }
+        .split-features { list-style: none; display: flex; flex-direction: column; gap: 0.75rem; }
+        .split-features li { display: flex; align-items: flex-start; gap: 0.6rem; font-size: 0.95rem; }
+        .split-features .icon { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; margin-top: 2px; }
+        .icon-check { background: rgba(16,185,129,0.2); color: var(--success); }
+        .icon-warn { background: rgba(245,158,11,0.2); color: var(--warning); }
+        .price-tag { margin-top: var(--space-lg); padding: var(--space-md) var(--space-lg); border-radius: var(--radius-md); font-family: var(--font-display); }
+        .price-tag-dark { background: rgba(80,230,255,0.08); border: 1px solid rgba(80,230,255,0.2); }
+        .price-tag-light { background: rgba(0,120,212,0.06); border: 1px solid rgba(0,120,212,0.15); }
+        .price-tag .value { font-size: 1.6rem; font-weight: 800; }
+        .price-tag .label { font-size: 0.8rem; opacity: 0.7; }
+        @media (max-width: 768px) { .split-diag { grid-template-columns: 1fr; } .split-left::after { display: none; } .split-right { padding-left: var(--space-xl); } }
+
+        /* STEPPER */
+        .stepper-section { padding: var(--space-2xl) var(--space-lg); background: var(--bg-light); }
+        .stepper-header { text-align: center; margin-bottom: var(--space-xl); }
+        .stepper { display: flex; align-items: flex-start; justify-content: center; position: relative; max-width: 1000px; margin: 0 auto; }
+        .stepper::before { content: ""; position: absolute; top: 35px; left: 15%; right: 15%; height: 3px; background: linear-gradient(90deg, rgba(239,68,68,0.4), rgba(245,158,11,0.4), rgba(16,185,129,0.4)); }
+        .step { flex: 1; text-align: center; position: relative; z-index: 2; padding: 0 var(--space-md); }
+        .step-icon { width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; margin: 0 auto var(--space-md); }
+        .step:nth-child(1) .step-icon { background: linear-gradient(135deg, #ef4444, #f97316); box-shadow: 0 4px 25px rgba(239,68,68,0.3); }
+        .step:nth-child(2) .step-icon { background: linear-gradient(135deg, #f59e0b, #eab308); box-shadow: 0 4px 25px rgba(245,158,11,0.3); }
+        .step:nth-child(3) .step-icon { background: linear-gradient(135deg, #10b981, #34d399); box-shadow: 0 4px 25px rgba(16,185,129,0.3); }
+        .step-arrow { position: absolute; right: -10px; top: 35px; font-size: 1.2rem; color: var(--text-light); }
+        .step h4 { font-size: 1rem; font-weight: 700; margin-bottom: var(--space-xs); }
+        .step p { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; }
+        .step .step-price { font-family: var(--font-mono); font-size: 0.8rem; color: var(--brand-primary); margin-top: var(--space-sm); font-weight: 600; }
+        .stepper-warning { text-align: center; margin-top: var(--space-xl); padding: var(--space-md) var(--space-lg); max-width: 700px; margin-left: auto; margin-right: auto; background: rgba(245,158,11,0.06); border: 1px solid rgba(245,158,11,0.2); border-radius: var(--radius-md); font-size: 0.9rem; color: var(--text-secondary); }
+        .stepper-warning strong { color: var(--warning); }
+        @media (max-width: 768px) { .stepper { flex-direction: column; align-items: center; gap: var(--space-lg); } .stepper::before { display: none; } .step-arrow { display: none; } }
+
+        /* BENTO */
+        .bento-section { padding: var(--space-2xl) var(--space-lg); background: var(--bg-dark); }
+        .bento-header { text-align: center; margin-bottom: var(--space-xl); }
+        .bento { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: minmax(160px, auto); gap: var(--space-md); max-width: 1200px; margin: 0 auto; }
+        .bento-item { border-radius: var(--radius-lg); padding: var(--space-lg); display: flex; flex-direction: column; justify-content: flex-end; position: relative; overflow: hidden; transition: transform var(--duration-normal) var(--ease-out); }
+        .bento-item:hover { transform: translateY(-4px); }
+        .bento-item--featured { grid-column: span 2; grid-row: span 2; background: var(--gradient-brand); color: white; }
+        .bento-item--wide { grid-column: span 2; }
+        .bento-item--dark { background: var(--bg-card); border: 1px solid rgba(0,120,212,0.1); color: white; }
+        .bento-item--accent { background: linear-gradient(135deg, rgba(0,120,212,0.15), rgba(80,230,255,0.08)); border: 1px solid rgba(80,230,255,0.15); color: white; }
+        .bento-item--highlight { background: linear-gradient(135deg, var(--brand-primary-dark), var(--brand-primary)); color: white; }
+        .bento-item .bento-icon { font-size: 2rem; margin-bottom: var(--space-sm); }
+        .bento-item h3 { font-size: clamp(1rem, 1.5vw, 1.3rem); font-weight: 700; margin-bottom: var(--space-xs); }
+        .bento-item p { font-size: 0.85rem; line-height: 1.5; opacity: 0.85; }
+        .bento-item .bento-big { font-size: clamp(2rem, 4vw, 3rem); font-weight: 900; line-height: 1; margin-bottom: var(--space-sm); }
+        @media (max-width: 768px) { .bento { grid-template-columns: 1fr; } .bento-item--featured, .bento-item--wide { grid-column: span 1; grid-row: span 1; } }
+
+        /* ZIGZAG */
+        .zigzag-section { padding: var(--space-2xl) var(--space-lg); background: linear-gradient(180deg, var(--bg-dark) 0%, #0d1a33 100%); }
+        .zigzag-header { text-align: center; margin-bottom: var(--space-xl); }
+        .zigzag-wrapper { position: relative; max-width: 1100px; margin: 0 auto; }
+        .zigzag-wrapper::before { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; background: linear-gradient(to bottom, transparent, var(--brand-accent), transparent); transform: translateX(-50%); }
+        .zigzag-item { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-xl); align-items: center; padding: var(--space-xl) 0; }
+        .zigzag-item:nth-child(even) { direction: rtl; }
+        .zigzag-item:nth-child(even) > * { direction: ltr; }
+        .zigzag-content h3 { font-size: clamp(1.3rem, 2.5vw, 1.8rem); margin-bottom: var(--space-sm); color: white; }
+        .mode-tag { display: inline-block; padding: 0.2rem 0.8rem; border-radius: var(--radius-pill); font-family: var(--font-mono); font-size: 0.7rem; font-weight: 600; margin-bottom: var(--space-md); letter-spacing: 0.05em; }
+        .mode-cascade { background: rgba(59,130,246,0.2); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
+        .mode-hybrid { background: rgba(168,85,247,0.2); color: #c084fc; border: 1px solid rgba(168,85,247,0.3); }
+        .mode-native { background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+        .zigzag-content p { font-size: 0.95rem; color: var(--text-dim); line-height: 1.7; margin-bottom: var(--space-md); }
+        .zigzag-visual { border-radius: var(--radius-xl); overflow: hidden; padding: var(--space-lg); }
+        .flow-diagram { display: flex; align-items: center; justify-content: center; gap: 0.5rem; flex-wrap: wrap; }
+        .flow-node { padding: 0.6rem 1rem; border-radius: var(--radius-md); font-family: var(--font-mono); font-size: 0.75rem; font-weight: 600; text-align: center; white-space: nowrap; }
+        .flow-arrow { font-size: 1.2rem; opacity: 0.5; color: var(--text-dim); }
+        .node-audio { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+        .node-stt { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+        .node-llm { background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
+        .node-tts { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+        .node-native { background: rgba(168,85,247,0.15); color: #c084fc; border: 1px solid rgba(168,85,247,0.3); }
+        .tariff-info { font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-dim); padding-top: var(--space-sm); border-top: 1px solid rgba(255,255,255,0.06); margin-top: var(--space-sm); }
+        @media (max-width: 768px) { .zigzag-item { grid-template-columns: 1fr; } .zigzag-item:nth-child(even) { direction: ltr; } .zigzag-wrapper::before { display: none; } }
+
+        /* TARIFF CARDS */
+        .tariff-section { padding: var(--space-2xl) var(--space-lg); background: var(--bg-light); }
+        .tariff-header { text-align: center; margin-bottom: var(--space-xl); }
+        .tariff-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-md); max-width: 1000px; margin: 0 auto var(--space-xl); }
+        .tariff-card { padding: var(--space-lg); border-radius: var(--radius-lg); background: var(--bg-white); border: 1px solid rgba(0,0,0,0.06); text-align: center; transition: transform var(--duration-normal) var(--ease-out), box-shadow var(--duration-normal) var(--ease-out); }
+        .tariff-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+        .tier-name { font-family: var(--font-display); font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: var(--space-md); padding-bottom: var(--space-sm); border-bottom: 2px solid; }
+        .tariff-card:nth-child(1) .tier-name { color: var(--brand-primary); border-color: var(--brand-primary); }
+        .tariff-card:nth-child(2) .tier-name { color: var(--success); border-color: var(--success); }
+        .tariff-card:nth-child(3) .tier-name { color: var(--warning); border-color: var(--warning); }
+        .tariff-row { display: flex; justify-content: space-between; padding: 0.4rem 0; font-size: 0.85rem; border-bottom: 1px solid rgba(0,0,0,0.04); }
+        .tariff-row:last-child { border-bottom: none; }
+        .tariff-row .t-label { color: var(--text-secondary); }
+        .tariff-row .t-value { font-weight: 700; font-family: var(--font-mono); font-size: 0.85rem; }
+        .tariff-winner { margin-top: var(--space-md); padding: var(--space-sm) var(--space-md); border-radius: var(--radius-pill); font-size: 0.78rem; font-weight: 700; display: inline-block; }
+        .winner-cascade { background: rgba(59,130,246,0.1); color: var(--info); }
+        .winner-native { background: rgba(16,185,129,0.1); color: var(--success); }
+        .winner-hybrid { background: rgba(168,85,247,0.1); color: #a855f7; }
+        .tariff-insight { max-width: 800px; margin: 0 auto; padding: var(--space-lg); text-align: center; }
+        .tariff-insight blockquote { font-size: clamp(1.05rem, 1.8vw, 1.3rem); font-weight: 400; font-style: italic; line-height: 1.6; color: var(--text-secondary); position: relative; padding: 0 var(--space-lg); }
+        .tariff-insight blockquote::before { content: "\201C"; font-size: 5rem; position: absolute; top: -25px; left: -10px; color: var(--brand-primary); opacity: 0.15; font-family: Georgia, serif; line-height: 1; }
+        @media (max-width: 768px) { .tariff-grid { grid-template-columns: 1fr; } }
+
+        /* COST COMPARISON */
+        .cost-section { padding: var(--space-2xl) var(--space-lg); background: var(--bg-dark); }
+        .cost-header { text-align: center; margin-bottom: var(--space-xl); }
+        .cost-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-lg); max-width: 1100px; margin: 0 auto var(--space-xl); }
+        .cost-block { padding: var(--space-xl); border-radius: var(--radius-xl); position: relative; overflow: hidden; }
+        .cost-block--a { background: var(--bg-card-alt); border: 1px solid rgba(239,68,68,0.15); }
+        .cost-block--b { background: var(--bg-card); border: 1px solid rgba(0,120,212,0.15); }
+        .cost-block-label { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: var(--space-md); }
+        .cost-block--a .cost-block-label { color: #f87171; }
+        .cost-block--b .cost-block-label { color: var(--brand-accent); }
+        .cost-total { font-family: var(--font-display); font-size: clamp(2.5rem, 5vw, 3.5rem); font-weight: 900; line-height: 1; margin-bottom: var(--space-xs); }
+        .cost-block--a .cost-total { color: #f87171; }
+        .cost-block--b .cost-total { background: var(--gradient-accent); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .cost-per { font-size: 0.85rem; color: var(--text-dim); margin-bottom: var(--space-lg); }
+        .cost-breakdown { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
+        .cost-breakdown li { display: flex; justify-content: space-between; font-size: 0.85rem; padding: 0.4rem 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .cost-breakdown .c-label { color: var(--text-dim); }
+        .cost-breakdown .c-value { font-family: var(--font-mono); font-weight: 600; color: white; }
+        .bars-container { max-width: 1000px; margin: 0 auto; }
+        .bars-title { text-align: center; margin-bottom: var(--space-lg); color: white; font-size: clamp(1.1rem, 2vw, 1.4rem); font-weight: 700; font-family: var(--font-display); }
+        .tier-bar { display: grid; grid-template-columns: 180px 1fr 80px; align-items: center; gap: var(--space-md); padding: 0.5rem 0; }
+        .tier-bar .bar-label { font-size: 0.85rem; font-weight: 600; color: var(--text-dim); }
+        .bar-track { height: 28px; background: rgba(255,255,255,0.04); border-radius: var(--radius-pill); overflow: hidden; }
+        .bar-fill { height: 100%; border-radius: var(--radius-pill); width: 0; transition: width 1.5s var(--ease-out); }
+        .bar-fill.animated { width: var(--w); }
+        .bar-value { font-family: var(--font-mono); font-size: 0.85rem; font-weight: 700; color: white; text-align: right; }
+        @media (max-width: 768px) { .cost-grid { grid-template-columns: 1fr; } .tier-bar { grid-template-columns: 120px 1fr 70px; } }
+
+        /* CTA */
+        .cta { text-align: center; padding: var(--space-2xl) var(--space-lg); background: var(--gradient-hero); color: white; min-height: 60vh; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; overflow: hidden; }
+        .cta::before { content: ""; position: absolute; width: 600px; height: 600px; border-radius: 50%; background: radial-gradient(circle, rgba(0,120,212,0.15) 0%, transparent 70%); bottom: -200px; right: -100px; pointer-events: none; }
+        .cta h2 { font-size: clamp(2rem, 4.5vw, 3.5rem); font-weight: 900; margin-bottom: var(--space-md); letter-spacing: -0.04em; position: relative; z-index: 2; }
+        .cta p { font-size: clamp(1rem, 1.3vw, 1.15rem); color: var(--text-dim); max-width: 550px; margin-bottom: var(--space-xl); line-height: 1.7; position: relative; z-index: 2; }
+        .cta-buttons { display: flex; gap: var(--space-md); flex-wrap: wrap; justify-content: center; position: relative; z-index: 2; }
+        .cta-btn { display: inline-block; padding: var(--space-md) var(--space-xl); border-radius: var(--radius-pill); font-size: 1rem; font-weight: 700; font-family: var(--font-display); transition: all var(--duration-normal) var(--ease-out); cursor: pointer; }
+        .cta-btn--primary { background: white; color: var(--brand-primary-dark); border: 2px solid white; }
+        .cta-btn--primary:hover { background: transparent; color: white; }
+        .cta-btn--ghost { background: transparent; color: white; border: 2px solid rgba(255,255,255,0.3); }
+        .cta-btn--ghost:hover { border-color: white; background: rgba(255,255,255,0.1); }
+        .cta-footer { margin-top: var(--space-xl); font-size: 0.8rem; color: rgba(255,255,255,0.4); position: relative; z-index: 2; display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
+
+        /* REVEALS */
+        .reveal { opacity: 0; transform: translateY(40px); transition: opacity var(--duration-slow) var(--ease-out), transform var(--duration-slow) var(--ease-out); }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+        .reveal-left { transform: translateX(-60px); }
+        .reveal-left.active { transform: translateX(0); }
+        .reveal-right { transform: translateX(60px); }
+        .reveal-right.active { transform: translateX(0); }
+        .stagger > * { opacity: 0; transform: translateY(30px); transition: all var(--duration-slow) var(--ease-out); }
+        .stagger.active > * { opacity: 1; transform: translateY(0); }
+        .stagger.active > *:nth-child(1) { transition-delay: 0ms; }
+        .stagger.active > *:nth-child(2) { transition-delay: 100ms; }
+        .stagger.active > *:nth-child(3) { transition-delay: 150ms; }
+        .stagger.active > *:nth-child(4) { transition-delay: 200ms; }
+        .stagger.active > *:nth-child(5) { transition-delay: 250ms; }
+        .stagger.active > *:nth-child(6) { transition-delay: 300ms; }
+        .stagger.active > *:nth-child(7) { transition-delay: 350ms; }
+        .stagger.active > *:nth-child(8) { transition-delay: 400ms; }
+
+        /* ACCESSIBILITY */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+            .reveal, .stagger > * { opacity: 1; transform: none; }
+            html { scroll-behavior: auto; }
+            .bar-fill { transition: none; }
+        }
+        a:focus-visible, button:focus-visible { outline: 2px solid var(--brand-accent); outline-offset: 3px; }
+    </style>
+</head>
+<body>
+    <!-- NAV -->
+    <nav>
+        <div class="nav-logo">
+            <svg width="21" height="21" viewBox="0 0 21 21" fill="none"><rect x="1" y="1" width="9" height="9" fill="#F25022"/><rect x="11" y="1" width="9" height="9" fill="#7FBA00"/><rect x="1" y="11" width="9" height="9" fill="#00A4EF"/><rect x="11" y="11" width="9" height="9" fill="#FFB900"/></svg>
+            <span>Microsoft Azure</span>
+        </div>
+        <ul class="nav-links">
+            <li><a href="#caminos">Dos Caminos</a></li>
+            <li><a href="#separados">Servicios Separados</a></li>
+            <li><a href="#voicelive">VoiceLive</a></li>
+            <li><a href="#modos">Modos de Audio</a></li>
+            <li><a href="#tarifas">Tarifas</a></li>
+            <li><a href="#costos">Costos</a></li>
+        </ul>
+    </nav>
+
+    <!-- HERO -->
+    <section class="hero" id="inicio">
+        <div class="hero-badge reveal">AZURE SPEECH SERVICES &middot; VOICE AI</div>
+        <h1 class="reveal">Azure <span class="accent">Voice AI</span></h1>
+        <p class="reveal">Dos caminos para construir agentes de voz inteligentes: elige entre control total o velocidad de despliegue</p>
+        <div class="hero-grid reveal stagger">
+            <div class="hero-stat"><div class="value">~300ms</div><div class="label">Latencia RTT (VoiceLive)</div></div>
+            <div class="hero-stat"><div class="value">140+</div><div class="label">Idiomas soportados</div></div>
+            <div class="hero-stat"><div class="value">3 tiers</div><div class="label">Pro &middot; Basic &middot; Lite</div></div>
+        </div>
+    </section>
+
+    <!-- SPLIT DIAGONAL -->
+    <section class="split-diag" id="caminos">
+        <div class="split-left">
+            <div class="reveal reveal-left">
+                <div class="split-badge badge-a">&#9881; Opci&oacute;n A</div>
+                <h2 class="split-title">Servicios Separados</h2>
+                <p class="split-desc split-desc--dark">Construyes el pipeline t&uacute;: cada componente (STT, LLM, TTS) se factura y gestiona de forma independiente.</p>
+                <ul class="split-features">
+                    <li><span class="icon icon-check">&#10003;</span> M&aacute;ximo control sobre cada componente</li>
+                    <li><span class="icon icon-check">&#10003;</span> Cualquier modelo de Azure OpenAI</li>
+                    <li><span class="icon icon-check">&#10003;</span> M&aacute;s econ&oacute;mico por sesi&oacute;n</li>
+                    <li><span class="icon icon-warn">!</span> T&uacute; implementas VAD, barge-in, echo cancellation</li>
+                    <li><span class="icon icon-warn">!</span> Mayor latencia (~800&ndash;1500ms)</li>
+                </ul>
+                <div class="price-tag price-tag-dark">
+                    <div class="value" style="color:white">~$0.11</div>
+                    <div class="label">por sesi&oacute;n de 5 minutos</div>
+                </div>
+            </div>
+        </div>
+        <div class="split-right">
+            <div class="reveal reveal-right">
+                <div class="split-badge badge-b">&#9889; Opci&oacute;n B</div>
+                <h2 class="split-title">VoiceLive (Todo-en-Uno)</h2>
+                <p class="split-desc">Un solo WebSocket que empaqueta STT + LLM + TTS con latencia ultra-baja y features enterprise nativos.</p>
+                <ul class="split-features">
+                    <li><span class="icon icon-check">&#10003;</span> Un solo WebSocket &mdash; setup m&iacute;nimo</li>
+                    <li><span class="icon icon-check">&#10003;</span> VAD, barge-in, echo cancel nativos</li>
+                    <li><span class="icon icon-check">&#10003;</span> ~300ms latencia round-trip</li>
+                    <li><span class="icon icon-check">&#10003;</span> 3 tiers + BYOM (trae tu modelo)</li>
+                    <li><span class="icon icon-warn">!</span> Cat&aacute;logo de modelos fijo por tier (o BYO)</li>
+                </ul>
+                <div class="price-tag price-tag-light">
+                    <div class="value" style="color:var(--brand-primary)">$0.09 &ndash; $0.33</div>
+                    <div class="label">por sesi&oacute;n de 5 min (seg&uacute;n tier y modo)</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- STEPPER: ARQUITECTURA OPCION A -->
+    <section class="stepper-section" id="separados">
+        <div class="stepper-header">
+            <div class="section-label reveal">OPCI&Oacute;N A &mdash; ARQUITECTURA</div>
+            <h2 class="section-title reveal">Pipeline de 3 Servicios Independientes</h2>
+            <p class="section-subtitle reveal" style="margin:0 auto">Cada componente se despliega, escala y factura por separado. T&uacute; orquestas el flujo completo.</p>
+        </div>
+        <div class="stepper reveal stagger">
+            <div class="step">
+                <div class="step-icon">&#127908;</div>
+                <span class="step-arrow">&rarr;</span>
+                <h4>Azure Speech STT</h4>
+                <p>Transcripci&oacute;n en tiempo real del audio del usuario a texto</p>
+                <div class="step-price">$1.00 / hora</div>
+            </div>
+            <div class="step">
+                <div class="step-icon">&#129504;</div>
+                <span class="step-arrow">&rarr;</span>
+                <h4>Azure OpenAI (LLM)</h4>
+                <p>Razonamiento, function calling, generaci&oacute;n de respuesta</p>
+                <div class="step-price">~$0.15 / 1M tok (mini)</div>
+            </div>
+            <div class="step">
+                <div class="step-icon">&#128266;</div>
+                <h4>Azure Speech TTS</h4>
+                <p>S&iacute;ntesis de voz neural con 600+ voces y custom voice</p>
+                <div class="step-price">$15 / 1M caracteres</div>
+            </div>
+        </div>
+        <div class="stepper-warning reveal">
+            <strong>&#9888; T&uacute; gestionas:</strong> Voice Activity Detection (VAD), barge-in (interrupciones), echo cancellation, session state y la orquestaci&oacute;n del pipeline completo.
+        </div>
+    </section>
+
+    <!-- BENTO: VOICELIVE -->
+    <section class="bento-section" id="voicelive">
+        <div class="bento-header">
+            <div class="section-label section-label--light reveal">OPCI&Oacute;N B &mdash; VOICELIVE</div>
+            <h2 class="section-title reveal" style="color:white">Un Solo WebSocket, Todo Incluido</h2>
+            <p class="section-subtitle section-subtitle--dark reveal" style="margin:0 auto">VoiceLive empaqueta STT + LLM + TTS en un servicio unificado con latencia ultra-baja y features enterprise nativos.</p>
+        </div>
+        <div class="bento reveal stagger">
+            <div class="bento-item bento-item--featured">
+                <div class="bento-big">~300ms</div>
+                <h3>Latencia Round-Trip</h3>
+                <p>Respuesta casi instant&aacute;nea gracias al pipeline integrado server-side. Sin hops extra entre servicios.</p>
+            </div>
+            <div class="bento-item bento-item--dark">
+                <div class="bento-icon">&#127919;</div>
+                <h3>VAD Nativo</h3>
+                <p>Detecci&oacute;n de voz autom&aacute;tica, sin implementaci&oacute;n custom</p>
+            </div>
+            <div class="bento-item bento-item--accent">
+                <div class="bento-icon">&#9889;</div>
+                <h3>Barge-in Server-Side</h3>
+                <p>El usuario puede interrumpir al agente de forma natural</p>
+            </div>
+            <div class="bento-item bento-item--dark">
+                <div class="bento-icon">&#128263;</div>
+                <h3>Echo Cancellation</h3>
+                <p>Eliminaci&oacute;n de eco integrada, sin procesamiento local</p>
+            </div>
+            <div class="bento-item bento-item--highlight bento-item--wide">
+                <div class="bento-icon">&#128230;</div>
+                <h3>3 Tiers + BYOM</h3>
+                <p><strong>Pro</strong> (GPT-Realtime, GPT-4o, GPT-4.1) &middot; <strong>Basic</strong> (GPT-Realtime-mini, GPT-4o-mini) &middot; <strong>Lite</strong> (Phi4, GPT-5-nano) &middot; <strong>BYOM</strong> (tu modelo, tu PTU, Claude, Grok)</p>
+            </div>
+            <div class="bento-item bento-item--dark">
+                <div class="bento-icon">&#127758;</div>
+                <h3>140+ Idiomas</h3>
+                <p>Soporte multiling&uuml;e con 600+ voces neurales y custom voice</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ZIGZAG: ENFASIS 3 MODOS -->
+    <section class="zigzag-section" id="modos">
+        <div class="zigzag-header">
+            <div class="section-label section-label--light reveal">&Eacute;NFASIS &mdash; AN&Aacute;LISIS DETALLADO</div>
+            <h2 class="section-title reveal" style="color:white">Tres Modos de Procesamiento de Audio</h2>
+            <p class="section-subtitle section-subtitle--dark reveal" style="margin:0 auto">La elecci&oacute;n del modo determina qu&eacute; tarifas de audio aplican &mdash; y el modo m&aacute;s econ&oacute;mico cambia seg&uacute;n el tier.</p>
+        </div>
+        <div class="zigzag-wrapper">
+            <!-- Cascada -->
+            <div class="zigzag-item reveal">
+                <div class="zigzag-content">
+                    <span class="mode-tag mode-cascade">&#127312; MODO CASCADA</span>
+                    <h3>Audio &rarr; STT &rarr; LLM Texto &rarr; TTS &rarr; Audio</h3>
+                    <p>El audio del usuario se transcribe a texto, un modelo de texto genera la respuesta, y se sintetiza de vuelta a voz. Tres servicios en serie dentro de VoiceLive.</p>
+                    <p style="font-weight:600; color:rgba(255,255,255,0.85)">Modelos: gpt-4o, gpt-4.1, gpt-5, phi4-mini</p>
+                    <div class="tariff-info">Tarifas: Audio Standard + Text</div>
+                </div>
+                <div class="zigzag-visual" style="background: rgba(59,130,246,0.05); border: 1px solid rgba(59,130,246,0.15);">
+                    <div class="flow-diagram">
+                        <div class="flow-node node-audio">&#127908; Audio</div>
+                        <div class="flow-arrow">&rarr;</div>
+                        <div class="flow-node node-stt">STT</div>
+                        <div class="flow-arrow">&rarr;</div>
+                        <div class="flow-node node-llm">LLM</div>
+                        <div class="flow-arrow">&rarr;</div>
+                        <div class="flow-node node-tts">TTS</div>
+                        <div class="flow-arrow">&rarr;</div>
+                        <div class="flow-node node-audio">&#128266; Audio</div>
+                    </div>
+                </div>
+            </div>
+            <!-- Hibrido -->
+            <div class="zigzag-item reveal">
+                <div class="zigzag-content">
+                    <span class="mode-tag mode-hybrid">&#127313; MODO H&Iacute;BRIDO</span>
+                    <h3>Audio &rarr; Modelo Nativo (in) &rarr; TTS &rarr; Audio</h3>
+                    <p>El modelo multimodal entiende el audio directamente (captura tono, emoci&oacute;n), pero la salida se genera con Azure Speech TTS para mayor control de voz.</p>
+                    <p style="font-weight:600; color:rgba(255,255,255,0.85)">Modelos: gpt-realtime, phi4-mm-realtime</p>
+                    <div class="tariff-info">Tarifas: Native S2S (in) + Audio Standard (out) + Text</div>
+                </div>
+                <div class="zigzag-visual" style="background: rgba(168,85,247,0.05); border: 1px solid rgba(168,85,247,0.15);">
+                    <div class="flow-diagram">
+                        <div class="flow-node node-audio">&#127908; Audio</div>
+                        <div class="flow-arrow">&rarr;</div>
+                        <div class="flow-node node-native">Modelo Nativo</div>
+                        <div class="flow-arrow">&rarr;</div>
+                        <div class="flow-node node-tts">TTS</div>
+                        <div class="flow-arrow">&rarr;</div>
+                        <div class="flow-node node-audio">&#128266; Audio</div>
+                    </div>
+                </div>
+            </div>
+            <!-- Full Native -->
+            <div class="zigzag-item reveal">
+                <div class="zigzag-content">
+                    <span class="mode-tag mode-native">&#127314; FULL NATIVE S2S</span>
+                    <h3>Audio &rarr; Modelo Nativo (in + out) &rarr; Audio</h3>
+                    <p>El modelo procesa audio de entrada y genera audio de salida directamente. Latencia m&iacute;nima y m&aacute;xima naturalidad. Sin pasar por STT ni TTS.</p>
+                    <p style="font-weight:600; color:rgba(255,255,255,0.85)">Modelos: gpt-realtime, gpt-realtime-mini</p>
+                    <div class="tariff-info">Tarifas: Native S2S (in + out) + Text</div>
+                </div>
+                <div class="zigzag-visual" style="background: rgba(16,185,129,0.05); border: 1px solid rgba(16,185,129,0.15);">
+                    <div class="flow-diagram">
+                        <div class="flow-node node-audio">&#127908; Audio</div>
+                        <div class="flow-arrow">&rarr;</div>
+                        <div class="flow-node node-native" style="padding: 1rem 1.5rem; font-size: 0.85rem;">Modelo Nativo<br><small style="opacity:0.7">in + out</small></div>
+                        <div class="flow-arrow">&rarr;</div>
+                        <div class="flow-node node-audio">&#128266; Audio</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TARIFF CARDS -->
+    <section class="tariff-section" id="tarifas">
+        <div class="tariff-header">
+            <div class="section-label reveal">TARIFAS DE AUDIO POR TIER (USD / 1M tokens)</div>
+            <h2 class="section-title reveal">&iquest;Por Qu&eacute; el Modo M&aacute;s Barato Var&iacute;a?</h2>
+            <p class="section-subtitle reveal" style="margin:0 auto">La tarifa Native S2S es m&aacute;s cara que Audio Standard en Pro, pero m&aacute;s barata en Basic y Lite. Esto invierte la ecuaci&oacute;n de costos seg&uacute;n el tier.</p>
+        </div>
+        <div class="tariff-grid reveal stagger">
+            <div class="tariff-card">
+                <div class="tier-name">Voice Live Pro</div>
+                <div class="tariff-row"><span class="t-label">Audio Std Input</span><span class="t-value">$17</span></div>
+                <div class="tariff-row"><span class="t-label">Audio Std Output</span><span class="t-value">$31</span></div>
+                <div class="tariff-row"><span class="t-label">Native S2S Input</span><span class="t-value" style="color:#ef4444">$32</span></div>
+                <div class="tariff-row"><span class="t-label">Native S2S Output</span><span class="t-value" style="color:#ef4444">$64</span></div>
+                <div class="tariff-winner winner-cascade">&#127312; Cascada gana &middot; Native 2&times; m&aacute;s caro</div>
+            </div>
+            <div class="tariff-card">
+                <div class="tier-name">Voice Live Basic</div>
+                <div class="tariff-row"><span class="t-label">Audio Std Input</span><span class="t-value">$15</span></div>
+                <div class="tariff-row"><span class="t-label">Audio Std Output</span><span class="t-value">$26</span></div>
+                <div class="tariff-row"><span class="t-label">Native S2S Input</span><span class="t-value" style="color:#10b981">$11</span></div>
+                <div class="tariff-row"><span class="t-label">Native S2S Output</span><span class="t-value" style="color:#10b981">$22</span></div>
+                <div class="tariff-winner winner-native">&#127314; Native gana &middot; 27% m&aacute;s barato</div>
+            </div>
+            <div class="tariff-card">
+                <div class="tier-name">Voice Live Lite</div>
+                <div class="tariff-row"><span class="t-label">Audio Std Input</span><span class="t-value">$15</span></div>
+                <div class="tariff-row"><span class="t-label">Audio Std Output</span><span class="t-value">$25</span></div>
+                <div class="tariff-row"><span class="t-label">Native S2S Input</span><span class="t-value" style="color:#10b981">$4</span></div>
+                <div class="tariff-row"><span class="t-label">Native S2S Output</span><span class="t-value" style="color:#94a3b8">&mdash;</span></div>
+                <div class="tariff-winner winner-hybrid">&#127313; H&iacute;brido gana &middot; Native in 73% m&aacute;s barato</div>
+            </div>
+        </div>
+        <div class="tariff-insight reveal">
+            <blockquote>Los modelos Pro (gpt-realtime) son modelos premium de frontera &mdash; Microsoft cobra un premium por su capacidad de audio nativo. En Basic y Lite, los modelos nativos son m&aacute;s ligeros y eficientes, con tarifas native <strong>inferiores</strong> a Audio Standard. Esto invierte completamente la ecuaci&oacute;n de costos.</blockquote>
+        </div>
+    </section>
+
+    <!-- COST COMPARISON -->
+    <section class="cost-section" id="costos">
+        <div class="cost-header">
+            <div class="section-label section-label--light reveal">EJEMPLO PR&Aacute;CTICO</div>
+            <h2 class="section-title reveal" style="color:white">Costo Real: Llamada de 5 Minutos</h2>
+            <p class="section-subtitle section-subtitle--dark reveal" style="margin:0 auto">Comparaci&oacute;n directa entre ambas opciones. Escenario: 5 turnos (30s usuario + 30s respuesta), system prompt de 500 tokens.</p>
+        </div>
+        <div class="cost-grid reveal stagger">
+            <div class="cost-block cost-block--a">
+                <div class="cost-block-label">&#9881; Opci&oacute;n A &mdash; Servicios Separados</div>
+                <div class="cost-total">$0.11</div>
+                <div class="cost-per">por sesi&oacute;n de 5 minutos</div>
+                <ul class="cost-breakdown">
+                    <li><span class="c-label">Azure Speech STT (5 min)</span><span class="c-value">$0.083</span></li>
+                    <li><span class="c-label">Azure TTS (~2,000 chars)</span><span class="c-value">$0.030</span></li>
+                    <li><span class="c-label">Azure OpenAI gpt-4o-mini</span><span class="c-value">$0.001</span></li>
+                </ul>
+            </div>
+            <div class="cost-block cost-block--b">
+                <div class="cost-block-label">&#9889; Opci&oacute;n B &mdash; VoiceLive</div>
+                <div class="cost-total">$0.09 &ndash; $0.33</div>
+                <div class="cost-per">por sesi&oacute;n de 5 min (seg&uacute;n tier y modo)</div>
+                <ul class="cost-breakdown">
+                    <li><span class="c-label">BYOM + PTU (gpt-4o)</span><span class="c-value" style="color:var(--brand-accent)">$0.088</span></li>
+                    <li><span class="c-label">Lite H&iacute;brido (phi4-mm)</span><span class="c-value">$0.096</span></li>
+                    <li><span class="c-label">Basic Full Native (rt-mini)</span><span class="c-value">$0.115</span></li>
+                    <li><span class="c-label">Pro Cascada (gpt-4.1)</span><span class="c-value">$0.175</span></li>
+                    <li><span class="c-label">Pro Full Native (gpt-rt)</span><span class="c-value" style="color:#f87171">$0.334</span></li>
+                </ul>
+            </div>
+        </div>
+        <div class="bars-container reveal">
+            <div class="bars-title">Costo Relativo por Sesi&oacute;n de 5 Minutos</div>
+            <div class="tier-bars stagger">
+                <div class="tier-bar">
+                    <div class="bar-label">BYOM + PTU</div>
+                    <div class="bar-track"><div class="bar-fill" style="--w:26%; background: var(--gradient-accent);"></div></div>
+                    <div class="bar-value" style="color:var(--brand-accent)">$0.088</div>
+                </div>
+                <div class="tier-bar">
+                    <div class="bar-label">Lite H&iacute;brido</div>
+                    <div class="bar-track"><div class="bar-fill" style="--w:29%; background: linear-gradient(90deg,#f59e0b,#fbbf24);"></div></div>
+                    <div class="bar-value">$0.096</div>
+                </div>
+                <div class="tier-bar">
+                    <div class="bar-label">Separados (A)</div>
+                    <div class="bar-track"><div class="bar-fill" style="--w:33%; background: linear-gradient(90deg,#ef4444,#f87171);"></div></div>
+                    <div class="bar-value">$0.114</div>
+                </div>
+                <div class="tier-bar">
+                    <div class="bar-label">Basic Native</div>
+                    <div class="bar-track"><div class="bar-fill" style="--w:34%; background: linear-gradient(90deg,#10b981,#34d399);"></div></div>
+                    <div class="bar-value">$0.115</div>
+                </div>
+                <div class="tier-bar">
+                    <div class="bar-label">Pro Cascada</div>
+                    <div class="bar-track"><div class="bar-fill" style="--w:52%; background: linear-gradient(90deg,var(--brand-primary),#60a5fa);"></div></div>
+                    <div class="bar-value">$0.175</div>
+                </div>
+                <div class="tier-bar">
+                    <div class="bar-label">Pro Native S2S</div>
+                    <div class="bar-track"><div class="bar-fill" style="--w:100%; background: linear-gradient(90deg,#7c3aed,#a855f7);"></div></div>
+                    <div class="bar-value">$0.334</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta" id="siguiente">
+        <h2 class="reveal">&iquest;Listo para construir<br>tu agente de voz?</h2>
+        <p class="reveal">VoiceLive ofrece la ruta m&aacute;s r&aacute;pida a producci&oacute;n con latencia ultra-baja. Servicios separados te dan control total. La mejor elecci&oacute;n depende de tus prioridades.</p>
+        <div class="cta-buttons reveal">
+            <a href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/voice-live" class="cta-btn cta-btn--primary" target="_blank" rel="noopener">Documentaci&oacute;n VoiceLive</a>
+            <a href="https://azure.microsoft.com/en-us/pricing/details/speech/" class="cta-btn cta-btn--ghost" target="_blank" rel="noopener">Pricing Oficial</a>
+        </div>
+        <div class="cta-footer reveal">
+            <svg width="16" height="16" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#F25022"/><rect x="11" y="1" width="9" height="9" fill="#7FBA00"/><rect x="1" y="11" width="9" height="9" fill="#00A4EF"/><rect x="11" y="11" width="9" height="9" fill="#FFB900"/></svg>
+            Microsoft Azure &middot; Precios vigentes desde julio 2025 &middot; &Uacute;ltima verificaci&oacute;n: mayo 2026
+        </div>
+    </section>
+
+    <script>
+        // Scroll reveals
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) entry.target.classList.add("active");
+            });
+        }, { threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
+        document.querySelectorAll(".reveal, .stagger").forEach(el => observer.observe(el));
+
+        // Bar animation
+        const barObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.querySelectorAll(".bar-fill").forEach(bar => bar.classList.add("animated"));
+                }
+            });
+        }, { threshold: 0.3 });
+        document.querySelectorAll(".tier-bars").forEach(el => barObserver.observe(el));
+
+        // Nav scroll
+        window.addEventListener("scroll", () => {
+            document.querySelector("nav").classList.toggle("scrolled", window.scrollY > 50);
+        }, { passive: true });
+
+        // Keyboard nav
+        document.addEventListener("keydown", (e) => {
+            const sections = document.querySelectorAll("section");
+            const current = [...sections].findIndex(s => {
+                const rect = s.getBoundingClientRect();
+                return rect.top >= -100 && rect.top <= window.innerHeight / 2;
+            });
+            if (e.key === "ArrowDown" || e.key === "PageDown") {
+                e.preventDefault();
+                sections[Math.min(current + 1, sections.length - 1)]?.scrollIntoView({ behavior: "smooth" });
+            }
+            if (e.key === "ArrowUp" || e.key === "PageUp") {
+                e.preventDefault();
+                sections[Math.max(current - 1, 0)]?.scrollIntoView({ behavior: "smooth" });
+            }
+        });
+    </script>
+</body>
+</html>

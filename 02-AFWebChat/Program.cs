@@ -38,6 +38,7 @@ builder.Services.AddSingleton<OrchestrationFactory>();
 builder.Services.AddSingleton<DocumentService>();
 builder.Services.AddSingleton<IBlobStorageService, BlobStorageService>();
 builder.Services.AddSingleton<IDocumentIndexingService, DocumentIndexingService>();
+builder.Services.AddSingleton<VoiceConversationService>();
 builder.Services.AddScoped<AgentOrchestrationService>();
 
 // Register plugins
@@ -179,6 +180,7 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+app.UseWebSockets();
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
