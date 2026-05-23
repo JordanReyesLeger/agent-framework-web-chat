@@ -1,3 +1,4 @@
+using AFWebChat.Models;
 using AFWebChat.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -59,7 +60,9 @@ public class LiveAvatarController : ControllerBase
             avatarCharacter = _config["AzureSpeech:AvatarCharacter"] ?? "lisa",
             avatarStyle = _config["AzureSpeech:AvatarStyle"] ?? "casual-sitting",
             avatarVideoCodec = _config["AzureSpeech:AvatarVideoCodec"] ?? "H264",
-            transparentBackground = bool.TryParse(_config["AzureSpeech:AvatarTransparentBackground"], out var tb) && tb
+            transparentBackground = bool.TryParse(_config["AzureSpeech:AvatarTransparentBackground"], out var tb) && tb,
+            // Prompt compartido por Voice Live y Live Avatar (Prompts/voice-system-prompt.txt).
+            instructions = VoicePrompt.Load()
         });
     }
 

@@ -12,22 +12,27 @@
     'use strict';
 
     const els = {
-        stage: document.getElementById('avatarStage'),
-        placeholder: document.getElementById('stagePlaceholder'),
-        video: document.getElementById('avatarVideo'),
-        audio: document.getElementById('avatarAudio'),
-        status: document.getElementById('stageStatus'),
-        statusText: document.getElementById('stageStatusText'),
-        caption: document.getElementById('captionBar'),
-        transcript: document.getElementById('transcript'),
-        btnConnect: document.getElementById('btnConnect'),
-        btnDisconnect: document.getElementById('btnDisconnect'),
-        btnMic: document.getElementById('btnMic'),
-        btnStop: document.getElementById('btnStop'),
-        character: document.getElementById('avatarCharacter'),
-        style: document.getElementById('avatarStyle'),
-        voiceName: document.getElementById('voiceName'),
-        systemPrompt: document.getElementById('systemPrompt'),
+        stage: document.getElementById('vu-stage'),
+        placeholder: document.getElementById('vu-placeholder'),
+        video: document.getElementById('vu-video'),
+        audio: document.getElementById('vu-audio'),
+        status: document.getElementById('vu-status'),
+        statusText: document.getElementById('vu-status-text'),
+        caption: document.getElementById('vu-caption'),
+        transcript: document.getElementById('vu-transcript'),
+        btnConnect: document.getElementById('vu-btn-connect'),
+        btnDisconnect: document.getElementById('vu-btn-disconnect'),
+        btnMic: document.getElementById('vu-btn-mic'),
+        btnStop: document.getElementById('vu-btn-stop'),
+        character: document.getElementById('vu-avatar-character'),
+        style: document.getElementById('vu-avatar-style'),
+        styleField: document.getElementById('vu-avatar-style-field'),
+        voiceName: document.getElementById('vu-voice'),
+        systemPrompt: document.getElementById('vu-system-prompt'),
+        headerPill: document.getElementById('vu-header-pill'),
+        headerPillText: document.getElementById('vu-header-pill-text'),
+        textInput: document.getElementById('vu-text-input'),
+        btnSend: document.getElementById('vu-btn-send'),
     };
 
     const state = {
@@ -49,15 +54,28 @@
         els.status.classList.remove('is-listening', 'is-speaking', 'is-thinking', 'is-error');
         if (kind) els.status.classList.add('is-' + kind);
         if (text) els.statusText.textContent = text;
+        // Mirror state into the header pill + stage outline.
+        if (els.headerPill) {
+            els.headerPill.classList.remove('connected', 'error');
+            if (kind === 'error') els.headerPill.classList.add('error');
+            else if (state.isConnected) els.headerPill.classList.add('connected');
+            if (els.headerPillText) els.headerPillText.textContent = text || (state.isConnected ? 'Conectado' : 'Desconectado');
+        }
+        if (els.stage) {
+            els.stage.classList.toggle('is-connected', state.isConnected && kind !== 'error');
+            els.stage.classList.toggle('is-speaking', kind === 'speaking');
+        }
     }
 
     function appendTranscript(role, text) {
-        const empty = els.transcript.querySelector('.text-muted');
+        const empty = els.transcript.querySelector('.vu-empty');
         if (empty) empty.remove();
         const div = document.createElement('div');
-        div.className = 'msg ' + role;
-        div.innerHTML = `<div class="role">${role}</div><div class="text"></div>`;
-        div.querySelector('.text').textContent = text;
+        div.className = 'vu-msg ' + role;
+        const roleLabel = role === 'user' ? '🧑 Tú' : '🤖 Asistente';
+        div.innerHTML = '<div class="vu-role"></div><div class="vu-text"></div>';
+        div.querySelector('.vu-role').textContent = roleLabel;
+        div.querySelector('.vu-text').textContent = text;
         els.transcript.appendChild(div);
         els.transcript.scrollTop = els.transcript.scrollHeight;
     }
@@ -72,6 +90,8 @@
     }
 
     async function loadConfig() {
+        // Called every time the user connects. Fetches token + caches config,
+        // but does NOT touch the dropdowns (to avoid clobbering the user's pick).
         const [cfg, tok] = await Promise.all([
             fetchJson('/api/LiveAvatar/config'),
             fetchJson('/api/LiveAvatar/speech-token'),
@@ -79,10 +99,26 @@
         state.config = cfg;
         state.token = tok.token;
         state.region = tok.region;
-        if (cfg.avatarCharacter) els.character.value = cfg.avatarCharacter;
-        if (cfg.avatarStyle) els.style.value = cfg.avatarStyle;
-        if (cfg.synthesisVoiceName) els.voiceName.value = cfg.synthesisVoiceName;
         if (!state.token) throw new Error('Speech token no disponible. Configura AzureSpeech:SubscriptionKey.');
+    }
+
+    async function loadInitialDefaults() {
+        // Called once on page load to pre-select the configured character/style/voice.
+        // After the user changes anything, those choices are preserved across (dis)connects.
+        try {
+            const cfg = await fetchJson('/api/LiveAvatar/config');
+            state.config = cfg;
+            if (cfg.avatarCharacter && els.character) els.character.value = cfg.avatarCharacter;
+            if (cfg.avatarStyle && els.style) els.style.value = cfg.avatarStyle;
+            if (cfg.synthesisVoiceName && els.voiceName) els.voiceName.value = cfg.synthesisVoiceName;
+            // Pre-llena el textarea con el prompt compartido si aún está vacío.
+            if (cfg.instructions && els.systemPrompt && !els.systemPrompt.value.trim()) {
+                els.systemPrompt.value = cfg.instructions;
+            }
+            syncAvatarStyleVisibility();
+        } catch (e) {
+            console.warn('[INIT] Failed to load defaults', e);
+        }
     }
 
     async function getIceServers() {
@@ -106,13 +142,25 @@
             const speechConfig = SDK.SpeechConfig.fromAuthorizationToken(state.token, state.region);
             speechConfig.speechSynthesisVoiceName = els.voiceName.value || state.config.synthesisVoiceName;
 
+            // Fallback defaults if the dropdown options haven't loaded yet.
+            const character = (els.character && els.character.value) || state.config.avatarCharacter || 'lisa';
+            const avatarStyle = (els.style && els.style.value) || state.config.avatarStyle || 'casual-sitting';
+
+            // Detect Talking Heads (photo avatars, preview) via data-photo attribute on the selected option.
+            const selectedOpt = els.character.options[els.character.selectedIndex];
+            const isPhotoAvatar = selectedOpt && selectedOpt.dataset.photo === 'true';
+
             const videoFormat = new SDK.AvatarVideoFormat();
-            const avatarConfig = new SDK.AvatarConfig(
-                els.character.value,
-                els.style.value,
-                videoFormat
-            );
+            // Photo avatars don't accept a style; full-body avatars do.
+            const avatarConfig = isPhotoAvatar
+                ? new SDK.AvatarConfig(character, undefined, videoFormat)
+                : new SDK.AvatarConfig(character, avatarStyle, videoFormat);
             avatarConfig.customized = false;
+            if (isPhotoAvatar) {
+                // Photo avatar (Talking Heads) base model — required for preview characters.
+                avatarConfig.photoAvatarBaseModel = 'vasa-1';
+                console.log('[AVATAR] Talking Head (preview · vasa-1):', character);
+            }
             if (state.config.avatarVideoCodec) {
                 try { videoFormat.codec = state.config.avatarVideoCodec; } catch (_) {}
             }
@@ -157,7 +205,9 @@
             els.btnDisconnect.disabled = false;
             els.btnMic.disabled = false;
             els.btnStop.disabled = false;
-            setStatus(null, 'Conectado. Pulsa "Iniciar micrófono".');
+            if (els.textInput) els.textInput.disabled = false;
+            if (els.btnSend) els.btnSend.disabled = false;
+            setStatus(null, 'Conectado. Pulsa "Micrófono".');
         } catch (err) {
             console.error('[CONNECT]', err);
             setStatus('error', 'Error: ' + err.message);
@@ -253,7 +303,8 @@
         state.recognizer.startContinuousRecognitionAsync(
             () => {
                 state.isListening = true;
-                els.btnMic.innerHTML = '<i class="bi bi-mic-mute"></i> Detener micrófono';
+                els.btnMic.innerHTML = '<i class="bi bi-mic-mute"></i> Detener';
+                els.btnMic.classList.add('is-active');
                 setStatus('listening', 'Escuchando...');
             },
             (err) => { console.error('[STT start]', err); setStatus('error', 'Error STT'); }
@@ -265,7 +316,8 @@
         state.recognizer.stopContinuousRecognitionAsync(
             () => {
                 state.isListening = false;
-                els.btnMic.innerHTML = '<i class="bi bi-mic"></i> Iniciar micrófono';
+                els.btnMic.innerHTML = '<i class="bi bi-mic"></i> Micrófono';
+                els.btnMic.classList.remove('is-active');
                 setStatus(null, 'Micrófono detenido');
             },
             (err) => console.warn('[STT stop]', err)
@@ -289,8 +341,19 @@
             els.btnDisconnect.disabled = true;
             els.btnMic.disabled = true;
             els.btnStop.disabled = true;
+            if (els.textInput) { els.textInput.disabled = true; els.textInput.value = ''; }
+            if (els.btnSend) els.btnSend.disabled = true;
             setStatus(null, 'Desconectado');
         }
+    }
+
+    function sendTypedMessage() {
+        if (!els.textInput) return;
+        const text = (els.textInput.value || '').trim();
+        if (!text || !state.isConnected) return;
+        els.textInput.value = '';
+        appendTranscript('user', text);
+        sendMessage(text);
     }
 
     els.btnConnect.addEventListener('click', connect);
@@ -299,8 +362,25 @@
     els.btnMic.addEventListener('click', () => {
         if (state.isListening) stopMic(); else startMic();
     });
+    if (els.btnSend) els.btnSend.addEventListener('click', sendTypedMessage);
+    if (els.textInput) els.textInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendTypedMessage(); });
+
+    // Hide the pose/style dropdown when a Talking Head (photo) avatar is selected — photo avatars don't accept styles.
+    function syncAvatarStyleVisibility() {
+        if (!els.character || !els.styleField) return;
+        const opt = els.character.options[els.character.selectedIndex];
+        const isPhoto = opt && opt.dataset.photo === 'true';
+        els.styleField.style.display = isPhoto ? 'none' : '';
+    }
+    if (els.character) els.character.addEventListener('change', syncAvatarStyleVisibility);
+    syncAvatarStyleVisibility();
+
     // Click stage to interrupt
     els.stage.addEventListener('click', () => {
         if (state.isSpeaking) stopSpeaking();
     });
+
+    // Load defaults from appsettings once on page open. The user's later selections
+    // are preserved across reconnects (loadConfig no longer overwrites them).
+    loadInitialDefaults();
 })();

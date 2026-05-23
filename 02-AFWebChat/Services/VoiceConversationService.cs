@@ -70,7 +70,9 @@ public class VoiceConversationService
         // Build chat messages
         var messages = new List<ChatMessage>();
 
-        if (!string.IsNullOrEmpty(systemPrompt) && !session.SystemPromptSet)
+        // Always honour the latest system prompt from the client — users may tweak it
+        // mid-session and expect the next turn to reflect the change.
+        if (!string.IsNullOrEmpty(systemPrompt))
         {
             session.SystemPrompt = systemPrompt;
             session.SystemPromptSet = true;

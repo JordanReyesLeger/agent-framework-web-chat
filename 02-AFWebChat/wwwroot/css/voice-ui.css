@@ -1,0 +1,336 @@
+/* ============================================================
+   Voice UI — Shared premium interface for Live Avatar & Voice Live.
+   Both pages share the same DOM and visual language; only the
+   wiring/transport JS differs underneath.
+   ============================================================ */
+
+.vu-shell {
+    min-height: calc(100vh - 80px);
+    padding: 20px 24px 28px;
+    background: radial-gradient(1200px 600px at 20% -10%, rgba(31,111,235,0.10), transparent 60%),
+                radial-gradient(900px 500px at 110% 110%, rgba(35,134,54,0.10), transparent 60%),
+                #0b0f15;
+    color: #e6edf3;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.vu-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin: 0 auto 18px; max-width: 1500px;
+    gap: 12px; flex-wrap: wrap;
+}
+.vu-header-titles h1 {
+    margin: 0; font-size: 1.6rem; font-weight: 700;
+    background: linear-gradient(135deg, #58a6ff 0%, #c46df0 70%);
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    display: inline-flex; align-items: center; gap: 10px;
+}
+.vu-header-titles .vu-badge {
+    font-size: 0.7rem; padding: 3px 10px; border-radius: 999px;
+    background: rgba(88,166,255,0.15); color: #58a6ff; border: 1px solid rgba(88,166,255,0.3);
+    text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600;
+    -webkit-text-fill-color: #58a6ff; vertical-align: middle;
+}
+.vu-header-titles p { margin: 4px 0 0; color: #8b949e; font-size: 0.9rem; }
+
+.vu-header-pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 14px; border-radius: 999px;
+    background: rgba(48,54,61,0.6); border: 1px solid #30363d;
+    backdrop-filter: blur(10px);
+    font-size: 0.85rem;
+}
+.vu-header-pill.connected { background: rgba(35,134,54,0.18); border-color: rgba(35,134,54,0.5); color: #3fb950; }
+.vu-header-pill.error { background: rgba(248,81,73,0.18); border-color: rgba(248,81,73,0.5); color: #f85149; }
+
+.vu-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) 420px;
+    gap: 18px;
+    height: calc(100vh - 170px);
+    min-height: 620px;
+    max-width: 1500px;
+    margin: 0 auto;
+}
+@media (max-width: 1100px) {
+    .vu-grid { grid-template-columns: 1fr; height: auto; }
+    .vu-stage { min-height: 60vh; }
+}
+
+/* ---------- Stage (avatar video area) ---------- */
+.vu-stage {
+    position: relative;
+    background: #000;
+    background-image:
+        radial-gradient(ellipse at center, rgba(31,111,235,0.12), transparent 60%),
+        linear-gradient(135deg, #0d1117 0%, #161b22 100%);
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04);
+    border: 1px solid #21262d;
+    transition: box-shadow 0.4s ease, border-color 0.4s ease;
+    display: flex; align-items: center; justify-content: center;
+}
+.vu-stage.is-connected { border-color: rgba(88,166,255,0.4); box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(88,166,255,0.2), inset 0 1px 0 rgba(255,255,255,0.04); }
+.vu-stage.is-speaking { box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 0 0 2px rgba(88,166,255,0.5), inset 0 1px 0 rgba(255,255,255,0.04); }
+
+.vu-stage video, .vu-stage .vu-media {
+    width: 100%; height: 100%; object-fit: cover;
+    background: linear-gradient(135deg, #1a1a2e 0%, #0d1117 100%);
+    display: block;
+}
+
+.vu-stage-placeholder {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    pointer-events: none; padding: 40px;
+    text-align: center; color: #8b949e;
+}
+.vu-stage-placeholder i {
+    font-size: 5rem; margin-bottom: 16px; opacity: 0.4;
+    background: linear-gradient(135deg, #58a6ff, #c46df0);
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    opacity: 0.6;
+}
+.vu-stage-placeholder h3 { color: #e6edf3; font-weight: 600; margin: 0 0 6px; }
+.vu-stage-placeholder p { margin: 0; max-width: 360px; }
+
+/* Stage overlay: status + caption + meter at the bottom of the video */
+.vu-stage-overlay {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    padding: 18px 22px 16px;
+    background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.55) 50%, rgba(0,0,0,0) 100%);
+    display: flex; flex-direction: column; gap: 10px;
+    pointer-events: none;
+}
+.vu-stage-overlay > * { pointer-events: auto; }
+
+.vu-status {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 14px; border-radius: 999px;
+    background: rgba(13,17,23,0.85); backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.08);
+    font-size: 0.82rem; font-weight: 500; align-self: flex-start;
+    transition: all 0.3s ease;
+}
+.vu-status-dot {
+    width: 9px; height: 9px; border-radius: 50%; background: #6e7681;
+    transition: all 0.3s ease;
+}
+.vu-status.is-listening { border-color: rgba(63,185,80,0.5); }
+.vu-status.is-listening .vu-status-dot { background: #3fb950; box-shadow: 0 0 12px #3fb950; animation: vu-pulse 1.4s infinite; }
+.vu-status.is-speaking { border-color: rgba(88,166,255,0.5); }
+.vu-status.is-speaking .vu-status-dot { background: #58a6ff; box-shadow: 0 0 12px #58a6ff; animation: vu-pulse 0.7s infinite; }
+.vu-status.is-thinking { border-color: rgba(210,153,34,0.5); }
+.vu-status.is-thinking .vu-status-dot { background: #d29922; box-shadow: 0 0 12px #d29922; animation: vu-pulse 1.0s infinite; }
+.vu-status.is-error { border-color: rgba(248,81,73,0.5); }
+.vu-status.is-error .vu-status-dot { background: #f85149; box-shadow: 0 0 12px #f85149; }
+
+@keyframes vu-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.55; transform: scale(1.4); }
+}
+
+.vu-caption {
+    min-height: 28px;
+    color: #e6edf3; font-size: 1.05rem; font-weight: 500;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+    line-height: 1.4;
+}
+
+/* Audio level meter (the "barrita") */
+.vu-meter {
+    height: 5px; background: rgba(255,255,255,0.1); border-radius: 999px; overflow: hidden;
+    position: relative;
+}
+.vu-meter > div {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, #3fb950, #d29922 60%, #f85149);
+    transition: width 80ms linear;
+    border-radius: 999px;
+}
+
+/* ---------- Side panel ---------- */
+.vu-panel {
+    background: rgba(22,27,34,0.85);
+    backdrop-filter: blur(20px);
+    border: 1px solid #30363d;
+    border-radius: 18px;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+}
+
+.vu-panel-header {
+    padding: 16px 18px;
+    border-bottom: 1px solid #21262d;
+    background: linear-gradient(180deg, rgba(31,111,235,0.06), transparent);
+}
+.vu-panel-header h2 {
+    margin: 0; font-size: 1.05rem; font-weight: 600; display: flex; align-items: center; gap: 8px;
+}
+.vu-panel-header h2 i { color: #58a6ff; }
+.vu-panel-header p { margin: 4px 0 0; font-size: 0.8rem; color: #8b949e; }
+
+/* Controls grid */
+.vu-controls {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+    padding: 14px 16px; border-bottom: 1px solid #21262d;
+}
+.vu-controls .vu-btn-wide { grid-column: 1 / -1; }
+
+.vu-btn {
+    padding: 10px 14px; border-radius: 10px;
+    background: rgba(48,54,61,0.6); color: #e6edf3;
+    border: 1px solid #30363d; cursor: pointer;
+    font-size: 0.88rem; font-weight: 500;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    transition: all 0.18s ease;
+}
+.vu-btn:hover:not(:disabled) { background: #30363d; border-color: #58a6ff; transform: translateY(-1px); box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+.vu-btn:active:not(:disabled) { transform: translateY(0); }
+.vu-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.vu-btn-primary { background: linear-gradient(135deg, #1f6feb, #388bfd); border-color: transparent; color: #fff; }
+.vu-btn-primary:hover:not(:disabled) { background: linear-gradient(135deg, #388bfd, #58a6ff); border-color: transparent; }
+.vu-btn-success { background: linear-gradient(135deg, #238636, #2ea043); border-color: transparent; color: #fff; }
+.vu-btn-success:hover:not(:disabled) { background: linear-gradient(135deg, #2ea043, #3fb950); border-color: transparent; }
+.vu-btn-danger { background: linear-gradient(135deg, #da3633, #f85149); border-color: transparent; color: #fff; }
+.vu-btn-danger:hover:not(:disabled) { background: linear-gradient(135deg, #f85149, #ff6961); border-color: transparent; }
+
+/* Mic toggle styling when active */
+.vu-btn.is-active { background: linear-gradient(135deg, #238636, #3fb950); border-color: transparent; color: #fff; }
+
+/* Config drawer */
+.vu-config {
+    padding: 14px 16px; border-bottom: 1px solid #21262d;
+    display: flex; flex-direction: column; gap: 10px;
+    max-height: 360px; overflow-y: auto;
+}
+.vu-config-toggle {
+    background: none; border: none; color: #8b949e; cursor: pointer;
+    font-size: 0.85rem; display: flex; align-items: center; gap: 6px;
+    padding: 4px 8px; border-radius: 6px;
+}
+.vu-config-toggle:hover { color: #58a6ff; }
+.vu-field { display: flex; flex-direction: column; gap: 5px; }
+.vu-field label { font-size: 0.78rem; color: #8b949e; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; }
+.vu-field input, .vu-field select, .vu-field textarea {
+    width: 100%;
+    padding: 8px 10px;
+    background: #0d1117; color: #e6edf3;
+    border: 1px solid #30363d; border-radius: 8px;
+    font-size: 0.88rem; font-family: inherit;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+.vu-field input:focus, .vu-field select:focus, .vu-field textarea:focus {
+    outline: none; border-color: #58a6ff; box-shadow: 0 0 0 3px rgba(88,166,255,0.18);
+}
+.vu-field textarea { resize: vertical; min-height: 72px; line-height: 1.4; }
+.vu-field select {
+    appearance: none; -webkit-appearance: none;
+    background-image: linear-gradient(45deg, transparent 50%, #8b949e 50%),
+                      linear-gradient(135deg, #8b949e 50%, transparent 50%);
+    background-position: calc(100% - 16px) 50%, calc(100% - 11px) 50%;
+    background-size: 5px 5px; background-repeat: no-repeat;
+    padding-right: 32px;
+}
+.vu-field select optgroup { font-weight: 700; color: #58a6ff; }
+.vu-field select option { background: #0d1117; color: #e6edf3; }
+.vu-field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.vu-field-toggle {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 10px; background: rgba(31,111,235,0.08);
+    border: 1px solid rgba(31,111,235,0.25);
+    border-radius: 8px; cursor: pointer; user-select: none;
+    font-size: 0.88rem;
+}
+.vu-field-toggle input { width: auto; margin: 0; }
+
+/* Tabs */
+.vu-tabs {
+    display: flex; gap: 2px;
+    padding: 8px 16px 0;
+    border-bottom: 1px solid #21262d;
+    background: rgba(13,17,23,0.5);
+}
+.vu-tab {
+    flex: 1; padding: 10px 12px;
+    background: none; border: none; color: #8b949e;
+    cursor: pointer; font-size: 0.85rem; font-weight: 500;
+    border-bottom: 2px solid transparent;
+    transition: all 0.18s ease;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+}
+.vu-tab:hover { color: #e6edf3; }
+.vu-tab.is-active { color: #58a6ff; border-bottom-color: #58a6ff; }
+
+.vu-tab-pane { display: none; flex: 1; flex-direction: column; overflow: hidden; min-height: 0; }
+.vu-tab-pane.is-active { display: flex; }
+
+/* Transcript */
+.vu-transcript {
+    flex: 1; overflow-y: auto;
+    padding: 14px 16px;
+    display: flex; flex-direction: column; gap: 10px;
+    min-height: 0;
+}
+.vu-transcript::-webkit-scrollbar { width: 6px; }
+.vu-transcript::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
+
+.vu-empty {
+    text-align: center; color: #6e7681; font-size: 0.85rem; padding: 30px 16px;
+}
+
+.vu-msg {
+    padding: 10px 12px; border-radius: 12px;
+    font-size: 0.9rem; line-height: 1.45;
+    border-left: 3px solid;
+    animation: vu-msg-in 0.25s ease-out;
+}
+@keyframes vu-msg-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.vu-msg .vu-role {
+    font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em;
+    opacity: 0.65; margin-bottom: 4px; font-weight: 600;
+}
+.vu-msg.user { background: linear-gradient(135deg, rgba(31,111,235,0.18), rgba(31,111,235,0.06)); border-left-color: #58a6ff; }
+.vu-msg.assistant { background: linear-gradient(135deg, rgba(35,134,54,0.18), rgba(35,134,54,0.06)); border-left-color: #3fb950; }
+
+/* Chat input */
+.vu-input {
+    padding: 10px 14px;
+    border-top: 1px solid #21262d;
+    display: flex; gap: 8px;
+    background: rgba(13,17,23,0.5);
+}
+.vu-input input {
+    flex: 1; padding: 9px 12px;
+    background: #0d1117; color: #e6edf3;
+    border: 1px solid #30363d; border-radius: 999px;
+    font-size: 0.9rem;
+}
+.vu-input input:focus { outline: none; border-color: #58a6ff; box-shadow: 0 0 0 3px rgba(88,166,255,0.18); }
+.vu-input button {
+    padding: 0 16px; min-width: 42px;
+    background: linear-gradient(135deg, #1f6feb, #388bfd);
+    color: #fff; border: none; border-radius: 999px;
+    cursor: pointer; font-size: 0.95rem;
+}
+.vu-input button:disabled { opacity: 0.4; cursor: not-allowed; background: #30363d; }
+
+/* Events panel (Voice Live only) */
+.vu-events {
+    flex: 1; overflow-y: auto;
+    padding: 12px 16px;
+    font-family: ui-monospace, 'Cascadia Code', Menlo, monospace;
+    font-size: 0.78rem; line-height: 1.4;
+    color: #8b949e;
+}
+.vu-events::-webkit-scrollbar { width: 6px; }
+.vu-events::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
+.vu-events div { padding: 2px 0; }
+.vu-events .ev-error { color: #f85149; }
+.vu-events .ev-speech { color: #d29922; }
+.vu-events .ev-response { color: #58a6ff; }

@@ -7,31 +7,42 @@
     const SEND_CHUNK_MS = 80; // ~1920 samples per send
 
     const els = {
-        status: document.getElementById('vlStatus'),
-        connect: document.getElementById('vlConnect'),
-        disconnect: document.getElementById('vlDisconnect'),
-        mic: document.getElementById('vlMic'),
-        stop: document.getElementById('vlStop'),
-        meter: document.getElementById('vlMeter'),
-        instructions: document.getElementById('vlInstructions'),
-        voice: document.getElementById('vlVoice'),
-        model: document.getElementById('vlModel'),
-        transcript: document.getElementById('vlTranscript'),
-        events: document.getElementById('vlEvents'),
-        textInput: document.getElementById('vlTextInput'),
-        sendText: document.getElementById('vlSendText'),
-        styleRow: document.getElementById('vlStyleRow'),
-        style: document.getElementById('vlStyle'),
-        avatarEnabled: document.getElementById('vlAvatarEnabled'),
-        avatarFields: document.getElementById('vlAvatarFields'),
-        avatarCharacter: document.getElementById('vlAvatarCharacter'),
-        avatarStyle: document.getElementById('vlAvatarStyle'),
-        avatarStage: document.getElementById('vlAvatarStage'),
-        avatarVideo: document.getElementById('vlAvatarVideo'),
-        avatarName: document.getElementById('vlAvatarName'),
-        avatarDetails: document.getElementById('vlAvatarDetails'),
-        avatarStatus: document.getElementById('vlAvatarStatus'),
-        visemeBar: document.getElementById('vlVisemeBar'),
+        // Stage / status (shared with the unified UI)
+        stage: document.getElementById('vu-stage'),
+        placeholder: document.getElementById('vu-placeholder'),
+        status: document.getElementById('vu-status'),
+        statusText: document.getElementById('vu-status-text'),
+        caption: document.getElementById('vu-caption'),
+        meter: document.getElementById('vu-meter-fill'),
+        headerPill: document.getElementById('vu-header-pill'),
+        headerPillText: document.getElementById('vu-header-pill-text'),
+
+        // Controls
+        connect: document.getElementById('vu-btn-connect'),
+        disconnect: document.getElementById('vu-btn-disconnect'),
+        mic: document.getElementById('vu-btn-mic'),
+        stop: document.getElementById('vu-btn-stop'),
+
+        // Config
+        instructions: document.getElementById('vu-system-prompt'),
+        voice: document.getElementById('vu-voice'),
+        model: document.getElementById('vu-model'),
+        styleRow: document.getElementById('vu-style-row'),
+        style: document.getElementById('vu-style'),
+        avatarEnabled: document.getElementById('vu-avatar-enable'),
+        avatarFields: document.getElementById('vu-avatar-fields'),
+        avatarCharacter: document.getElementById('vu-avatar-character'),
+        avatarStyle: document.getElementById('vu-avatar-style'),
+
+        // Conversation
+        transcript: document.getElementById('vu-transcript'),
+        events: document.getElementById('vu-events'),
+        textInput: document.getElementById('vu-text-input'),
+        sendText: document.getElementById('vu-btn-send'),
+
+        // Avatar media (reuses the main stage video/audio)
+        avatarVideo: document.getElementById('vu-video'),
+        avatarAudio: document.getElementById('vu-audio'),
     };
 
     // Holds the full /voices response so we can repopulate styles/avatar on demand.
@@ -66,11 +77,26 @@
         avatarStream: null,
     };
 
-    function setStatus(text, cls) {
-        els.status.textContent = text;
-        els.status.className = 'vl-status' + (cls ? ' ' + cls : '');
+    function setStatus(text, kind) {
+        // Mirror state on stage status pill + header pill.
+        if (els.status) {
+            els.status.classList.remove('is-listening', 'is-speaking', 'is-thinking', 'is-error');
+            if (kind === 'connected') els.status.classList.add('is-listening');
+            else if (kind === 'error') els.status.classList.add('is-error');
+            if (els.statusText) els.statusText.textContent = text || '';
+        }
+        if (els.headerPill) {
+            els.headerPill.classList.remove('connected', 'error');
+            if (kind === 'connected') els.headerPill.classList.add('connected');
+            else if (kind === 'error') els.headerPill.classList.add('error');
+            if (els.headerPillText) els.headerPillText.textContent = text || 'Desconectado';
+        }
+        if (els.stage) {
+            els.stage.classList.toggle('is-connected', kind === 'connected');
+        }
     }
     function logEvent(text, kind) {
+        if (!els.events) return;
         const div = document.createElement('div');
         div.className = 'ev-' + (kind || 'info');
         const ts = new Date().toLocaleTimeString();
@@ -79,20 +105,63 @@
         els.events.scrollTop = els.events.scrollHeight;
     }
     function appendTranscript(role, textChunk, isFinal) {
-        // Reuse the same line for streaming deltas
+        // Remove empty-state placeholder if present.
+        const empty = els.transcript.querySelector('.vu-empty');
+        if (empty) empty.remove();
+        // Reuse the same bubble for streaming deltas.
         const key = role === 'assistant' ? 'currentAssistantLine' : 'currentUserLine';
         if (!state[key]) {
-            const line = document.createElement('div');
-            line.style.padding = '4px 0';
-            line.style.borderTop = '1px solid #21262d';
-            line.style.color = role === 'assistant' ? '#58a6ff' : '#e6edf3';
-            line.innerHTML = `<strong>${role === 'assistant' ? '🤖' : '🧑'}</strong> <span class="vl-content"></span>`;
-            els.transcript.appendChild(line);
-            state[key] = line.querySelector('.vl-content');
+            const bubble = document.createElement('div');
+            bubble.className = 'vu-msg ' + role;
+            const roleLabel = role === 'assistant' ? '🤖 Asistente' : '🧑 Tú';
+            bubble.innerHTML = '<div class="vu-role"></div><div class="vu-text"></div>';
+            bubble.querySelector('.vu-role').textContent = roleLabel;
+            els.transcript.appendChild(bubble);
+            state[key] = bubble.querySelector('.vu-text');
+        }
+        // Si la burbuja venía con un placeholder (ej. "transcribiendo…"), límpialo
+        // antes de empezar a concatenar el transcript real.
+        if (state[key].querySelector('.vu-typing')) {
+            state[key].innerHTML = '';
         }
         state[key].textContent += textChunk;
         els.transcript.scrollTop = els.transcript.scrollHeight;
         if (isFinal) state[key] = null;
+    }
+
+    // Reemplaza el contenido de la burbuja actual con el transcript final (útil cuando
+    // el servidor sólo manda "completed"/"done" sin haber mandado deltas previas).
+    function setFinalTranscript(role, fullText) {
+        const empty = els.transcript.querySelector('.vu-empty');
+        if (empty) empty.remove();
+        const key = role === 'assistant' ? 'currentAssistantLine' : 'currentUserLine';
+        if (state[key]) {
+            state[key].textContent = fullText;
+            state[key] = null;
+        } else {
+            const bubble = document.createElement('div');
+            bubble.className = 'vu-msg ' + role;
+            const roleLabel = role === 'assistant' ? '🤖 Asistente' : '🧑 Tú';
+            bubble.innerHTML = '<div class="vu-role"></div><div class="vu-text"></div>';
+            bubble.querySelector('.vu-role').textContent = roleLabel;
+            bubble.querySelector('.vu-text').textContent = fullText;
+            els.transcript.appendChild(bubble);
+        }
+        els.transcript.scrollTop = els.transcript.scrollHeight;
+    }
+
+    // Reserva la burbuja del usuario en el orden cronológico correcto, ANTES de que
+    // el asistente empiece a responder. Se llena cuando llegue la transcripción de Whisper.
+    function ensureUserBubble() {
+        if (state.currentUserLine) return; // ya existe
+        const empty = els.transcript.querySelector('.vu-empty');
+        if (empty) empty.remove();
+        const bubble = document.createElement('div');
+        bubble.className = 'vu-msg user';
+        bubble.innerHTML = '<div class="vu-role">🧑 Tú</div><div class="vu-text"><span class="vu-typing">transcribiendo…</span></div>';
+        els.transcript.appendChild(bubble);
+        state.currentUserLine = bubble.querySelector('.vu-text');
+        els.transcript.scrollTop = els.transcript.scrollHeight;
     }
 
     async function loadConfig() {
@@ -166,18 +235,61 @@
         if (!catalog.avatar) return;
         const charSel = els.avatarCharacter;
         charSel.innerHTML = '';
-        (catalog.avatar.characters || []).forEach(c => {
-            const opt = document.createElement('option');
-            opt.value = c.id;
-            opt.textContent = `${genderIcon(c.gender)} ${c.label}`;
-            opt.dataset.styles = JSON.stringify(c.styles || []);
-            charSel.appendChild(opt);
-        });
+
+        const characters = catalog.avatar.characters || [];
+        const fullbody = characters.filter(c => c.type !== 'photo');
+        const photos = characters.filter(c => c.type === 'photo');
+
+        if (fullbody.length) {
+            const og = document.createElement('optgroup');
+            og.label = '👥 Full body (3D)';
+            fullbody.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = `${genderIcon(c.gender)} ${c.label}`;
+                opt.dataset.styles = JSON.stringify(c.styles || []);
+                opt.dataset.photo = 'false';
+                og.appendChild(opt);
+            });
+            charSel.appendChild(og);
+        }
+        if (photos.length) {
+            const og = document.createElement('optgroup');
+            og.label = '🎭 Talking Heads (Preview · solo Live Avatar)';
+            photos.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = `${genderIcon(c.gender)} ${c.label}`;
+                opt.dataset.styles = JSON.stringify(c.styles || []);
+                opt.dataset.photo = 'true';
+                og.appendChild(opt);
+            });
+            charSel.appendChild(og);
+        }
+
         if (catalog.avatar.defaultCharacter) {
             const match = Array.from(charSel.options).find(o => o.value === catalog.avatar.defaultCharacter);
             if (match) match.selected = true;
         }
         populateAvatarStyles();
+        syncPhotoAvatarWarning();
+    }
+
+    function isSelectedAvatarPhoto() {
+        const sel = els.avatarCharacter;
+        if (!sel) return false;
+        const opt = sel.options[sel.selectedIndex];
+        return !!(opt && opt.dataset.photo === 'true');
+    }
+
+    function syncPhotoAvatarWarning() {
+        const styleField = document.getElementById('vu-avatar-style-field');
+        const isPhoto = isSelectedAvatarPhoto();
+        if (styleField) styleField.style.display = isPhoto ? 'none' : '';
+        // Surface a one-time hint in the event log when the user picks a Talking Head here.
+        if (isPhoto && els.avatarEnabled && els.avatarEnabled.checked) {
+            logEvent('Talking Heads (foto avatar) aún no soportado por Voice Live SDK 1.0 — usa la página "Live Avatar" para previsualizarlos.', 'warn');
+        }
     }
 
     function populateAvatarStyles() {
@@ -213,12 +325,19 @@
             params.set('avatar', '1');
             if (els.avatarCharacter.value) params.set('avatarCharacter', els.avatarCharacter.value);
             if (els.avatarStyle.value) params.set('avatarStyle', els.avatarStyle.value);
+            if (isSelectedAvatarPhoto()) params.set('avatarPhoto', '1');
         }
         const qs = params.toString();
         return `${scheme}://${location.host}/api/VoiceLive/ws${qs ? '?' + qs : ''}`;
     }
 
     async function connect() {
+        // Note: Talking Heads (photo avatars) aren't officially supported by
+        // Azure.AI.VoiceLive 1.0, but we let the user try anyway — the server
+        // will surface whatever response Voice Live gives us.
+        if (els.avatarEnabled && els.avatarEnabled.checked && isSelectedAvatarPhoto()) {
+            logEvent('Probando Talking Head en Voice Live (preview, no oficial). Si falla, el servicio devolverá un error.', 'warn');
+        }
         try {
             state.ws = new WebSocket(buildWsUrl());
             state.ws.binaryType = 'arraybuffer';
@@ -267,15 +386,12 @@
             try { msg = JSON.parse(ev.data); } catch { return; }
             switch (msg.type) {
                 case 'ready':
-                    setStatus('Conectado a VoiceLive', 'connected');
+                    setStatus('Conectado', 'connected');
                     logEvent(`Listo · modelo=${msg.model} voz=${msg.voice}` + (msg.style ? ` estilo=${msg.style}` : ''), 'info');
                     if (msg.avatar && msg.avatar.enabled) {
-                        els.avatarStage.classList.add('active');
-                        els.avatarName.textContent = `Avatar: ${msg.avatar.character || '?'}`;
-                        els.avatarDetails.textContent = `Estilo: ${msg.avatar.style || '-'} · iniciando WebRTC…`;
-                        setAvatarStatus('iniciando oferta SDP');
+                        if (els.stage) els.stage.classList.add('is-connected');
+                        if (els.caption) els.caption.textContent = `Avatar ${msg.avatar.character || ''} · ${msg.avatar.style || ''}`;
                         logEvent(`🎭 Avatar activo: ${msg.avatar.character} (${msg.avatar.style})`, 'info');
-                        // Client initiates the WebRTC offer — Voice Live spec requires session.avatar.connect from client first.
                         await initiateAvatarWebRtc();
                     } else {
                         teardownAvatar();
@@ -293,6 +409,10 @@
                     break;
                 case 'speech_started':
                     logEvent('🎤 Usuario hablando', 'speech');
+                    // Crea ya la burbuja del usuario (vacía) para asegurar orden cronológico:
+                    // Whisper devuelve la transcripción ~1-2s después, pero el asistente
+                    // ya empezó a responder y crearía su burbuja primero.
+                    ensureUserBubble();
                     // Barge-in on the client: stop pending playback
                     flushPlayback();
                     els.stop.disabled = false;
@@ -315,8 +435,16 @@
                 case 'transcript_delta':
                     appendTranscript('assistant', msg.text || '', false);
                     break;
-                case 'user_transcript':
+                case 'transcript_done':
+                    if (msg.text) setFinalTranscript('assistant', msg.text);
+                    else if (state.currentAssistantLine) state.currentAssistantLine = null;
+                    break;
+                case 'user_transcript_delta':
                     appendTranscript('user', msg.text || '', false);
+                    break;
+                case 'user_transcript':
+                    // Whisper suele entregar el transcript completo en "completed" sin deltas previas.
+                    setFinalTranscript('user', msg.text || '');
                     break;
                 case 'error':
                     logEvent('❌ ' + msg.message, 'error');
@@ -344,13 +472,13 @@
     }
 
     function setAvatarStatus(text) {
-        if (els.avatarStatus) els.avatarStatus.textContent = 'WebRTC: ' + text;
+        // Surface WebRTC state in the caption bar (less noisy than a dedicated badge).
+        if (els.caption) els.caption.textContent = 'WebRTC: ' + text;
     }
 
     async function initiateAvatarWebRtc() {
         try {
             setAvatarStatus('preparando offer…');
-            els.avatarDetails.textContent = 'Preparando WebRTC…';
 
             // Tear down any previous peer connection.
             if (state.avatarPc) {
@@ -370,41 +498,20 @@
             });
             state.avatarPc = pc;
 
-            // Voice Live avatar uses sendrecv transceivers (per the official sample).
             pc.addTransceiver('video', { direction: 'sendrecv' });
             pc.addTransceiver('audio', { direction: 'sendrecv' });
 
-            // Each track gets its own element (video + audio separately).
-            // Voice Live sends them as separate streams; appending to a shared
-            // MediaStream sometimes prevents autoplay from working.
-            const stage = els.avatarStage;
-            // Remove any prior media elements we created (but keep the info block).
-            stage.querySelectorAll('.vl-avatar-media').forEach(el => el.remove());
-
             pc.ontrack = (event) => {
                 logEvent(`📺 Avatar track recibido: ${event.track.kind}`, 'info');
-                const media = document.createElement(event.track.kind === 'video' ? 'video' : 'audio');
-                media.className = 'vl-avatar-media';
-                media.srcObject = event.streams[0];
-                media.autoplay = false;
-                media.playsInline = true;
-                media.addEventListener('loadeddata', () => {
-                    media.play().catch(err => logEvent('⚠️ play() rechazado: ' + err.message, 'error'));
-                });
-                if (event.track.kind === 'video') {
-                    media.style.width = '360px';
-                    media.style.height = '360px';
-                    media.style.borderRadius = '12px';
-                    media.style.background = '#000';
-                    media.style.objectFit = 'cover';
-                    media.style.flexShrink = '0';
-                    media.style.boxShadow = '0 4px 16px rgba(0,0,0,0.5)';
-                    // Hide the placeholder <video id="vlAvatarVideo"> if present.
-                    if (els.avatarVideo) els.avatarVideo.style.display = 'none';
-                    stage.insertBefore(media, stage.firstChild);
-                } else {
-                    media.style.display = 'none';
-                    stage.appendChild(media);
+                if (event.track.kind === 'video' && els.avatarVideo) {
+                    els.avatarVideo.srcObject = event.streams[0];
+                    els.avatarVideo.hidden = false;
+                    els.avatarVideo.muted = false;
+                    els.avatarVideo.play().catch(err => logEvent('⚠️ video.play() rechazado: ' + err.message, 'error'));
+                    if (els.placeholder) els.placeholder.style.display = 'none';
+                } else if (event.track.kind === 'audio' && els.avatarAudio) {
+                    els.avatarAudio.srcObject = event.streams[0];
+                    els.avatarAudio.play().catch(err => logEvent('⚠️ audio.play() rechazado: ' + err.message, 'error'));
                 }
             };
 
@@ -412,18 +519,12 @@
                 setAvatarStatus(pc.iceConnectionState);
                 logEvent('ICE: ' + pc.iceConnectionState, 'info');
                 if (pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') {
-                    els.avatarDetails.textContent = 'Video conectado · lipsync en vivo';
-                }
-                if (pc.iceConnectionState === 'failed') {
-                    els.avatarDetails.textContent = 'WebRTC falló — revisa firewall/red';
+                    if (els.caption) els.caption.textContent = 'Avatar conectado · lipsync en vivo';
                 }
             };
             pc.onconnectionstatechange = () => logEvent('PC: ' + pc.connectionState, 'info');
-
-            // Data channel for WebRTC-side avatar events (mirrors the official sample).
             pc.createDataChannel('eventChannel');
 
-            // Build our OFFER and wait for ICE gathering.
             const offer = await pc.createOffer();
             await pc.setLocalDescription(offer);
             await new Promise(resolve => {
@@ -438,10 +539,9 @@
                 setTimeout(resolve, 3000);
             });
 
-            // Voice Live REQUIRES base64-encoded JSON of the full RTCSessionDescription.
             const localDesc = pc.localDescription;
             const clientSdpBase64 = btoa(JSON.stringify({ type: localDesc.type, sdp: localDesc.sdp }));
-            logEvent(`🎭 Offer SDP listo (audio=${/m=audio/.test(localDesc.sdp)}, video=${/m=video/.test(localDesc.sdp)}, ${localDesc.sdp.length} chars, base64=${clientSdpBase64.length} chars) — enviando…`, 'info');
+            logEvent(`🎭 Offer SDP listo (${clientSdpBase64.length} chars base64) — enviando…`, 'info');
 
             if (state.ws && state.ws.readyState === 1) {
                 state.ws.send(JSON.stringify({ type: 'avatar_offer', sdp: clientSdpBase64 }));
@@ -483,17 +583,19 @@
     function handleAvatarFrame(_msg) {
         // Visemes/blendshapes arrive only when there is no avatar video stream
         // (otherwise the video already shows the lipsync). Kept as a fallback
-        // activity indicator on the bar.
-        els.visemeBar.style.width = '70%';
+        // activity indicator on the audio meter bar.
+        if (!els.meter) return;
+        els.meter.style.width = '70%';
         clearTimeout(handleAvatarFrame._t);
-        handleAvatarFrame._t = setTimeout(() => { els.visemeBar.style.width = '0%'; }, 220);
+        handleAvatarFrame._t = setTimeout(() => { els.meter.style.width = '0%'; }, 220);
     }
 
     function teardownAvatar() {
         if (state.avatarPc) { try { state.avatarPc.close(); } catch {} state.avatarPc = null; }
         if (state.avatarStream) { state.avatarStream.getTracks().forEach(t => { try { t.stop(); } catch {} }); state.avatarStream = null; }
-        if (els.avatarVideo) els.avatarVideo.srcObject = null;
-        els.avatarStage.classList.remove('active');
+        if (els.avatarVideo) { els.avatarVideo.srcObject = null; els.avatarVideo.hidden = true; }
+        if (els.avatarAudio) { els.avatarAudio.srcObject = null; }
+        if (els.placeholder) els.placeholder.style.display = '';
         setAvatarStatus('desconectado');
     }
 
@@ -638,6 +740,7 @@ registerProcessor('vl-pcm16-encoder', VlPcm16Encoder);
 
     // Update avatar style choices when character changes.
     els.avatarCharacter.addEventListener('change', populateAvatarStyles);
+    els.avatarCharacter.addEventListener('change', syncPhotoAvatarWarning);
 
     function sendText() {
         const t = els.textInput.value.trim();

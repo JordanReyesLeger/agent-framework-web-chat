@@ -42,8 +42,8 @@ public class VoiceLiveController : ControllerBase
     {
         model = _config["VoiceLive:Model"] ?? "gpt-4o-mini-realtime-preview",
         voice = _config["VoiceLive:Voice"] ?? _config["AzureSpeech:SynthesisVoiceName"] ?? "es-MX-DaliaNeural",
-        instructions = _config["VoiceLive:Instructions"]
-            ?? "Eres un asistente de IA útil. Responde de forma natural y conversacional en español.",
+        // Prompt compartido por Voice Live y Live Avatar (Prompts/voice-system-prompt.txt).
+        instructions = VoicePrompt.Load(),
         sampleRate = 24000
     });
 
@@ -117,18 +117,58 @@ public class VoiceLiveController : ControllerBase
             }
         },
         // Avatar characters (Azure Live Avatar) supported by Voice Live.
+        // Full-body 3D avatars work end-to-end via Azure.AI.VoiceLive SDK.
+        // Talking Heads (photo avatars, vasa-1) are shown for UI parity with the
+        // Live Avatar page, but they are NOT supported by the Voice Live SDK 1.0
+        // (no PhotoAvatarBaseModel property). The client blocks Connect when a
+        // photo avatar is selected and asks the user to switch to Live Avatar.
         avatar = new
         {
             defaultCharacter = _config["AzureSpeech:AvatarCharacter"] ?? "lisa",
             defaultStyle = _config["AzureSpeech:AvatarStyle"] ?? "casual-sitting",
-            characters = new[]
+            characters = new object[]
             {
-                new { id = "lisa",  label = "Lisa",  gender = "female", styles = new[] { "casual-sitting", "graceful-sitting", "graceful-standing", "technical-sitting", "technical-standing" } },
-                new { id = "meg",   label = "Meg",   gender = "female", styles = new[] { "formal", "casual", "business" } },
-                new { id = "lori",  label = "Lori",  gender = "female", styles = new[] { "casual", "formal" } },
-                new { id = "max",   label = "Max",   gender = "male",   styles = new[] { "formal", "casual", "business" } },
-                new { id = "harry", label = "Harry", gender = "male",   styles = new[] { "business", "casual", "youthful" } },
-                new { id = "jeff",  label = "Jeff",  gender = "male",   styles = new[] { "business", "formal" } }
+                new { id = "lisa",   label = "Lisa",   gender = "female", type = "fullbody", styles = new[] { "casual-sitting", "graceful-sitting", "graceful-standing", "technical-sitting", "technical-standing" } },
+                new { id = "meg",    label = "Meg",    gender = "female", type = "fullbody", styles = new[] { "formal", "casual", "business" } },
+                new { id = "lori",   label = "Lori",   gender = "female", type = "fullbody", styles = new[] { "casual", "formal", "graceful" } },
+                new { id = "max",    label = "Max",    gender = "male",   type = "fullbody", styles = new[] { "formal", "casual", "business" } },
+                new { id = "harry",  label = "Harry",  gender = "male",   type = "fullbody", styles = new[] { "business", "casual", "youthful" } },
+                new { id = "jeff",   label = "Jeff (retiro Dic 2026)", gender = "male", type = "fullbody", styles = new[] { "business", "formal" } },
+                new { id = "rowan",  label = "Rowan",  gender = "male",   type = "fullbody", styles = Array.Empty<string>() },
+                new { id = "celine", label = "Celine", gender = "female", type = "fullbody", styles = Array.Empty<string>() },
+                new { id = "nia",    label = "Nia",    gender = "female", type = "fullbody", styles = Array.Empty<string>() },
+                new { id = "malik",  label = "Malik",  gender = "male",   type = "fullbody", styles = Array.Empty<string>() },
+                // Talking Heads (photo avatars, preview) — shown for parity, not supported by Voice Live SDK 1.0.
+                new { id = "adrian",    label = "Adrian (Preview)",    gender = "male",   type = "photo", styles = Array.Empty<string>() },
+                new { id = "amara",     label = "Amara (Preview)",     gender = "female", type = "photo", styles = Array.Empty<string>() },
+                new { id = "amira",     label = "Amira (Preview)",     gender = "female", type = "photo", styles = Array.Empty<string>() },
+                new { id = "anika",     label = "Anika (Preview)",     gender = "female", type = "photo", styles = Array.Empty<string>() },
+                new { id = "bianca",    label = "Bianca (Preview)",    gender = "female", type = "photo", styles = Array.Empty<string>() },
+                new { id = "camila",    label = "Camila (Preview)",    gender = "female", type = "photo", styles = Array.Empty<string>() },
+                new { id = "carlos",    label = "Carlos (Preview)",    gender = "male",   type = "photo", styles = Array.Empty<string>() },
+                new { id = "clara",     label = "Clara (Preview)",     gender = "female", type = "photo", styles = Array.Empty<string>() },
+                new { id = "darius",    label = "Darius (Preview)",    gender = "male",   type = "photo", styles = Array.Empty<string>() },
+                new { id = "diego",     label = "Diego (Preview)",     gender = "male",   type = "photo", styles = Array.Empty<string>() },
+                new { id = "elise",     label = "Elise (Preview)",     gender = "female", type = "photo", styles = Array.Empty<string>() },
+                new { id = "farhan",    label = "Farhan (Preview)",    gender = "male",   type = "photo", styles = Array.Empty<string>() },
+                new { id = "faris",     label = "Faris (Preview)",     gender = "male",   type = "photo", styles = Array.Empty<string>() },
+                new { id = "gabrielle", label = "Gabrielle (Preview)", gender = "female", type = "photo", styles = Array.Empty<string>() },
+                new { id = "hyejin",    label = "Hyejin (Preview)",    gender = "female", type = "photo", styles = Array.Empty<string>() },
+                new { id = "imran",     label = "Imran (Preview)",     gender = "male",   type = "photo", styles = Array.Empty<string>() },
+                new { id = "isabella",  label = "Isabella (Preview)",  gender = "female", type = "photo", styles = Array.Empty<string>() },
+                new { id = "layla",     label = "Layla (Preview)",     gender = "female", type = "photo", styles = Array.Empty<string>() },
+                new { id = "liwei",     label = "Liwei (Preview)",     gender = "male",   type = "photo", styles = Array.Empty<string>() },
+                new { id = "ling",      label = "Ling (Preview)",      gender = "female", type = "photo", styles = Array.Empty<string>() },
+                new { id = "marcus",    label = "Marcus (Preview)",    gender = "male",   type = "photo", styles = Array.Empty<string>() },
+                new { id = "matteo",    label = "Matteo (Preview)",    gender = "male",   type = "photo", styles = Array.Empty<string>() },
+                new { id = "rahul",     label = "Rahul (Preview)",     gender = "male",   type = "photo", styles = Array.Empty<string>() },
+                new { id = "rana",      label = "Rana (Preview)",      gender = "female", type = "photo", styles = Array.Empty<string>() },
+                new { id = "ren",       label = "Ren (Preview)",       gender = "male",   type = "photo", styles = Array.Empty<string>() },
+                new { id = "riya",      label = "Riya (Preview)",      gender = "female", type = "photo", styles = Array.Empty<string>() },
+                new { id = "sakura",    label = "Sakura (Preview)",    gender = "female", type = "photo", styles = Array.Empty<string>() },
+                new { id = "simone",    label = "Simone (Preview)",    gender = "female", type = "photo", styles = Array.Empty<string>() },
+                new { id = "zayd",      label = "Zayd (Preview)",      gender = "male",   type = "photo", styles = Array.Empty<string>() },
+                new { id = "zoe",       label = "Zoe (Preview)",       gender = "female", type = "photo", styles = Array.Empty<string>() }
             }
         }
     });
@@ -191,8 +231,8 @@ public class VoiceLiveController : ControllerBase
 
             var model = _config["VoiceLive:Model"] ?? "gpt-4o-mini-realtime-preview";
             var defaultVoice = _config["VoiceLive:Voice"] ?? _config["AzureSpeech:SynthesisVoiceName"] ?? "es-MX-DaliaNeural";
-            var defaultInstructions = _config["VoiceLive:Instructions"]
-                ?? "Eres un asistente de IA útil. Responde de forma natural y conversacional en español.";
+            // Lee Prompts/voice-system-prompt.txt en cada conexión — sin reiniciar el server.
+            var defaultInstructions = VoicePrompt.Load();
 
             // Allow per-session overrides via query string
             // ?voice=...&voiceType=openai|azure&style=...&instructions=...
@@ -212,6 +252,8 @@ public class VoiceLiveController : ControllerBase
                 ?? _config["AzureSpeech:AvatarCharacter"] ?? "lisa";
             var avatarStyle = Request.Query["avatarStyle"].FirstOrDefault()
                 ?? _config["AzureSpeech:AvatarStyle"] ?? "casual-sitting";
+            var avatarPhoto = Request.Query["avatarPhoto"].FirstOrDefault() is string ap
+                && (ap == "1" || string.Equals(ap, "true", StringComparison.OrdinalIgnoreCase));
 
             _logger.LogInformation(
                 "VoiceLive: starting session model={Model} voice={Voice} type={Type} style={Style} avatar={Avatar}",
@@ -254,6 +296,8 @@ public class VoiceLiveController : ControllerBase
                 InputAudioFormat = InputAudioFormat.Pcm16,
                 OutputAudioFormat = OutputAudioFormat.Pcm16,
                 InputAudioEchoCancellation = new AudioEchoCancellation(),
+                // Activa transcripción del audio del usuario para que la UI muestre lo que dijo.
+                InputAudioTranscription = new AudioInputTranscriptionOptions(AudioInputTranscriptionOptionsModel.Whisper1),
                 TurnDetection = new AzureSemanticVadTurnDetection
                 {
                     Threshold = 0.5f,
@@ -274,10 +318,23 @@ public class VoiceLiveController : ControllerBase
                 try
                 {
                     // AvatarConfiguration(character, bypassAvatarTalkingOptimization)
-                    sessionOptions.Avatar = new AvatarConfiguration(avatarCharacter, false)
+                    var avatarCfg = new AvatarConfiguration(avatarCharacter, false);
+
+                    if (avatarPhoto)
                     {
-                        Style = avatarStyle
-                    };
+                        // Photo avatar (Talking Heads, vasa-1) — official support in Azure.AI.VoiceLive 1.1.0-beta.3.
+                        // Photo avatars do NOT accept a style — passing one yields avatar_verification_failed.
+                        // https://learn.microsoft.com/dotnet/api/azure.ai.voicelive.avatarconfiguration.model?view=azure-dotnet
+                        avatarCfg.Type = AvatarConfigTypes.PhotoAvatar;
+                        avatarCfg.Model = PhotoAvatarBaseModes.Vasa1;
+                        _logger.LogInformation("VoiceLive: configured photo avatar (vasa-1) for character={Character} (no style)", avatarCharacter);
+                    }
+                    else
+                    {
+                        avatarCfg.Style = avatarStyle;
+                    }
+
+                    sessionOptions.Avatar = avatarCfg;
                     sessionOptions.Animation = new AnimationOptions();
                 }
                 catch (Exception ex)
@@ -401,9 +458,51 @@ public class VoiceLiveController : ControllerBase
                                 break;
 
                             case SessionUpdateError err:
-                                await SendJsonAsync(socket, new { type = "error", message = err.Error?.Message ?? "unknown" }, pumpCt);
-                                responseActive = false;
+                                {
+                                    var emsg = err.Error?.Message ?? "unknown";
+                                    var ecode = err.Error?.Code ?? "-";
+                                    var etype = err.Error?.Type ?? "-";
+                                    var eparam = err.Error?.Param ?? "-";
+                                    _logger.LogError("VoiceLive server error: code={Code} type={Type} param={Param} message={Message}", ecode, etype, eparam, emsg);
+                                    await SendJsonAsync(socket, new { type = "error", code = ecode, errorType = etype, param = eparam, message = emsg }, pumpCt);
+                                    responseActive = false;
+                                    break;
+                                }
+
+                            // Transcripción del audio del USUARIO (lo que el micrófono captura).
+                            case SessionUpdateConversationItemInputAudioTranscriptionDelta userDelta:
+                                {
+                                    var text = userDelta.Delta;
+                                    if (!string.IsNullOrEmpty(text))
+                                        await SendJsonAsync(socket, new { type = "user_transcript_delta", text }, pumpCt);
+                                    break;
+                                }
+                            case SessionUpdateConversationItemInputAudioTranscriptionCompleted userDone:
+                                {
+                                    var text = userDone.Transcript;
+                                    if (!string.IsNullOrEmpty(text))
+                                        await SendJsonAsync(socket, new { type = "user_transcript", text }, pumpCt);
+                                    break;
+                                }
+                            case SessionUpdateConversationItemInputAudioTranscriptionFailed userFailed:
+                                _logger.LogWarning("VoiceLive: user transcription failed: {Msg}", userFailed.Error?.Message);
                                 break;
+
+                            // Transcripción del audio del ASISTENTE (lo que la IA está diciendo).
+                            case SessionUpdateResponseAudioTranscriptDelta asstDelta:
+                                {
+                                    var text = asstDelta.Delta;
+                                    if (!string.IsNullOrEmpty(text))
+                                        await SendJsonAsync(socket, new { type = "transcript_delta", text }, pumpCt);
+                                    break;
+                                }
+                            case SessionUpdateResponseAudioTranscriptDone asstDone:
+                                {
+                                    var text = asstDone.Transcript;
+                                    if (!string.IsNullOrEmpty(text))
+                                        await SendJsonAsync(socket, new { type = "transcript_done", text }, pumpCt);
+                                    break;
+                                }
 
                             default:
                                 // Try to extract transcript deltas / animation events via reflection for forward-compat

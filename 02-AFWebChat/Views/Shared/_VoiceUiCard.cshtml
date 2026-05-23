@@ -1,0 +1,242 @@
+@*
+    Shared Voice UI card — same layout/IDs for Live Avatar and Voice Live.
+    Pass model via @{ ViewData["VuMode"] = "live-avatar" or "voice-live"; }
+    The host page is responsible for including the right JS file.
+*@
+@{
+    var mode = (string?)ViewData["VuMode"] ?? "voice-live";
+    var modeBadge = mode == "live-avatar" ? "Azure Speech Avatar · WebRTC" : "Azure Voice Live · WebRTC";
+    var modeTitle = mode == "live-avatar" ? "Azure Speech Avatar (Cascaded)" : "Azure Voice Live";
+    var modeSubtitle = mode == "live-avatar"
+        ? "Arquitectura cascaded: Speech STT → Azure OpenAI → Speech Avatar TTS (tres servicios encadenados)."
+        : "Pipeline unificado speech-to-speech con audio nativo, barge-in y avatar opcional.";
+    var hasEvents = mode == "voice-live";
+    var hasCatalog = mode == "voice-live";
+    var hasAvatarToggle = mode == "voice-live";
+}
+
+<link rel="stylesheet" href="~/css/voice-ui.css" asp-append-version="true" />
+
+<div class="vu-shell">
+    <div class="vu-header">
+        <div class="vu-header-titles">
+            <h1>
+                <i class="bi @(mode == "live-avatar" ? "bi-person-video3" : "bi-broadcast")"></i>
+                @modeTitle
+                <span class="vu-badge">@modeBadge</span>
+            </h1>
+            <p>@modeSubtitle</p>
+        </div>
+        <span id="vu-header-pill" class="vu-header-pill">
+            <i class="bi bi-circle"></i>
+            <span id="vu-header-pill-text">Desconectado</span>
+        </span>
+    </div>
+
+    <div class="vu-grid">
+        <!-- ============== AVATAR STAGE ============== -->
+        <section class="vu-stage" id="vu-stage">
+            <div class="vu-stage-placeholder" id="vu-placeholder">
+                <i class="bi @(mode == "live-avatar" ? "bi-person-video3" : "bi-broadcast-pin")"></i>
+                <h3>@(mode == "live-avatar" ? "Avatar listo para conectar" : "Voice Live listo para iniciar")</h3>
+                <p>Configura las opciones del panel y pulsa <strong>Conectar</strong> para arrancar la sesión.</p>
+            </div>
+            <video id="vu-video" autoplay playsinline muted hidden></video>
+            <audio id="vu-audio" autoplay></audio>
+            <div class="vu-stage-overlay">
+                <div class="vu-status" id="vu-status">
+                    <span class="vu-status-dot"></span>
+                    <span class="vu-status-text" id="vu-status-text">Desconectado</span>
+                </div>
+                <div class="vu-caption" id="vu-caption"></div>
+                <div class="vu-meter"><div id="vu-meter-fill"></div></div>
+            </div>
+        </section>
+
+        <!-- ============== SIDE PANEL ============== -->
+        <aside class="vu-panel">
+            <div class="vu-panel-header">
+                <h2><i class="bi bi-sliders"></i> @modeTitle</h2>
+                <p>@(mode == "live-avatar" ? "WebRTC + Speech SDK directo en el navegador." : "Sesión unificada vía WebSocket bridge.")</p>
+            </div>
+
+            <div class="vu-controls">
+                <button class="vu-btn vu-btn-primary vu-btn-wide" id="vu-btn-connect"><i class="bi bi-broadcast"></i> Conectar</button>
+                <button class="vu-btn" id="vu-btn-disconnect" disabled><i class="bi bi-x-circle"></i> Desconectar</button>
+                <button class="vu-btn vu-btn-success" id="vu-btn-mic" disabled><i class="bi bi-mic"></i> Micrófono</button>
+                <button class="vu-btn vu-btn-danger vu-btn-wide" id="vu-btn-stop" disabled><i class="bi bi-stop-circle"></i> Interrumpir</button>
+            </div>
+
+            <div class="vu-config">
+                <div class="vu-field">
+                    <label for="vu-system-prompt">Prompt del sistema</label>
+                    <textarea id="vu-system-prompt" rows="3" placeholder="Eres un asistente útil..."></textarea>
+                </div>
+
+                @if (hasCatalog)
+                {
+                    <div class="vu-field-grid">
+                        <div class="vu-field">
+                            <label for="vu-voice">Voz</label>
+                            <select id="vu-voice"></select>
+                        </div>
+                        <div class="vu-field">
+                            <label for="vu-model">Modelo</label>
+                            <input id="vu-model" type="text" disabled />
+                        </div>
+                    </div>
+                    <div class="vu-field" id="vu-style-row" style="display:none;">
+                        <label for="vu-style">Estilo de voz</label>
+                        <select id="vu-style"></select>
+                    </div>
+                }
+                else
+                {
+                    <div class="vu-field">
+                        <label for="vu-voice">Voz (Azure TTS)</label>
+                        <select id="vu-voice">
+                            <optgroup label="🎤 Español">
+                                <option value="es-MX-DaliaNeural">👩 Dalia (México)</option>
+                                <option value="es-MX-JorgeNeural">👨 Jorge (México)</option>
+                                <option value="es-ES-ElviraNeural">👩 Elvira (España)</option>
+                                <option value="es-ES-AlvaroNeural">👨 Álvaro (España)</option>
+                                <option value="es-AR-ElenaNeural">👩 Elena (Argentina)</option>
+                                <option value="es-CO-SalomeNeural">👩 Salomé (Colombia)</option>
+                            </optgroup>
+                            <optgroup label="🎛️ Azure HD (Dragon HD Latest)">
+                                <option value="en-US-Andrew3:DragonHDLatestNeural">👨 Andrew 3 (HD)</option>
+                                <option value="en-US-Andrew:DragonHDLatestNeural">👨 Andrew (HD)</option>
+                                <option value="en-US-Ava3:DragonHDLatestNeural">👩 Ava 3 (HD)</option>
+                                <option value="en-US-Aria:DragonHDLatestNeural">👩 Aria (HD)</option>
+                                <option value="en-US-Brian:DragonHDLatestNeural">👨 Brian (HD)</option>
+                                <option value="en-US-Emma:DragonHDLatestNeural">👩 Emma (HD)</option>
+                                <option value="en-US-Jenny:DragonHDLatestNeural">👩 Jenny (HD)</option>
+                                <option value="en-US-Steffan:DragonHDLatestNeural">👨 Steffan (HD)</option>
+                            </optgroup>
+                            <optgroup label="🌐 Multilingüe">
+                                <option value="en-US-AvaMultilingualNeural">👩 Ava Multilingüe</option>
+                                <option value="en-US-AndrewMultilingualNeural">👨 Andrew Multilingüe</option>
+                                <option value="en-US-EmmaMultilingualNeural">👩 Emma Multilingüe</option>
+                                <option value="en-US-BrianMultilingualNeural">👨 Brian Multilingüe</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                }
+
+                @if (hasAvatarToggle)
+                {
+                    <label class="vu-field-toggle">
+                        <input type="checkbox" id="vu-avatar-enable" />
+                        <span>🎭 Habilitar Avatar (video en tiempo real)</span>
+                    </label>
+                }
+
+                <div class="vu-field-grid" id="vu-avatar-fields" @(hasAvatarToggle ? "style=display:none;" : "")>
+                    <div class="vu-field">
+                        <label for="vu-avatar-character">Personaje</label>
+                        <select id="vu-avatar-character">
+                            <optgroup label="👥 Full body (3D)">
+                                <option value="lisa" data-photo="false">Lisa</option>
+                                <option value="meg" data-photo="false">Meg</option>
+                                <option value="lori" data-photo="false">Lori</option>
+                                <option value="max" data-photo="false">Max</option>
+                                <option value="harry" data-photo="false">Harry</option>
+                                <option value="jeff" data-photo="false">Jeff (retiro Dic 2026)</option>
+                                <option value="rowan" data-photo="false">Rowan</option>
+                                <option value="celine" data-photo="false">Celine</option>
+                                <option value="nia" data-photo="false">Nia</option>
+                                <option value="malik" data-photo="false">Malik</option>
+                            </optgroup>
+                            <optgroup label="🎭 Talking Heads (Preview · foto avatar)">
+                                <option value="adrian" data-photo="true">Adrian (Preview)</option>
+                                <option value="amara" data-photo="true">Amara (Preview)</option>
+                                <option value="amira" data-photo="true">Amira (Preview)</option>
+                                <option value="anika" data-photo="true">Anika (Preview)</option>
+                                <option value="bianca" data-photo="true">Bianca (Preview)</option>
+                                <option value="camila" data-photo="true">Camila (Preview)</option>
+                                <option value="carlos" data-photo="true">Carlos (Preview)</option>
+                                <option value="clara" data-photo="true">Clara (Preview)</option>
+                                <option value="darius" data-photo="true">Darius (Preview)</option>
+                                <option value="diego" data-photo="true">Diego (Preview)</option>
+                                <option value="elise" data-photo="true">Elise (Preview)</option>
+                                <option value="farhan" data-photo="true">Farhan (Preview)</option>
+                                <option value="faris" data-photo="true">Faris (Preview)</option>
+                                <option value="gabrielle" data-photo="true">Gabrielle (Preview)</option>
+                                <option value="hyejin" data-photo="true">Hyejin (Preview)</option>
+                                <option value="imran" data-photo="true">Imran (Preview)</option>
+                                <option value="isabella" data-photo="true">Isabella (Preview)</option>
+                                <option value="layla" data-photo="true">Layla (Preview)</option>
+                                <option value="liwei" data-photo="true">Liwei (Preview)</option>
+                                <option value="ling" data-photo="true">Ling (Preview)</option>
+                                <option value="marcus" data-photo="true">Marcus (Preview)</option>
+                                <option value="matteo" data-photo="true">Matteo (Preview)</option>
+                                <option value="rahul" data-photo="true">Rahul (Preview)</option>
+                                <option value="rana" data-photo="true">Rana (Preview)</option>
+                                <option value="ren" data-photo="true">Ren (Preview)</option>
+                                <option value="riya" data-photo="true">Riya (Preview)</option>
+                                <option value="sakura" data-photo="true">Sakura (Preview)</option>
+                                <option value="simone" data-photo="true">Simone (Preview)</option>
+                                <option value="zayd" data-photo="true">Zayd (Preview)</option>
+                                <option value="zoe" data-photo="true">Zoe (Preview)</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <div class="vu-field" id="vu-avatar-style-field">
+                        <label for="vu-avatar-style">Pose / estilo</label>
+                        <select id="vu-avatar-style">
+                            <option value="casual-sitting">casual-sitting</option>
+                            <option value="graceful-sitting">graceful-sitting</option>
+                            <option value="graceful-standing">graceful-standing</option>
+                            <option value="technical-sitting">technical-sitting</option>
+                            <option value="technical-standing">technical-standing</option>
+                            <option value="business">business</option>
+                            <option value="youthful">youthful</option>
+                            <option value="formal">formal</option>
+                            <option value="casual">casual</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="vu-tabs">
+                <button class="vu-tab is-active" data-tab="chat"><i class="bi bi-chat-dots"></i> Conversación</button>
+                @if (hasEvents)
+                {
+                    <button class="vu-tab" data-tab="events"><i class="bi bi-activity"></i> Eventos</button>
+                }
+            </div>
+
+            <div class="vu-tab-pane is-active" data-tab="chat">
+                <div class="vu-transcript" id="vu-transcript">
+                    <div class="vu-empty">La conversación aparecerá aquí.</div>
+                </div>
+                <div class="vu-input">
+                    <input id="vu-text-input" placeholder="Escribe un mensaje o habla con el micrófono…" disabled />
+                    <button id="vu-btn-send" disabled><i class="bi bi-send"></i></button>
+                </div>
+            </div>
+
+            @if (hasEvents)
+            {
+                <div class="vu-tab-pane" data-tab="events">
+                    <div class="vu-events" id="vu-events"></div>
+                </div>
+            }
+        </aside>
+    </div>
+</div>
+
+<script>
+// Tab switcher (shared)
+(function () {
+    const tabs = document.querySelectorAll('.vu-tab');
+    const panes = document.querySelectorAll('.vu-tab-pane');
+    tabs.forEach(t => t.addEventListener('click', () => {
+        tabs.forEach(x => x.classList.remove('is-active'));
+        panes.forEach(p => p.classList.remove('is-active'));
+        t.classList.add('is-active');
+        const target = t.dataset.tab;
+        document.querySelector('.vu-tab-pane[data-tab="' + target + '"]').classList.add('is-active');
+    }));
+})();
+</script>

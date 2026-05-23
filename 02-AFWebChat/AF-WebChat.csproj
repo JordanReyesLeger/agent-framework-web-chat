@@ -21,7 +21,7 @@
     <PackageReference Include="Azure.AI.OpenAI" Version="2.9.0-beta.1" />
 
     <!-- Azure VoiceLive SDK (real-time speech-to-speech) -->
-    <PackageReference Include="Azure.AI.VoiceLive" Version="1.0.0" />
+    <PackageReference Include="Azure.AI.VoiceLive" Version="1.1.0-beta.3" />
 
     <!-- Auth -->
     <PackageReference Include="Azure.Identity" Version="1.20.0" />
@@ -49,6 +49,9 @@
 
   <ItemGroup>
     <Content Update="Agents\INEGI\bundle_censo_2020_ageb\ontologia\ontologia_censo_2020.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Prompts\voice-system-prompt.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
