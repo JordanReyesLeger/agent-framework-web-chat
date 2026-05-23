@@ -1,0 +1,142 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - navigation [ref=e3]:
+      - generic [ref=e4]:
+        - link " AF-WebChat" [ref=e5] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e7]: 
+          - generic [ref=e8]: AF-WebChat
+        - list [ref=e10]:
+          - listitem [ref=e11]:
+            - link " Inicio" [ref=e12] [cursor=pointer]:
+              - /url: /
+              - generic [ref=e13]: 
+              - text: Inicio
+          - listitem [ref=e14]:
+            - link " Chat de Agentes" [ref=e15] [cursor=pointer]:
+              - /url: /Home/Chat
+              - generic [ref=e16]: 
+              - text: Chat de Agentes
+          - listitem [ref=e17]:
+            - link " Documentos" [ref=e18] [cursor=pointer]:
+              - /url: /Home/Documents
+              - generic [ref=e19]: 
+              - text: Documentos
+          - listitem [ref=e20]:
+            - link " Notificaciones" [ref=e21] [cursor=pointer]:
+              - /url: /Home/Notifications
+              - generic [ref=e22]: 
+              - text: Notificaciones
+          - listitem [ref=e23]:
+            - link " Azure Speech Avatar" [ref=e24] [cursor=pointer]:
+              - /url: /Home/LiveAvatar
+              - generic [ref=e25]: 
+              - text: Azure Speech Avatar
+          - listitem [ref=e26]:
+            - link " Azure Voice Live" [ref=e27] [cursor=pointer]:
+              - /url: /Home/VoiceLive
+              - generic [ref=e28]: 
+              - text: Azure Voice Live
+  - main [ref=e30]:
+    - generic [ref=e31]:
+      - generic [ref=e32]:
+        - generic [ref=e33]:
+          - heading " Azure Voice Live Azure Voice Live · WebRTC" [level=1] [ref=e34]:
+            - generic [ref=e35]: 
+            - text: Azure Voice Live
+            - generic [ref=e36]: Azure Voice Live · WebRTC
+          - paragraph [ref=e37]: Pipeline unificado speech-to-speech con audio nativo, barge-in y avatar opcional.
+        - generic [ref=e38]:
+          - generic [ref=e39]: 
+          - generic [ref=e40]: Desconectado
+      - generic [ref=e41]:
+        - generic [ref=e42]:
+          - generic:
+            - generic: 
+            - heading "Voice Live listo para iniciar" [level=3]
+            - paragraph:
+              - text: Configura las opciones del panel y pulsa
+              - strong: Conectar
+              - text: para arrancar la sesión.
+          - generic [ref=e45]: Desconectado
+        - complementary [ref=e48]:
+          - generic [ref=e49]:
+            - heading " Azure Voice Live" [level=2] [ref=e50]:
+              - generic [ref=e51]: 
+              - text: Azure Voice Live
+            - paragraph [ref=e52]: Sesión unificada vía WebSocket bridge.
+          - generic [ref=e53]:
+            - button " Conectar" [ref=e54] [cursor=pointer]:
+              - generic [ref=e55]: 
+              - text: Conectar
+            - button " Desconectar" [disabled] [ref=e56]:
+              - generic [ref=e57]: 
+              - text: Desconectar
+            - button " Micrófono" [disabled] [ref=e58]:
+              - generic [ref=e59]: 
+              - text: Micrófono
+            - button " Interrumpir" [disabled] [ref=e60]:
+              - generic [ref=e61]: 
+              - text: Interrumpir
+          - generic [ref=e62]:
+            - generic [ref=e63]:
+              - generic [ref=e64]: Prompt del sistema
+              - textbox "Prompt del sistema" [ref=e65]:
+                - /placeholder: Eres un asistente útil...
+                - text: "Eres Sage, una coach de voz en tiempo real especializada en conversaciones difíciles. # 1. Objetivo principal Ayuda al usuario a prepararse y ensayar conversaciones difíciles: feedback de desempeño, conflictos, despidos, negociación salarial, dar malas noticias, poner límites, disputas familiares, escalamientos con clientes. Puedes guiarlo (modo coaching) o interpretar a la otra persona para que practique (modo role-play). # 2. Estilo al hablar - Habla con calma, empatía y firmeza, como una coach ejecutiva experimentada. - Mantén tus respuestas en 3 o 4 oraciones máximo. - Haz 1 o 2 preguntas por turno. - Deja silencios; no sermonees ni hagas monólogos. - Usa lenguaje natural y cálido; nada de listas, emojis, formato markdown ni símbolos. # 3. Idioma - Habla siempre en español natural y conversacional. - Si el usuario cambia a otro idioma, síguelo y vuelve al español apenas él regrese. - Adapta la formalidad al usuario (tú vs usted, según cómo te hable). # 4. Estrategia de conversación - Empieza entendiendo la situación: quién es la otra persona, qué pasó, qué está en juego y qué relación tienen. - Identifica primero la emoción (miedo, culpa, rabia, ansiedad) antes de pasar a tácticas. - Ofrece dos modos y deja que el usuario elija: \"modo coaching\" (lo conversamos) o \"modo ensayo\" (yo hago el papel de la otra persona y tú practicas). - En modo ensayo, mantente en personaje. Reacciona realista — defiéndete, emociónate, haz preguntas incómodas — según la persona que el usuario describió. - Después de unas cuantas réplicas en ensayo, ofrece pausar y revisar cómo le fue. # 5. Marco de coaching Cuando estés en modo coaching, aplica estos movimientos sin nombrarlos: - Valida la emoción antes de dar estrategia. - Reformula el objetivo: \"¿qué resultado quieres realmente al final de la conversación?\" - Saca a la luz supuestos: \"¿qué crees que pueda estar sintiendo la otra persona desde su lado?\" - Sugiere aperturas, transiciones y cierres concretos en palabras exactas. - Anticipa la peor reacción posible y ensayen juntos cómo manejarla. # 6. Restricciones obligatorias - Solo produce lenguaje hablado natural. - Nunca devuelvas JSON, código, datos estructurados ni texto tipo sistema. - Nunca simules llamadas a funciones, APIs ni herramientas. - Nunca describas tu razonamiento interno ni cómo funcionas. - No des asesoría legal, médica ni de políticas de recursos humanos; sugiere consultar un profesional si la situación lo requiere. - Si el usuario describe abuso, autoagresión o peligro inmediato, pausa el ensayo con suavidad y sugiérele contactar a un profesional o línea de ayuda calificada antes de continuar. - Nunca juzgues ni moralices la situación del usuario. # 7. Flujo de la conversación - Abre con el saludo del paso 8. - Pide que describa la situación en una o dos frases. - Pregunta quién es la otra persona y qué resultado quiere de la conversación. - Ofrece modo coaching o modo ensayo, y arranca lo que el usuario escoja. - Cada cuatro o cinco réplicas, ofrece detenerse y revisar. - Cierra con tres cosas: una frase que el usuario debe recordar, una acción concreta para las próximas 24 horas, y una invitación a volver a practicar. # 8. Apertura (di exactamente esto en el primer turno) \"Hola, soy Sage. Acompaño a personas a prepararse para conversaciones difíciles. Cuéntame, ¿qué conversación traes en la cabeza que te está costando?\""
+            - generic [ref=e66]:
+              - generic [ref=e67]:
+                - generic [ref=e68]: Voz
+                - combobox "Voz" [ref=e69]:
+                  - option "🤖 Alloy (S2S) (multi)"
+                  - option "👨 Ash (S2S) (multi)"
+                  - option "👨 Ballad (S2S) (multi)"
+                  - option "👩 Coral (S2S) (multi)"
+                  - option "👨 Echo (S2S) (multi)"
+                  - option "👩 Sage (S2S) (multi)"
+                  - option "👩 Shimmer (S2S) (multi)"
+                  - option "👨 Verse (S2S) (multi)"
+                  - option "👨 Andrew 3 (HD) — más nueva (en-US)" [selected]
+                  - option "👨 Andrew (HD) (en-US)"
+                  - option "👩 Ava 3 (HD) (en-US)"
+                  - option "👩 Aria (HD) (en-US)"
+                  - option "👨 Brian (HD) (en-US)"
+                  - option "👩 Emma (HD) (en-US)"
+                  - option "👩 Jenny (HD) (en-US)"
+                  - option "👨 Steffan (HD) (en-US)"
+                  - option "👩 Ava Multilingüe (multi)"
+                  - option "👨 Andrew Multilingüe (multi)"
+                  - option "👩 Emma Multilingüe (multi)"
+                  - option "👨 Brian Multilingüe (multi)"
+                  - option "👩 Dalia (México) (es-MX)"
+                  - option "👨 Jorge (México) (es-MX)"
+                  - option "👩 Elvira (España) (es-ES)"
+                  - option "👨 Álvaro (España) (es-ES)"
+                  - option "👩 Elena (Argentina) (es-AR)"
+                  - option "👩 Salomé (Colombia) (es-CO)"
+              - generic [ref=e70]:
+                - generic [ref=e71]: Modelo
+                - textbox "Modelo" [disabled] [ref=e72]: gpt-realtime-mini
+            - generic [ref=e73]:
+              - generic [ref=e74]: Estilo de voz
+              - combobox "Estilo de voz" [ref=e75]:
+                - option "— (sin estilo)" [selected]
+                - option "chat"
+                - option "professional"
+                - option "friendly"
+            - generic [ref=e76] [cursor=pointer]:
+              - checkbox "🎭 Habilitar Avatar (video en tiempo real)" [ref=e77]
+              - generic [ref=e78]: 🎭 Habilitar Avatar (video en tiempo real)
+          - generic [ref=e79]:
+            - button " Conversación" [ref=e80] [cursor=pointer]:
+              - generic [ref=e81]: 
+              - text: Conversación
+            - button " Eventos" [ref=e82] [cursor=pointer]:
+              - generic [ref=e83]: 
+              - text: Eventos
+          - generic [ref=e84]:
+            - generic [ref=e86]: La conversación aparecerá aquí.
+            - generic [ref=e87]:
+              - textbox "Escribe un mensaje o habla con el micrófono…" [disabled] [ref=e88]
+              - button "" [disabled] [ref=e89]:
+                - generic [ref=e90]: 

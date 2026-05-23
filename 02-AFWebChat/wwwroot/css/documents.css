@@ -1,0 +1,418 @@
+/* ==========================================================================
+   Documents Page — diseño premium aislado
+   --------------------------------------------------------------------------
+   Variables al inicio para personalizar por cliente:
+   - sobrescribe en :root, en .documents-page, o en un selector más
+     específico (ej. body.cliente-x .documents-page { ... })
+   ========================================================================== */
+
+.documents-page {
+    /* ----------------------------------------------------------------------
+       Tokens propios de la página de Documentos.
+       Por defecto heredan de --app-* (branding global definido en _Layout).
+       Para un override puntual sin tocar el branding: redefine aquí.
+       ---------------------------------------------------------------------- */
+
+    /* Paleta base */
+    --doc-bg-from: var(--app-background-color, #0d1117);
+    --doc-bg-to:   color-mix(in srgb, var(--app-background-color, #0d1117) 70%, var(--app-navbar-color, #161b22));
+    --doc-surface: color-mix(in srgb, var(--app-surface-color, #161b22) 60%, transparent);
+    --doc-surface-hover: color-mix(in srgb, var(--app-surface-color, #161b22) 90%, transparent);
+    --doc-surface-2: var(--app-surface-color, rgba(255, 255, 255, 0.05));
+    --doc-border: var(--app-border-color, rgba(255, 255, 255, 0.08));
+    --doc-border-strong: color-mix(in srgb, var(--app-border-color, rgba(255,255,255,0.14)) 200%, transparent);
+
+    /* Texto */
+    --doc-text: var(--app-text-color, #e6edf3);
+    --doc-text-muted: var(--app-muted-color, #8b949e);
+    --doc-text-faint: color-mix(in srgb, var(--app-muted-color, #6e7681) 70%, transparent);
+
+    /* Acentos (heredan del branding global) */
+    --doc-accent: var(--app-accent-color, #58a6ff);
+    --doc-accent-2: var(--app-shape2-from, var(--app-accent-color, #bc8cff));
+    --doc-accent-glow: color-mix(in srgb, var(--doc-accent) 35%, transparent);
+
+    /* Severidades / acciones */
+    --doc-info: #58a6ff;
+    --doc-info-bg: rgba(88, 166, 255, 0.14);
+    --doc-success: var(--app-success-color, #3fb950);
+    --doc-success-bg: color-mix(in srgb, var(--doc-success) 14%, transparent);
+    --doc-warning: #d29922;
+    --doc-warning-bg: rgba(210, 153, 34, 0.14);
+    --doc-error: var(--app-error-color, #f85149);
+    --doc-error-bg: color-mix(in srgb, var(--doc-error) 14%, transparent);
+
+    /* Tipos de archivo (color por extensión) */
+    --doc-pdf: #f85149;
+    --doc-word: #58a6ff;
+    --doc-txt: #8b949e;
+
+    /* Métricas */
+    --doc-radius: 14px;
+    --doc-radius-sm: 8px;
+    --doc-padding: 20px;
+    --doc-gap: 14px;
+    --doc-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+    --doc-shadow-hover: 0 14px 40px rgba(0, 0, 0, 0.45);
+
+    /* Tipografía */
+    --doc-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --doc-mono: ui-monospace, "Cascadia Code", "JetBrains Mono", Menlo, monospace;
+
+    /* Fondo de la página */
+    background: linear-gradient(180deg, var(--doc-bg-from) 0%, var(--doc-bg-to) 100%);
+    min-height: 100vh;
+    color: var(--doc-text);
+    font-family: var(--doc-font);
+    position: relative;
+    overflow: hidden;
+}
+
+/* ---------- Hero ---------- */
+.documents-page .doc-hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+    position: relative;
+    z-index: 1;
+}
+.documents-page .doc-hero-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+.documents-page .doc-hero-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--doc-accent), var(--doc-accent-2));
+    box-shadow: 0 0 32px var(--doc-accent-glow);
+    color: #fff;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+}
+.documents-page .doc-hero-title {
+    font-size: 1.7rem;
+    font-weight: 700;
+    margin: 0;
+    background: linear-gradient(135deg, #fff 30%, var(--doc-accent) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.01em;
+}
+.documents-page .doc-hero-subtitle {
+    color: var(--doc-text-muted);
+    margin: 2px 0 0;
+    font-size: 0.85rem;
+}
+
+/* Badges del cliente / índice */
+.documents-page .doc-hero-badges {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.documents-page .doc-hero-badges .badge {
+    background: var(--doc-surface) !important;
+    border: 1px solid var(--doc-border);
+    color: var(--doc-text) !important;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-weight: 500;
+    font-size: 0.78rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.documents-page .doc-hero-badges .badge i { color: var(--doc-accent); }
+.documents-page .doc-hero-badges .badge strong { color: var(--doc-text); font-weight: 600; }
+
+/* ---------- Panels (sobrescribe .document-panel cuando está dentro de .documents-page) ---------- */
+.documents-page .document-panel {
+    background: var(--doc-surface);
+    border: 1px solid var(--doc-border);
+    border-radius: var(--doc-radius);
+    box-shadow: var(--doc-shadow);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: var(--doc-padding);
+    color: var(--doc-text);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+    z-index: 1;
+}
+.documents-page .document-panel:hover {
+    border-color: var(--doc-border-strong);
+    box-shadow: var(--doc-shadow-hover);
+}
+.documents-page .document-panel h4,
+.documents-page .document-panel h5,
+.documents-page .document-panel h6 { color: var(--doc-text); }
+.documents-page .document-panel h4 i,
+.documents-page .document-panel h5 i,
+.documents-page .document-panel h6 i { color: var(--doc-accent); }
+
+/* ---------- Upload Area (drag & drop) ---------- */
+.documents-page .upload-area {
+    border: 2px dashed var(--doc-border-strong);
+    background: var(--doc-surface-2);
+    border-radius: var(--doc-radius);
+    padding: 36px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+    color: var(--doc-text-muted);
+}
+.documents-page .upload-area:hover {
+    border-color: var(--doc-accent);
+    background: var(--doc-surface-hover);
+    transform: translateY(-1px);
+}
+.documents-page .upload-area.dragover {
+    border-color: var(--doc-accent);
+    background: var(--doc-info-bg);
+    border-style: solid;
+    transform: scale(1.01);
+    box-shadow: 0 0 0 4px var(--doc-accent-glow);
+}
+.documents-page .upload-area > i {
+    color: var(--doc-accent) !important;
+    transition: transform 0.25s ease;
+}
+.documents-page .upload-area:hover > i { transform: translateY(-3px); }
+.documents-page .upload-area p { color: var(--doc-text); }
+.documents-page .upload-area .text-muted { color: var(--doc-text-faint) !important; }
+
+/* ---------- Form inputs ---------- */
+.documents-page .form-label {
+    color: var(--doc-text-muted);
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 6px;
+}
+.documents-page .metadata-input,
+.documents-page .form-control,
+.documents-page .form-select {
+    background: var(--doc-surface-2);
+    border: 1px solid var(--doc-border);
+    border-radius: var(--doc-radius-sm);
+    color: var(--doc-text);
+    padding: 10px 14px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+.documents-page .metadata-input:focus,
+.documents-page .form-control:focus,
+.documents-page .form-select:focus {
+    background: var(--doc-surface-hover);
+    border-color: var(--doc-accent);
+    box-shadow: 0 0 0 3px var(--doc-accent-glow);
+    color: var(--doc-text);
+    outline: none;
+}
+.documents-page .form-control::placeholder { color: var(--doc-text-faint); }
+.documents-page .form-select option { background: var(--doc-bg-to); color: var(--doc-text); }
+
+/* ---------- Buttons ---------- */
+.documents-page .btn-primary {
+    background: linear-gradient(135deg, var(--doc-accent), var(--doc-accent-2));
+    border: 0;
+    padding: 10px 18px;
+    font-weight: 600;
+    border-radius: var(--doc-radius-sm);
+    box-shadow: 0 4px 14px var(--doc-accent-glow);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+.documents-page .btn-primary:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px var(--doc-accent-glow);
+    filter: brightness(1.08);
+}
+.documents-page .btn-primary:disabled { opacity: 0.5; cursor: progress; }
+
+.documents-page .btn-secondary,
+.documents-page .btn-outline-primary,
+.documents-page .btn-outline-secondary {
+    background: var(--doc-surface);
+    border: 1px solid var(--doc-border);
+    color: var(--doc-text-muted);
+    font-weight: 500;
+    border-radius: var(--doc-radius-sm);
+    transition: all 0.15s ease;
+}
+.documents-page .btn-secondary:hover,
+.documents-page .btn-outline-primary:hover,
+.documents-page .btn-outline-secondary:hover {
+    background: var(--doc-surface-hover);
+    border-color: var(--doc-border-strong);
+    color: var(--doc-text);
+}
+
+.documents-page .btn-warning {
+    background: var(--doc-warning-bg);
+    border: 1px solid var(--doc-warning);
+    color: var(--doc-warning);
+    font-weight: 600;
+}
+.documents-page .btn-warning:hover {
+    background: var(--doc-warning);
+    color: #1f1605;
+    filter: brightness(1.05);
+}
+.documents-page .btn-info {
+    background: var(--doc-info-bg);
+    border: 1px solid var(--doc-info);
+    color: var(--doc-info);
+    font-weight: 600;
+}
+.documents-page .btn-info:hover {
+    background: var(--doc-info);
+    color: #021426;
+}
+.documents-page .btn-outline-danger {
+    background: transparent;
+    border: 1px solid var(--doc-border);
+    color: var(--doc-text-faint);
+    border-radius: 6px;
+}
+.documents-page .btn-outline-danger:hover {
+    background: var(--doc-error-bg);
+    border-color: var(--doc-error);
+    color: var(--doc-error);
+}
+
+/* ---------- Progress bar ---------- */
+.documents-page .progress {
+    background: var(--doc-surface-2);
+    border-radius: 999px;
+    overflow: hidden;
+}
+.documents-page .progress-bar {
+    background: linear-gradient(90deg, var(--doc-accent), var(--doc-accent-2));
+}
+
+/* ---------- File list items ---------- */
+.documents-page .file-list-item {
+    display: flex;
+    align-items: center;
+    background: var(--doc-surface);
+    border: 1px solid var(--doc-border);
+    border-radius: var(--doc-radius-sm);
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    color: var(--doc-text);
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+    animation: doc-fade-in 0.25s ease-out;
+}
+.documents-page .file-list-item:hover {
+    background: var(--doc-surface-hover);
+    border-color: var(--doc-border-strong);
+    transform: translateX(2px);
+}
+@keyframes doc-fade-in {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.documents-page .file-list-item strong { color: var(--doc-text); font-weight: 600; }
+.documents-page .file-list-item .text-muted { color: var(--doc-text-faint) !important; }
+
+/* Iconos por tipo de archivo */
+.documents-page .file-list-item .bi-file-earmark-pdf { color: var(--doc-pdf) !important; }
+.documents-page .file-list-item .bi-file-earmark-word { color: var(--doc-word) !important; }
+.documents-page .file-list-item .bi-file-earmark-text { color: var(--doc-txt) !important; }
+
+/* Estado vacío del listado */
+.documents-page #documentList .text-center.text-muted {
+    color: var(--doc-text-faint) !important;
+    padding: 40px 16px !important;
+}
+.documents-page #documentList .text-center.text-muted i {
+    color: var(--doc-text-faint);
+    opacity: 0.5;
+}
+
+/* ---------- Contador de documentos ---------- */
+.documents-page #docCount {
+    background: var(--doc-info-bg) !important;
+    color: var(--doc-info) !important;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 999px;
+}
+
+/* ---------- Status messages (success / error) ---------- */
+.documents-page .alert {
+    border-radius: var(--doc-radius-sm);
+    border: 1px solid var(--doc-border);
+    padding: 10px 14px;
+    font-size: 0.85rem;
+    animation: doc-fade-in 0.25s ease-out;
+}
+.documents-page .alert-success {
+    background: var(--doc-success-bg);
+    border-color: var(--doc-success);
+    color: var(--doc-success);
+}
+.documents-page .alert-danger {
+    background: var(--doc-error-bg);
+    border-color: var(--doc-error);
+    color: var(--doc-error);
+}
+.documents-page .alert-warning {
+    background: var(--doc-warning-bg);
+    border-color: var(--doc-warning);
+    color: var(--doc-warning);
+}
+.documents-page .alert-info {
+    background: var(--doc-info-bg);
+    border-color: var(--doc-info);
+    color: var(--doc-info);
+}
+
+/* ---------- Animated background shapes (sutiles) ---------- */
+.documents-page .doc-animated-bg {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 0;
+}
+.documents-page .doc-animated-bg .doc-shape {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.15;
+    animation: doc-float 22s ease-in-out infinite;
+}
+.documents-page .doc-animated-bg .doc-shape-1 { width: 340px; height: 340px; background: var(--doc-accent); top: -110px; left: -80px; }
+.documents-page .doc-animated-bg .doc-shape-2 { width: 280px; height: 280px; background: var(--doc-accent-2); bottom: -90px; right: -70px; animation-delay: -8s; }
+.documents-page .doc-animated-bg .doc-shape-3 { width: 220px; height: 220px; background: var(--doc-info); top: 40%; left: 55%; animation-delay: -14s; }
+@keyframes doc-float {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33%      { transform: translate(40px, -30px) scale(1.06); }
+    66%      { transform: translate(-30px, 30px) scale(0.96); }
+}
+
+/* ---------- Tema claro opcional ---------- */
+.documents-page[data-doc-theme="light"] {
+    --doc-bg-from: #ffffff;
+    --doc-bg-to: #f6f8fa;
+    --doc-surface: #ffffff;
+    --doc-surface-hover: #f6f8fa;
+    --doc-surface-2: #f6f8fa;
+    --doc-border: #d0d7de;
+    --doc-border-strong: #afb8c1;
+    --doc-text: #1f2328;
+    --doc-text-muted: #59636e;
+    --doc-text-faint: #818b98;
+    --doc-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+    --doc-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.12);
+}

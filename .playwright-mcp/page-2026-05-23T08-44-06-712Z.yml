@@ -1,0 +1,171 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - navigation [ref=e3]:
+      - generic [ref=e4]:
+        - link " AF-WebChat" [ref=e5] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e7]: 
+          - generic [ref=e8]: AF-WebChat
+        - list [ref=e10]:
+          - listitem [ref=e11]:
+            - link " Inicio" [ref=e12] [cursor=pointer]:
+              - /url: /
+              - generic [ref=e13]: 
+              - text: Inicio
+          - listitem [ref=e14]:
+            - link " Chat de Agentes" [ref=e15] [cursor=pointer]:
+              - /url: /Home/Chat
+              - generic [ref=e16]: 
+              - text: Chat de Agentes
+          - listitem [ref=e17]:
+            - link " Documentos" [ref=e18] [cursor=pointer]:
+              - /url: /Home/Documents
+              - generic [ref=e19]: 
+              - text: Documentos
+          - listitem [ref=e20]:
+            - link " Notificaciones" [ref=e21] [cursor=pointer]:
+              - /url: /Home/Notifications
+              - generic [ref=e22]: 
+              - text: Notificaciones
+          - listitem [ref=e23]:
+            - link " Azure Speech Avatar" [ref=e24] [cursor=pointer]:
+              - /url: /Home/LiveAvatar
+              - generic [ref=e25]: 
+              - text: Azure Speech Avatar
+          - listitem [ref=e26]:
+            - link " Azure Voice Live" [ref=e27] [cursor=pointer]:
+              - /url: /Home/VoiceLive
+              - generic [ref=e28]: 
+              - text: Azure Voice Live
+  - main [ref=e30]:
+    - generic [ref=e31]:
+      - generic [ref=e32]:
+        - generic [ref=e33]:
+          - heading " Azure Speech Avatar (Cascaded) Azure Speech Avatar · WebRTC" [level=1] [ref=e34]:
+            - generic [ref=e35]: 
+            - text: Azure Speech Avatar (Cascaded)
+            - generic [ref=e36]: Azure Speech Avatar · WebRTC
+          - paragraph [ref=e37]: "Arquitectura cascaded: Speech STT → Azure OpenAI → Speech Avatar TTS (tres servicios encadenados)."
+        - generic [ref=e38]:
+          - generic [ref=e39]: 
+          - generic [ref=e40]: Desconectado
+      - generic [ref=e41]:
+        - generic [ref=e42]:
+          - generic:
+            - generic: 
+            - heading "Avatar listo para conectar" [level=3]
+            - paragraph:
+              - text: Configura las opciones del panel y pulsa
+              - strong: Conectar
+              - text: para arrancar la sesión.
+          - generic [ref=e45]: Desconectado
+        - complementary [ref=e48]:
+          - generic [ref=e49]:
+            - heading " Azure Speech Avatar (Cascaded)" [level=2] [ref=e50]:
+              - generic [ref=e51]: 
+              - text: Azure Speech Avatar (Cascaded)
+            - paragraph [ref=e52]: WebRTC + Speech SDK directo en el navegador.
+          - generic [ref=e53]:
+            - button " Conectar" [ref=e54] [cursor=pointer]:
+              - generic [ref=e55]: 
+              - text: Conectar
+            - button " Desconectar" [disabled] [ref=e56]:
+              - generic [ref=e57]: 
+              - text: Desconectar
+            - button " Micrófono" [disabled] [ref=e58]:
+              - generic [ref=e59]: 
+              - text: Micrófono
+            - button " Interrumpir" [disabled] [ref=e60]:
+              - generic [ref=e61]: 
+              - text: Interrumpir
+          - generic [ref=e62]:
+            - generic [ref=e63]:
+              - generic [ref=e64]: Prompt del sistema
+              - textbox "Prompt del sistema" [ref=e65]:
+                - /placeholder: Eres un asistente útil...
+            - generic [ref=e66]:
+              - generic [ref=e67]: Voz (Azure TTS)
+              - combobox "Voz (Azure TTS)" [ref=e68]:
+                - option "👩 Dalia (México)" [selected]
+                - option "👨 Jorge (México)"
+                - option "👩 Elvira (España)"
+                - option "👨 Álvaro (España)"
+                - option "👩 Elena (Argentina)"
+                - option "👩 Salomé (Colombia)"
+                - option "👨 Andrew 3 (HD)"
+                - option "👨 Andrew (HD)"
+                - option "👩 Ava 3 (HD)"
+                - option "👩 Aria (HD)"
+                - option "👨 Brian (HD)"
+                - option "👩 Emma (HD)"
+                - option "👩 Jenny (HD)"
+                - option "👨 Steffan (HD)"
+                - option "👩 Ava Multilingüe"
+                - option "👨 Andrew Multilingüe"
+                - option "👩 Emma Multilingüe"
+                - option "👨 Brian Multilingüe"
+            - generic [ref=e69]:
+              - generic [ref=e70]:
+                - generic [ref=e71]: Personaje
+                - combobox "Personaje" [ref=e72]:
+                  - option "Lisa" [selected]
+                  - option "Meg"
+                  - option "Lori"
+                  - option "Max"
+                  - option "Harry"
+                  - option "Jeff (retiro Dic 2026)"
+                  - option "Rowan"
+                  - option "Celine"
+                  - option "Nia"
+                  - option "Malik"
+                  - option "Adrian (Preview)"
+                  - option "Amara (Preview)"
+                  - option "Amira (Preview)"
+                  - option "Anika (Preview)"
+                  - option "Bianca (Preview)"
+                  - option "Camila (Preview)"
+                  - option "Carlos (Preview)"
+                  - option "Clara (Preview)"
+                  - option "Darius (Preview)"
+                  - option "Diego (Preview)"
+                  - option "Elise (Preview)"
+                  - option "Farhan (Preview)"
+                  - option "Faris (Preview)"
+                  - option "Gabrielle (Preview)"
+                  - option "Hyejin (Preview)"
+                  - option "Imran (Preview)"
+                  - option "Isabella (Preview)"
+                  - option "Layla (Preview)"
+                  - option "Liwei (Preview)"
+                  - option "Ling (Preview)"
+                  - option "Marcus (Preview)"
+                  - option "Matteo (Preview)"
+                  - option "Rahul (Preview)"
+                  - option "Rana (Preview)"
+                  - option "Ren (Preview)"
+                  - option "Riya (Preview)"
+                  - option "Sakura (Preview)"
+                  - option "Simone (Preview)"
+                  - option "Zayd (Preview)"
+                  - option "Zoe (Preview)"
+              - generic [ref=e73]:
+                - generic [ref=e74]: Pose / estilo
+                - combobox "Pose / estilo" [ref=e75]:
+                  - option "casual-sitting" [selected]
+                  - option "graceful-sitting"
+                  - option "graceful-standing"
+                  - option "technical-sitting"
+                  - option "technical-standing"
+                  - option "business"
+                  - option "youthful"
+                  - option "formal"
+                  - option "casual"
+          - button " Conversación" [ref=e77] [cursor=pointer]:
+            - generic [ref=e78]: 
+            - text: Conversación
+          - generic [ref=e79]:
+            - generic [ref=e81]: La conversación aparecerá aquí.
+            - generic [ref=e82]:
+              - textbox "Escribe un mensaje o habla con el micrófono…" [disabled] [ref=e83]
+              - button "" [disabled] [ref=e84]:
+                - generic [ref=e85]: 

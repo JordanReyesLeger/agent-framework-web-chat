@@ -1,0 +1,296 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - navigation [ref=e3]:
+      - generic [ref=e4]:
+        - link " AF-WebChat" [ref=e5] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e7]: 
+          - generic [ref=e8]: AF-WebChat
+        - generic [ref=e9]:
+          - list [ref=e10]:
+            - listitem [ref=e11]:
+              - link " Inicio" [ref=e12] [cursor=pointer]:
+                - /url: /
+                - generic [ref=e13]: 
+                - text: Inicio
+            - listitem [ref=e14]:
+              - link " Chat de Agentes" [ref=e15] [cursor=pointer]:
+                - /url: /Home/Chat
+                - generic [ref=e16]: 
+                - text: Chat de Agentes
+            - listitem [ref=e17]:
+              - link " Documentos" [ref=e18] [cursor=pointer]:
+                - /url: /Home/Documents
+                - generic [ref=e19]: 
+                - text: Documentos
+            - listitem [ref=e20]:
+              - link " Notificaciones" [ref=e21] [cursor=pointer]:
+                - /url: /Home/Notifications
+                - generic [ref=e22]: 
+                - text: Notificaciones
+            - listitem [ref=e23]:
+              - link " Azure Speech Avatar" [ref=e24] [cursor=pointer]:
+                - /url: /Home/LiveAvatar
+                - generic [ref=e25]: 
+                - text: Azure Speech Avatar
+            - listitem [ref=e26]:
+              - link " Azure Voice Live" [ref=e27] [cursor=pointer]:
+                - /url: /Home/VoiceLive
+                - generic [ref=e28]: 
+                - text: Azure Voice Live
+          - generic [ref=e29]:
+            - button "" [ref=e30] [cursor=pointer]:
+              - generic [ref=e31]: 
+            - button " New" [ref=e32] [cursor=pointer]:
+              - generic [ref=e33]: 
+              - text: New
+            - generic [ref=e34]: "Session: 8e2642f9..."
+  - main [ref=e36]:
+    - generic [ref=e37]:
+      - generic [ref=e38]:
+        - complementary [ref=e39]:
+          - generic [ref=e40]:
+            - button " Agentes" [ref=e41] [cursor=pointer]:
+              - generic [ref=e42]: 
+              - text: Agentes
+            - button " Catálogo" [ref=e43] [cursor=pointer]:
+              - generic [ref=e44]: 
+              - text: Catálogo
+            - button " Constructor" [ref=e45] [cursor=pointer]:
+              - generic [ref=e46]: 
+              - text: Constructor
+          - generic [ref=e47]:
+            - textbox "Filtrar agentes..." [ref=e49]
+            - generic [ref=e50]:
+              - generic [ref=e52] [cursor=pointer]:
+                - generic [ref=e53]: 🤖
+                - generic [ref=e54]:
+                  - generic [ref=e55]: GeneralAssistant
+                  - generic [ref=e56]: Asistente conversacional de propósito general. Responde preguntas de forma clara y concisa.
+              - generic [ref=e58] [cursor=pointer]:
+                - generic [ref=e59]: 💾
+                - generic [ref=e60]:
+                  - generic [ref=e61]: DatabaseQuery
+                  - generic [ref=e62]: Genera y ejecuta consultas SQL de solo lectura contra la base de datos.
+              - generic [ref=e64] [cursor=pointer]:
+                - generic [ref=e65]: 🔍
+                - generic [ref=e66]:
+                  - generic [ref=e67]: WebSearch
+                  - generic [ref=e68]: Busca en la web y extrae contenido de páginas con web scraping real.
+              - generic [ref=e70] [cursor=pointer]:
+                - generic [ref=e71]: 💡
+                - generic [ref=e72]:
+                  - generic [ref=e73]: Lights
+                  - generic [ref=e74]: "Agente de domótica que controla luces inteligentes: encender, apagar, cambiar brillo y color."
+              - generic [ref=e76] [cursor=pointer]:
+                - generic [ref=e77]: 🏷️
+                - generic [ref=e78]:
+                  - generic [ref=e79]: EntityExtractor
+                  - generic [ref=e80]: Extrae entidades estructuradas (personas, empresas, fechas, montos) del texto.
+              - generic [ref=e82] [cursor=pointer]:
+                - generic [ref=e83]: 😊
+                - generic [ref=e84]:
+                  - generic [ref=e85]: SentimentAnalyzer
+                  - generic [ref=e86]: Analiza el sentimiento y las emociones en texto, devolviendo resultados estructurados.
+              - generic [ref=e88] [cursor=pointer]:
+                - generic [ref=e89]: 👁️
+                - generic [ref=e90]:
+                  - generic [ref=e91]: VisionAgent
+                  - generic [ref=e92]: "Analiza imágenes: describe contenido, extrae texto y responde preguntas sobre contenido visual."
+              - generic [ref=e94] [cursor=pointer]:
+                - generic [ref=e95]: 🔬
+                - generic [ref=e96]:
+                  - generic [ref=e97]: ResearchAssistant
+                  - generic [ref=e98]: Asistente de investigación que orquesta sub-agentes de búsqueda, resumen y traducción.
+              - generic [ref=e100] [cursor=pointer]:
+                - generic [ref=e101]: 🧠
+                - generic [ref=e102]:
+                  - generic [ref=e103]: MemoryAgent
+                  - generic [ref=e104]: Agente con memoria persistente — recuerda información entre conversaciones.
+              - generic [ref=e106] [cursor=pointer]:
+                - generic [ref=e107]: 📚
+                - generic [ref=e108]:
+                  - generic [ref=e109]: RAGAgent
+                  - generic [ref=e110]: Agente RAG que busca información en documentos indexados usando Azure AI Search.
+              - generic [ref=e112] [cursor=pointer]:
+                - generic [ref=e113]: 🔌
+                - generic [ref=e114]:
+                  - generic [ref=e115]: McpTools
+                  - generic [ref=e116]: Agente que usa herramientas de servidores MCP (Model Context Protocol) externos.
+              - generic [ref=e118] [cursor=pointer]:
+                - generic [ref=e119]: 🗄️
+                - generic [ref=e120]:
+                  - generic [ref=e121]: AgenteSQLAzure
+                  - generic [ref=e122]: Agente experto en bases de datos SQL que ayuda a los usuarios a consultar información de una base de datos Azure SQL de forma segura.
+              - generic [ref=e124] [cursor=pointer]:
+                - generic [ref=e125]: 🌐
+                - generic [ref=e126]:
+                  - generic [ref=e127]: BingGrounding
+                  - generic [ref=e128]: Agente que busca información actualizada en la web usando Bing y puede extraer contenido de páginas.
+              - generic [ref=e130] [cursor=pointer]:
+                - generic [ref=e131]: 👋
+                - generic [ref=e132]:
+                  - generic [ref=e133]: FoundrySimpleBot
+                  - generic [ref=e134]: Agente simple de Foundry (versioned) — se crea y gestiona en el portal de Foundry. Sin herramientas.
+              - generic [ref=e136] [cursor=pointer]:
+                - generic [ref=e137]: 🏗️
+                - generic [ref=e138]:
+                  - generic [ref=e139]: FoundryAgent
+                  - generic [ref=e140]: Agente orquestador de Foundry (versioned) con herramienta OpenAPI — delega a agentes de AF-WebChat via API.
+              - generic [ref=e142] [cursor=pointer]:
+                - generic [ref=e143]: 🧠
+                - generic [ref=e144]:
+                  - generic [ref=e145]: MultiAgentPlanner
+                  - generic [ref=e146]: Orquestador empresarial que combina datos SQL, documentos RAG y búsqueda web para crear planes de proyecto completos con datos reales.
+              - generic [ref=e148] [cursor=pointer]:
+                - generic [ref=e149]: 📈
+                - generic [ref=e150]:
+                  - generic [ref=e151]: DataStoryteller
+                  - generic [ref=e152]: Transforma datos SQL en narrativas ejecutivas con tablas, KPIs, tendencias y recomendaciones accionables.
+              - generic [ref=e154] [cursor=pointer]:
+                - generic [ref=e155]: 📋
+                - generic [ref=e156]:
+                  - generic [ref=e157]: AnalistaDeNegocio
+                  - generic [ref=e158]: Analista de negocio que identifica requerimientos, alcance y objetivos de un proyecto.
+              - generic [ref=e160] [cursor=pointer]:
+                - generic [ref=e161]: 💰
+                - generic [ref=e162]:
+                  - generic [ref=e163]: EstimadorDeCostos
+                  - generic [ref=e164]: Estimador que calcula costos, tiempos y recursos necesarios para un proyecto.
+              - generic [ref=e166] [cursor=pointer]:
+                - generic [ref=e167]: 📅
+                - generic [ref=e168]:
+                  - generic [ref=e169]: PlanificadorDeProyecto
+                  - generic [ref=e170]: Planificador que genera el plan de trabajo, cronograma y asignación de recursos.
+              - generic [ref=e172] [cursor=pointer]:
+                - generic [ref=e173]: 📊
+                - generic [ref=e174]:
+                  - generic [ref=e175]: AnalistaDeDatos
+                  - generic [ref=e176]: Analista de datos que interpreta información de negocio y genera insights accionables.
+              - generic [ref=e178] [cursor=pointer]:
+                - generic [ref=e179]: ✍️
+                - generic [ref=e180]:
+                  - generic [ref=e181]: RedactorEjecutivo
+                  - generic [ref=e182]: Redactor ejecutivo que transforma datos en narrativas claras para directivos y tomadores de decisión.
+              - generic [ref=e184] [cursor=pointer]:
+                - generic [ref=e185]: 🎬
+                - generic [ref=e186]:
+                  - generic [ref=e187]: DiseñadorDePresentacion
+                  - generic [ref=e188]: Diseñador de presentaciones que estructura la información en slides listos para mostrar.
+              - generic [ref=e190] [cursor=pointer]:
+                - generic [ref=e191]: 🤝
+                - generic [ref=e192]:
+                  - generic [ref=e193]: ConsultorDeVentas
+                  - generic [ref=e194]: Consultor de ventas que entiende la necesidad del cliente y define la estrategia comercial.
+              - generic [ref=e196] [cursor=pointer]:
+                - generic [ref=e197]: 🧩
+                - generic [ref=e198]:
+                  - generic [ref=e199]: EspecialistaEnSolucion
+                  - generic [ref=e200]: Arquitecto de solución que diseña la propuesta técnica alineada a la necesidad del cliente.
+              - generic [ref=e202] [cursor=pointer]:
+                - generic [ref=e203]: 📄
+                - generic [ref=e204]:
+                  - generic [ref=e205]: GeneradorDePropuesta
+                  - generic [ref=e206]: Generador de propuestas comerciales profesionales listas para enviar al cliente.
+              - generic [ref=e208] [cursor=pointer]:
+                - generic [ref=e209]: 👨‍💻
+                - generic [ref=e210]:
+                  - generic [ref=e211]: Desarrollador
+                  - generic [ref=e212]: Desarrollador senior que propone soluciones de código, evalúa implementaciones y sugiere mejores prácticas.
+              - generic [ref=e214] [cursor=pointer]:
+                - generic [ref=e215]: 🏗️
+                - generic [ref=e216]:
+                  - generic [ref=e217]: Arquitecto
+                  - generic [ref=e218]: Arquitecto de software que diseña la solución a alto nivel, define patrones y toma decisiones técnicas.
+              - generic [ref=e220] [cursor=pointer]:
+                - generic [ref=e221]: 📋
+                - generic [ref=e222]:
+                  - generic [ref=e223]: ProjectManager
+                  - generic [ref=e224]: Project Manager que coordina alcance, tiempos, riesgos y prioridades del equipo.
+              - generic [ref=e226] [cursor=pointer]:
+                - generic [ref=e227]: 🗄️
+                - generic [ref=e228]:
+                  - generic [ref=e229]: DBA
+                  - generic [ref=e230]: Administrador de Base de Datos que diseña modelos de datos, optimiza queries y define estrategias de persistencia.
+              - generic [ref=e232] [cursor=pointer]:
+                - generic [ref=e233]: 🚨
+                - generic [ref=e234]:
+                  - generic [ref=e235]: EvaluadorDeUrgencia
+                  - generic [ref=e236]: Evalúa un texto y determina su nivel de urgencia, categoría y palabras clave para búsqueda.
+              - generic [ref=e238] [cursor=pointer]:
+                - generic [ref=e239]: 🔍
+                - generic [ref=e240]:
+                  - generic [ref=e241]: BuscadorDeCorreos
+                  - generic [ref=e242]: Busca correos relacionados en la base de datos ACSMail usando palabras clave del evaluador de urgencia.
+              - generic [ref=e244] [cursor=pointer]:
+                - generic [ref=e245]: ✍️
+                - generic [ref=e246]:
+                  - generic [ref=e247]: RedactorDeRespuesta
+                  - generic [ref=e248]: Redacta una respuesta profesional basada en la evaluación de urgencia y los correos históricos encontrados.
+              - generic [ref=e250] [cursor=pointer]:
+                - generic [ref=e251]: 🔬
+                - generic [ref=e252]:
+                  - generic [ref=e253]: AnalistaDeProducto
+                  - generic [ref=e254]: Analiza una frase o descripción breve y extrae las características principales de un producto.
+              - generic [ref=e256] [cursor=pointer]:
+                - generic [ref=e257]: ✨
+                - generic [ref=e258]:
+                  - generic [ref=e259]: RedactorPublicitario
+                  - generic [ref=e260]: Genera textos publicitarios impactantes basados en el análisis de producto.
+          - text:                                 
+        - main [ref=e261]:
+          - text: 
+          - generic [ref=e262]:
+            - generic [ref=e263]: 🤖
+            - heading "GeneralAssistant" [level=5] [ref=e264]
+            - paragraph [ref=e265]: Asistente conversacional de propósito general. Responde preguntas de forma clara y concisa.
+          - generic [ref=e266]:
+            - button "¿Qué es Semantic Kernel y cómo funciona?" [ref=e267] [cursor=pointer]
+            - button "Explica la diferencia entre agentes y plugins" [ref=e268] [cursor=pointer]
+            - button "Ayúdame a redactar un correo profesional" [ref=e269] [cursor=pointer]
+          - generic [ref=e271]:
+            - generic [ref=e272]: 
+            - heading "Bienvenido a AF-WebChat" [level=4] [ref=e273]
+            - paragraph [ref=e274]: Selecciona un agente y comienza a chatear.
+          - generic [ref=e275]:
+            - generic [ref=e276]:
+              - button "" [ref=e277] [cursor=pointer]:
+                - generic [ref=e278]: 
+              - textbox "Escribe un mensaje..." [ref=e279]
+              - button "" [ref=e280] [cursor=pointer]:
+                - generic [ref=e281]: 
+            - text:  
+        - complementary [ref=e282]:
+          - generic [ref=e283]: FLUJO DE EJECUCIÓN
+          - paragraph [ref=e285]: Sin flujo activo
+          - separator [ref=e286]
+          - generic [ref=e287]: INFO DEL AGENTE
+          - generic [ref=e288]:
+            - generic [ref=e289]:
+              - generic [ref=e290]: Nombre
+              - generic [ref=e291]: —
+            - generic [ref=e292]:
+              - generic [ref=e293]: Modelo
+              - generic [ref=e294]: —
+            - generic [ref=e295]:
+              - generic [ref=e296]: Herramientas
+              - generic [ref=e297]: —
+            - generic [ref=e298]:
+              - generic [ref=e299]: Proveedor
+              - generic [ref=e300]: —
+            - generic [ref=e301]:
+              - generic [ref=e302]: Middleware
+              - generic [ref=e303]: —
+          - separator [ref=e304]
+          - generic [ref=e305]: SESIÓN
+          - generic [ref=e306]:
+            - generic [ref=e307]:
+              - generic [ref=e308]: ID
+              - generic [ref=e309]: 8e2642f9-467...
+            - generic [ref=e310]:
+              - generic [ref=e311]: Mensajes
+              - generic [ref=e312]: "0"
+            - generic [ref=e313]:
+              - generic [ref=e314]: Tokens
+              - generic [ref=e315]: "0"
+      - text: 
