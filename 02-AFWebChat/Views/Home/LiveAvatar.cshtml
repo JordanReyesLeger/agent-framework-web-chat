@@ -1,0 +1,11 @@
+@{
+    ViewData["Title"] = "Azure Speech Avatar (Cascaded)";
+    ViewData["VuMode"] = "live-avatar";
+}
+
+@await Html.PartialAsync("_VoiceUiCard")
+
+@section Scripts {
+    <script src="https://aka.ms/csspeech/jsbrowserpackageraw"></script>
+    <script src="~/js/live-avatar.js" asp-append-version="true"></script>
+}

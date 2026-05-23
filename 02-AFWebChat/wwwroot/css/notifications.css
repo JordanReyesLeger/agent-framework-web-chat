@@ -1,0 +1,358 @@
+/* ==========================================================================
+   Notifications Center — diseño premium aislado
+   --------------------------------------------------------------------------
+   Variables al inicio para personalizar por cliente:
+   - sobrescribe en :root, en .notifications-page, o en un selector más
+     específico (ej. body.cliente-x .notifications-page { ... })
+   ========================================================================== */
+
+.notifications-page {
+    /* ----------------------------------------------------------------------
+       Tokens propios del Centro de Notificaciones.
+       Por defecto heredan de --app-* (branding global definido en _Layout).
+       Para un override puntual sin tocar el branding: redefine aquí.
+       ---------------------------------------------------------------------- */
+
+    /* Paleta base */
+    --nc-bg-from: var(--app-background-color, #0d1117);
+    --nc-bg-to:   color-mix(in srgb, var(--app-background-color, #0d1117) 70%, var(--app-navbar-color, #161b22));
+    --nc-surface: color-mix(in srgb, var(--app-surface-color, #161b22) 60%, transparent);
+    --nc-surface-hover: color-mix(in srgb, var(--app-surface-color, #161b22) 90%, transparent);
+    --nc-surface-2: var(--app-surface-color, rgba(255, 255, 255, 0.05));
+    --nc-border: var(--app-border-color, rgba(255, 255, 255, 0.08));
+    --nc-border-strong: color-mix(in srgb, var(--app-border-color, rgba(255,255,255,0.14)) 200%, transparent);
+
+    /* Texto */
+    --nc-text: var(--app-text-color, #e6edf3);
+    --nc-text-muted: var(--app-muted-color, #8b949e);
+    --nc-text-faint: color-mix(in srgb, var(--app-muted-color, #6e7681) 70%, transparent);
+
+    /* Acentos (heredan del branding global) */
+    --nc-accent: var(--app-accent-color, #58a6ff);
+    --nc-accent-2: var(--app-shape2-from, var(--app-accent-color, #bc8cff));
+    --nc-accent-glow: color-mix(in srgb, var(--nc-accent) 35%, transparent);
+
+    /* Severidades */
+    --nc-info: #58a6ff;
+    --nc-info-bg: rgba(88, 166, 255, 0.14);
+    --nc-success: var(--app-success-color, #3fb950);
+    --nc-success-bg: color-mix(in srgb, var(--nc-success) 14%, transparent);
+    --nc-warning: #d29922;
+    --nc-warning-bg: rgba(210, 153, 34, 0.14);
+    --nc-error: var(--app-error-color, #f85149);
+    --nc-error-bg: color-mix(in srgb, var(--nc-error) 14%, transparent);
+
+    /* Métricas */
+    --nc-radius: 14px;
+    --nc-radius-sm: 8px;
+    --nc-padding: 18px;
+    --nc-gap: 14px;
+    --nc-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+    --nc-shadow-hover: 0 14px 40px rgba(0, 0, 0, 0.45);
+
+    /* Tipografía */
+    --nc-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --nc-mono: ui-monospace, "Cascadia Code", "JetBrains Mono", Menlo, monospace;
+
+    /* Fondo de la página */
+    background: linear-gradient(180deg, var(--nc-bg-from) 0%, var(--nc-bg-to) 100%);
+    min-height: 100vh;
+    color: var(--nc-text);
+    font-family: var(--nc-font);
+}
+
+/* ---------- Hero ---------- */
+.notifications-page .nc-hero {
+    text-align: center;
+    margin-bottom: 32px;
+}
+.notifications-page .nc-hero-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--nc-accent), var(--nc-accent-2));
+    box-shadow: 0 0 32px var(--nc-accent-glow);
+    color: #fff;
+    font-size: 1.7rem;
+    animation: nc-pulse 2.8s ease-in-out infinite;
+}
+@keyframes nc-pulse {
+    0%, 100% { box-shadow: 0 0 32px var(--nc-accent-glow); }
+    50%      { box-shadow: 0 0 50px var(--nc-accent-glow); }
+}
+.notifications-page .nc-title {
+    font-size: 2.1rem;
+    font-weight: 700;
+    margin: 0 0 6px;
+    background: linear-gradient(135deg, #ffffff 30%, var(--nc-accent) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.01em;
+}
+.notifications-page .nc-subtitle {
+    color: var(--nc-text-muted);
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+/* ---------- Cards (sobrescribe Bootstrap sin romper) ---------- */
+.notifications-page .card {
+    background: var(--nc-surface);
+    border: 1px solid var(--nc-border);
+    border-radius: var(--nc-radius);
+    box-shadow: var(--nc-shadow);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: var(--nc-text);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.notifications-page .card:hover {
+    border-color: var(--nc-border-strong);
+    box-shadow: var(--nc-shadow-hover);
+}
+.notifications-page .card-header {
+    background: transparent;
+    border-bottom: 1px solid var(--nc-border);
+    padding: 16px var(--nc-padding);
+    font-weight: 600;
+    color: var(--nc-text);
+}
+.notifications-page .card-header h5,
+.notifications-page .card-header h6 {
+    color: var(--nc-text);
+    margin: 0;
+}
+.notifications-page .card-header i { color: var(--nc-accent); }
+.notifications-page .card-body { padding: var(--nc-padding); }
+
+/* ---------- Lista de conversaciones conectadas ---------- */
+.notifications-page .nc-conv-item,
+.notifications-page #conversationsList .list-group-item {
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid var(--nc-divider, var(--nc-border));
+    color: var(--nc-text);
+    padding: 14px var(--nc-padding);
+    transition: background 0.15s ease, padding-left 0.15s ease;
+}
+.notifications-page #conversationsList .list-group-item:hover {
+    background: var(--nc-surface-hover);
+    padding-left: calc(var(--nc-padding) + 4px);
+}
+.notifications-page #conversationsList .list-group-item:last-child { border-bottom: 0; }
+.notifications-page #conversationsList .badge {
+    background: var(--nc-info-bg) !important;
+    color: var(--nc-info) !important;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.notifications-page #conversationsList .text-muted { color: var(--nc-text-faint) !important; }
+
+/* Estado vacío de la lista */
+.notifications-page #conversationsList .text-center.text-muted {
+    color: var(--nc-text-faint) !important;
+}
+.notifications-page #conversationsList .display-4 {
+    color: var(--nc-text-faint);
+    opacity: 0.4;
+}
+
+/* ---------- Inputs / Form ---------- */
+.notifications-page .form-label {
+    color: var(--nc-text-muted);
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+}
+.notifications-page .form-control,
+.notifications-page .form-select {
+    background: var(--nc-surface-2);
+    border: 1px solid var(--nc-border);
+    border-radius: var(--nc-radius-sm);
+    color: var(--nc-text);
+    padding: 10px 14px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+.notifications-page .form-control:focus,
+.notifications-page .form-select:focus {
+    background: var(--nc-surface-hover);
+    border-color: var(--nc-accent);
+    box-shadow: 0 0 0 3px var(--nc-accent-glow);
+    color: var(--nc-text);
+    outline: none;
+}
+.notifications-page .form-control::placeholder { color: var(--nc-text-faint); }
+.notifications-page .form-select option { background: var(--nc-bg-to); color: var(--nc-text); }
+
+/* ---------- Severidad (radio chips) ---------- */
+.notifications-page .btn-group label.btn {
+    background: var(--nc-surface);
+    border: 1px solid var(--nc-border);
+    color: var(--nc-text-muted);
+    font-weight: 600;
+    transition: all 0.15s ease;
+}
+.notifications-page .btn-group label.btn:hover {
+    background: var(--nc-surface-hover);
+    color: var(--nc-text);
+}
+.notifications-page .btn-check:checked + label.btn-outline-info {
+    background: var(--nc-info-bg);
+    border-color: var(--nc-info);
+    color: var(--nc-info);
+}
+.notifications-page .btn-check:checked + label.btn-outline-success {
+    background: var(--nc-success-bg);
+    border-color: var(--nc-success);
+    color: var(--nc-success);
+}
+.notifications-page .btn-check:checked + label.btn-outline-warning {
+    background: var(--nc-warning-bg);
+    border-color: var(--nc-warning);
+    color: var(--nc-warning);
+}
+.notifications-page .btn-check:checked + label.btn-outline-danger {
+    background: var(--nc-error-bg);
+    border-color: var(--nc-error);
+    color: var(--nc-error);
+}
+
+/* ---------- Botón Enviar (primary) ---------- */
+.notifications-page .btn-primary {
+    background: linear-gradient(135deg, var(--nc-accent), var(--nc-accent-2));
+    border: 0;
+    padding: 12px 18px;
+    font-weight: 600;
+    border-radius: var(--nc-radius-sm);
+    box-shadow: 0 4px 14px var(--nc-accent-glow);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+.notifications-page .btn-primary:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px var(--nc-accent-glow);
+    filter: brightness(1.1);
+}
+.notifications-page .btn-primary:disabled { opacity: 0.55; cursor: progress; }
+
+/* Botón "Actualizar" secundario */
+.notifications-page .btn-outline-secondary {
+    color: var(--nc-text-muted);
+    border-color: var(--nc-border);
+    background: var(--nc-surface);
+}
+.notifications-page .btn-outline-secondary:hover {
+    background: var(--nc-surface-hover);
+    border-color: var(--nc-border-strong);
+    color: var(--nc-text);
+}
+
+/* ---------- Historial de envíos ---------- */
+.notifications-page #notificationHistory .list-group-item {
+    background: transparent;
+    border: 0;
+    border-left: 3px solid var(--nc-info);
+    border-radius: 0;
+    margin: 6px 10px;
+    padding: 10px 14px;
+    background: var(--nc-surface);
+    border-radius: var(--nc-radius-sm);
+    color: var(--nc-text);
+    animation: nc-slide-in 0.25s ease-out;
+}
+@keyframes nc-slide-in {
+    from { opacity: 0; transform: translateX(-8px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+.notifications-page #notificationHistory .list-group-item.nc-sev-success { border-left-color: var(--nc-success); }
+.notifications-page #notificationHistory .list-group-item.nc-sev-warning { border-left-color: var(--nc-warning); }
+.notifications-page #notificationHistory .list-group-item.nc-sev-error   { border-left-color: var(--nc-error); }
+.notifications-page #notificationHistory .badge.bg-success { background: var(--nc-success-bg) !important; color: var(--nc-success) !important; }
+.notifications-page #notificationHistory .badge.bg-danger  { background: var(--nc-error-bg)   !important; color: var(--nc-error)   !important; }
+.notifications-page #notificationHistory .text-muted { color: var(--nc-text-faint) !important; }
+.notifications-page #notificationHistory > .text-center.text-muted { padding: 24px !important; }
+
+/* ---------- Preview del Adaptive Card ---------- */
+.notifications-page #cardPreview {
+    background: #0a0d12 !important;
+    color: #c9d1d9;
+    border: 1px solid var(--nc-border);
+    border-radius: var(--nc-radius-sm);
+    font-family: var(--nc-mono);
+    font-size: 0.78rem;
+    line-height: 1.55;
+    margin: 0;
+}
+
+/* ---------- "Cómo funciona" ---------- */
+.notifications-page .card-body ol { padding-left: 18px; }
+.notifications-page .card-body ol li { margin-bottom: 6px; color: var(--nc-text-muted); }
+.notifications-page .card-body ol li strong { color: var(--nc-text); }
+.notifications-page .card-body hr {
+    border-color: var(--nc-border);
+    opacity: 1;
+}
+
+/* ---------- Animated background shapes (sutiles, no distraen) ---------- */
+.notifications-page .animated-background {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 0;
+}
+.notifications-page .shape {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.18;
+    animation: nc-float 18s ease-in-out infinite;
+}
+.notifications-page .shape-1 {
+    width: 380px; height: 380px;
+    background: var(--nc-accent);
+    top: -120px; left: -100px;
+}
+.notifications-page .shape-2 {
+    width: 320px; height: 320px;
+    background: var(--nc-accent-2);
+    bottom: -100px; right: -80px;
+    animation-delay: -6s;
+}
+.notifications-page .shape-3 {
+    width: 240px; height: 240px;
+    background: var(--nc-info);
+    top: 40%; left: 60%;
+    animation-delay: -12s;
+}
+@keyframes nc-float {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33%      { transform: translate(40px, -30px) scale(1.06); }
+    66%      { transform: translate(-30px, 30px) scale(0.96); }
+}
+
+/* ---------- Tema claro opcional ---------- */
+.notifications-page[data-nc-theme="light"] {
+    --nc-bg-from: #ffffff;
+    --nc-bg-to: #f6f8fa;
+    --nc-surface: #ffffff;
+    --nc-surface-hover: #f6f8fa;
+    --nc-surface-2: #f6f8fa;
+    --nc-border: #d0d7de;
+    --nc-border-strong: #afb8c1;
+    --nc-text: #1f2328;
+    --nc-text-muted: #59636e;
+    --nc-text-faint: #818b98;
+    --nc-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+    --nc-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.12);
+}

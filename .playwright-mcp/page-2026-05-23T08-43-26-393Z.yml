@@ -1,0 +1,92 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - navigation [ref=e3]:
+      - generic [ref=e4]:
+        - link " AF-WebChat" [ref=e5] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e7]: 
+          - generic [ref=e8]: AF-WebChat
+        - list [ref=e10]:
+          - listitem [ref=e11]:
+            - link " Inicio" [ref=e12] [cursor=pointer]:
+              - /url: /
+              - generic [ref=e13]: 
+              - text: Inicio
+          - listitem [ref=e14]:
+            - link " Chat de Agentes" [ref=e15] [cursor=pointer]:
+              - /url: /Home/Chat
+              - generic [ref=e16]: 
+              - text: Chat de Agentes
+          - listitem [ref=e17]:
+            - link " Documentos" [ref=e18] [cursor=pointer]:
+              - /url: /Home/Documents
+              - generic [ref=e19]: 
+              - text: Documentos
+          - listitem [ref=e20]:
+            - link " Notificaciones" [ref=e21] [cursor=pointer]:
+              - /url: /Home/Notifications
+              - generic [ref=e22]: 
+              - text: Notificaciones
+          - listitem [ref=e23]:
+            - link " Azure Speech Avatar" [ref=e24] [cursor=pointer]:
+              - /url: /Home/LiveAvatar
+              - generic [ref=e25]: 
+              - text: Azure Speech Avatar
+          - listitem [ref=e26]:
+            - link " Azure Voice Live" [ref=e27] [cursor=pointer]:
+              - /url: /Home/VoiceLive
+              - generic [ref=e28]: 
+              - text: Azure Voice Live
+  - main [ref=e30]:
+    - generic [ref=e32]:
+      - generic [ref=e33]:
+        - generic [ref=e34]:
+          - generic [ref=e36]: 
+          - generic [ref=e37]:
+            - heading "Gestión de Documentos" [level=2] [ref=e38]
+            - paragraph [ref=e39]: Sube, indexa y consulta documentos del cliente para tu motor de RAG.
+        - generic [ref=e40]:
+          - generic [ref=e41]:
+            - generic [ref=e42]: 
+            - text: "Cliente:"
+            - strong [ref=e43]: default
+          - generic [ref=e44]:
+            - generic [ref=e45]: 
+            - text: "Índice:"
+            - strong [ref=e46]: skill
+      - generic [ref=e47]:
+        - generic [ref=e48]:
+          - generic [ref=e49]:
+            - heading " Upload Documents" [level=4] [ref=e50]:
+              - generic [ref=e51]: 
+              - text: Upload Documents
+            - generic [ref=e52] [cursor=pointer]:
+              - generic [ref=e53]: 
+              - paragraph [ref=e54]: Drag & Drop files here or click to browse
+              - paragraph [ref=e55]: "Supported formats: PDF, DOCX, TXT — Max 50 MB per file"
+            - text:   
+          - generic [ref=e56]:
+            - heading " Index Configuration" [level=4] [ref=e57]:
+              - generic [ref=e58]: 
+              - text: Index Configuration
+            - paragraph [ref=e59]: Initialize the Azure Search index with the required schema, skillset, and indexer.
+            - generic [ref=e60]:
+              - button " Setup Index" [ref=e61] [cursor=pointer]:
+                - generic [ref=e62]: 
+                - text: Setup Index
+              - button " Run Indexer" [ref=e63] [cursor=pointer]:
+                - generic [ref=e64]: 
+                - text: Run Indexer
+        - generic [ref=e66]:
+          - generic [ref=e67]:
+            - heading " Documentos del Cliente 0" [level=4] [ref=e68]:
+              - generic [ref=e69]: 
+              - text: Documentos del Cliente
+              - generic [ref=e70]: "0"
+            - button " Actualizar" [ref=e71] [cursor=pointer]:
+              - generic [ref=e72]: 
+              - text: Actualizar
+          - textbox "Buscar documentos..." [ref=e74]
+          - generic [ref=e76]:
+            - status [ref=e77]
+            - text: Cargando...

@@ -1,0 +1,76 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - navigation [ref=e3]:
+      - generic [ref=e4]:
+        - link " AF-WebChat" [ref=e5] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e7]: 
+          - generic [ref=e8]: AF-WebChat
+        - list [ref=e10]:
+          - listitem [ref=e11]:
+            - link " Inicio" [ref=e12] [cursor=pointer]:
+              - /url: /
+              - generic [ref=e13]: 
+              - text: Inicio
+          - listitem [ref=e14]:
+            - link " Chat de Agentes" [ref=e15] [cursor=pointer]:
+              - /url: /Home/Chat
+              - generic [ref=e16]: 
+              - text: Chat de Agentes
+          - listitem [ref=e17]:
+            - link " Documentos" [ref=e18] [cursor=pointer]:
+              - /url: /Home/Documents
+              - generic [ref=e19]: 
+              - text: Documentos
+          - listitem [ref=e20]:
+            - link " Notificaciones" [ref=e21] [cursor=pointer]:
+              - /url: /Home/Notifications
+              - generic [ref=e22]: 
+              - text: Notificaciones
+          - listitem [ref=e23]:
+            - link " Azure Speech Avatar" [ref=e24] [cursor=pointer]:
+              - /url: /Home/LiveAvatar
+              - generic [ref=e25]: 
+              - text: Azure Speech Avatar
+          - listitem [ref=e26]:
+            - link " Azure Voice Live" [ref=e27] [cursor=pointer]:
+              - /url: /Home/VoiceLive
+              - generic [ref=e28]: 
+              - text: Azure Voice Live
+  - main [ref=e30]:
+    - generic [ref=e31]:
+      - generic [ref=e33]:
+        - generic [ref=e35]: 
+        - heading "Agent Framework Web Chat" [level=1] [ref=e36]
+        - paragraph [ref=e37]: Interactúa con agentes de IA impulsados por Microsoft Agent Framework, diseña flujos de orquestación y visualiza la ejecución en tiempo real
+        - link " Comenzar a Chatear" [ref=e39] [cursor=pointer]:
+          - /url: /Home/Chat
+          - generic [ref=e40]: 
+          - text: Comenzar a Chatear
+      - generic [ref=e41]:
+        - generic [ref=e42]:
+          - generic [ref=e44]:
+            - generic [ref=e46]: 
+            - heading "Gestión de Agentes" [level=5] [ref=e47]
+            - paragraph [ref=e48]: Interactúa con agentes de IA construidos con Microsoft Agent Framework, con herramientas y proveedores de contexto personalizados.
+          - generic [ref=e51]:
+            - generic [ref=e53]: 
+            - heading "Flujos de Orquestación" [level=5] [ref=e54]
+            - paragraph [ref=e55]: Diseña flujos secuenciales, paralelos, condicionales, iterativos o de grupo y visualiza la interacción entre agentes en tiempo real.
+          - generic [ref=e58]:
+            - generic [ref=e60]: 
+            - heading "Historial de Ejecución" [level=5] [ref=e61]
+            - paragraph [ref=e62]: Visualiza el historial completo de interacciones de agentes con timestamps, llamadas a herramientas y flujos de ejecución.
+        - generic [ref=e64]:
+          - generic [ref=e66]:
+            - generic [ref=e68]: 
+            - heading "Documentos RAG" [level=5] [ref=e69]
+            - paragraph [ref=e70]: Sube documentos, indéxalos en Azure AI Search y permite que los agentes respondan preguntas usando tus datos.
+          - generic [ref=e73]:
+            - generic [ref=e75]: 
+            - heading "Aprobación de Herramientas" [level=5] [ref=e76]
+            - paragraph [ref=e77]: Los agentes con herramientas sensibles (INSERT, UPDATE, DELETE) requieren aprobación humana explícita antes de ejecutarse.
+          - generic [ref=e80]:
+            - generic [ref=e82]: 
+            - heading "SQL y Herramientas MCP" [level=5] [ref=e83]
+            - paragraph [ref=e84]: Consulta bases de datos con lenguaje natural, conéctate a servidores MCP y extiende agentes con plugins personalizados.

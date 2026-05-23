@@ -1,0 +1,225 @@
+/* ==========================================================================
+   Navbar — diseño premium aislado
+   --------------------------------------------------------------------------
+   Consume EXCLUSIVAMENTE los tokens globales --app-* del branding (definidos
+   en _Layout.cshtml a partir de AppBrandingSettings). Un cambio de branding
+   en appsettings se refleja aquí automáticamente.
+   ========================================================================== */
+
+/* Contenedor sticky con glassmorphism */
+.navbar {
+    position: sticky;
+    top: 0;
+    z-index: 1030;
+    background: color-mix(in srgb, var(--app-navbar-color, #161b22) 75%, transparent) !important;
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    border-bottom: 1px solid color-mix(in srgb, var(--app-border-color, rgba(255,255,255,0.08)) 80%, transparent) !important;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 4px 18px rgba(0, 0, 0, 0.22) !important;
+    padding-top: 0.55rem !important;
+    padding-bottom: 0.55rem !important;
+    transition: padding 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Cuando se hace scroll, padding se reduce un poco (se siente más compacto) */
+.navbar.is-scrolled {
+    padding-top: 0.35rem !important;
+    padding-bottom: 0.35rem !important;
+    box-shadow: 0 2px 24px rgba(0, 0, 0, 0.35) !important;
+}
+
+/* ---------- Brand ---------- */
+.navbar-brand {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 12px;
+    color: var(--app-text-color, #fff) !important;
+    font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: -0.01em;
+    padding: 4px 14px 4px 4px !important;
+    border-radius: 12px;
+    transition: transform 0.18s ease, background 0.18s ease;
+    position: relative;
+}
+.navbar-brand:hover {
+    background: color-mix(in srgb, var(--app-accent-color) 10%, transparent);
+    transform: translateY(-1px);
+}
+.navbar-brand:hover .brand-icon {
+    box-shadow: 0 0 24px color-mix(in srgb, var(--app-accent-color) 55%, transparent),
+                inset 0 1px 0 rgba(255, 255, 255, 0.18);
+    transform: scale(1.04);
+}
+
+/* Caja con gradiente para el icono — espejo del hero icon de Home */
+.navbar-brand .brand-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg,
+        var(--app-accent-color, #0078D4),
+        color-mix(in srgb, var(--app-accent-color, #0078D4) 60%, var(--app-shape2-from, #8764b8)));
+    box-shadow: 0 0 16px color-mix(in srgb, var(--app-accent-color, #0078D4) 35%, transparent),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    color: #fff;
+    transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+.navbar-brand .brand-icon i {
+    font-size: 1.15rem;
+    color: #fff;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25));
+}
+.navbar-brand .brand-icon .brand-logo {
+    height: 28px;
+    width: auto;
+    object-fit: contain;
+}
+
+/* Texto del brand al lado del recuadro */
+.navbar-brand .brand-text {
+    background: linear-gradient(135deg,
+        var(--app-text-color, #fff) 40%,
+        color-mix(in srgb, var(--app-accent-color, #0078D4) 80%, var(--app-text-color, #fff)) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1;
+}
+
+/* En pantallas pequeñas escondemos el texto y dejamos solo el recuadro */
+@media (max-width: 575.98px) {
+    .navbar-brand .brand-text { display: none; }
+    .navbar-brand { padding: 4px !important; }
+}
+
+/* ---------- Nav links ---------- */
+.navbar-nav { gap: 2px; }
+
+.nav-link {
+    position: relative;
+    color: color-mix(in srgb, var(--app-text-color, #fff) 65%, transparent) !important;
+    font-weight: 500;
+    font-size: 0.85rem;
+    padding: 8px 14px !important;
+    border-radius: 8px;
+    transition: color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+/* Icono del nav-link con micro-interacción */
+.nav-link i {
+    font-size: 0.95rem;
+    transition: transform 0.2s ease, color 0.2s ease;
+    color: inherit;
+    opacity: 0.85;
+}
+
+.nav-link:hover {
+    color: var(--app-text-color, #fff) !important;
+    background: color-mix(in srgb, var(--app-text-color, #fff) 6%, transparent);
+}
+.nav-link:hover i { transform: translateY(-1px) scale(1.05); opacity: 1; }
+
+/* Estado ACTIVO — pill con tinte del acento + indicador inferior animado */
+.nav-link.active,
+.nav-link[aria-current="page"] {
+    color: var(--app-text-color, #fff) !important;
+    background: color-mix(in srgb, var(--app-accent-color, #C9A227) 14%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--app-accent-color) 22%, transparent);
+}
+.nav-link.active i,
+.nav-link[aria-current="page"] i {
+    color: var(--app-accent-color, #C9A227);
+    opacity: 1;
+}
+/* Indicador subrayado animado en el activo */
+.nav-link.active::after,
+.nav-link[aria-current="page"]::after {
+    content: '';
+    position: absolute;
+    left: 14px;
+    right: 14px;
+    bottom: 2px;
+    height: 2px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--app-accent-color), color-mix(in srgb, var(--app-accent-color) 60%, var(--app-text-color, #fff)));
+    animation: nav-active-in 0.3s ease-out;
+}
+@keyframes nav-active-in {
+    from { transform: scaleX(0); opacity: 0; }
+    to   { transform: scaleX(1); opacity: 1; }
+}
+
+/* ---------- Botón hamburguesa (mobile) ---------- */
+.navbar-toggler {
+    border: 1px solid var(--app-border-color, rgba(255,255,255,0.12)) !important;
+    background: color-mix(in srgb, var(--app-surface-color, rgba(255,255,255,0.04)) 80%, transparent);
+    border-radius: 8px;
+    padding: 4px 10px;
+    transition: background 0.18s ease, border-color 0.18s ease;
+}
+.navbar-toggler:hover {
+    background: color-mix(in srgb, var(--app-text-color, #fff) 10%, transparent);
+    border-color: var(--app-accent-color);
+}
+.navbar-toggler:focus-visible {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--app-accent-color) 35%, transparent);
+}
+.navbar-toggler-icon { filter: invert(1) opacity(0.85); }
+
+/* ---------- Action buttons a la derecha (af-nav-btn, etc.) ---------- */
+.af-nav-btn {
+    background: color-mix(in srgb, var(--app-surface-color) 80%, transparent);
+    border: 1px solid var(--app-border-color);
+    color: color-mix(in srgb, var(--app-text-color, #fff) 80%, transparent);
+    font-size: 0.78rem;
+    padding: 5px 12px;
+    border-radius: 7px;
+    transition: all 0.18s ease;
+}
+.af-nav-btn:hover {
+    background: color-mix(in srgb, var(--app-accent-color) 18%, var(--app-surface-color));
+    color: var(--app-text-color, #fff);
+    border-color: color-mix(in srgb, var(--app-accent-color) 50%, var(--app-border-color));
+}
+
+.af-nav-session-badge {
+    color: color-mix(in srgb, var(--app-text-color, #fff) 45%, transparent);
+    font-size: 0.7rem;
+    font-family: var(--nc-mono, ui-monospace, "Cascadia Code", Menlo, monospace);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 575.98px) {
+    .navbar-collapse {
+        background: var(--app-navbar-color);
+        border: 1px solid var(--app-border-color);
+        border-radius: 10px;
+        padding: 8px;
+        margin-top: 8px;
+    }
+    .navbar-nav { gap: 4px; }
+    .nav-link {
+        padding: 10px 14px !important;
+        font-size: 0.9rem;
+    }
+    /* En mobile el subrayado animado no aplica bien — usamos un borde lateral */
+    .nav-link.active::after,
+    .nav-link[aria-current="page"]::after {
+        left: 0;
+        right: auto;
+        top: 8px;
+        bottom: 8px;
+        width: 3px;
+        height: auto;
+        border-radius: 0 3px 3px 0;
+        animation: none;
+    }
+}

@@ -1,0 +1,10 @@
+@{
+    ViewData["Title"] = "Azure Voice Live";
+    ViewData["VuMode"] = "voice-live";
+}
+
+@await Html.PartialAsync("_VoiceUiCard")
+
+@section Scripts {
+    <script src="~/js/voice-live.js" asp-append-version="true"></script>
+}

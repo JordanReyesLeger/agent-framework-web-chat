@@ -6,6 +6,8 @@
     var branding = BrandingOptions.Value;
 }
 
+<link rel="stylesheet" href="~/css/notifications.css" asp-append-version="true" />
+
 <div class="notifications-page">
     <!-- Animated Background Shapes -->
     <div class="animated-background">
@@ -16,10 +18,10 @@
 
     <div class="container-fluid py-4" style="position:relative; z-index:1;">
         <!-- Hero header -->
-        <div class="text-center mb-4">
-            <i class="bi bi-bell-fill" style="font-size:2.5rem; color:var(--app-accent-color);"></i>
-            <h2 class="mt-2">Centro de Notificaciones</h2>
-            <p class="text-muted">Envía notificaciones proactivas a usuarios conectados vía Teams o WebChat</p>
+        <div class="nc-hero">
+            <div class="nc-hero-icon"><i class="bi bi-bell-fill"></i></div>
+            <h2 class="nc-title">Centro de Notificaciones</h2>
+            <p class="nc-subtitle">Envía notificaciones proactivas a usuarios conectados vía Teams o WebChat</p>
         </div>
 
         <div class="row g-4">
@@ -198,11 +200,11 @@
             }
 
             list.innerHTML = conversations.map(c => `
-                <div class="list-group-item list-group-item-action bg-dark text-light border-secondary">
+                <div class="list-group-item list-group-item-action">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <strong><i class="bi bi-person-circle me-1"></i>${escapeHtml(c.userName)}</strong>
-                            <span class="badge bg-secondary ms-2">${escapeHtml(c.channelId)}</span>
+                            <span class="badge ms-2">${escapeHtml(c.channelId)}</span>
                         </div>
                         <small class="text-muted">${new Date(c.lastActivity).toLocaleString()}</small>
                     </div>
@@ -272,7 +274,7 @@
         const success = result.sent !== undefined ? result.sent > 0 : false;
 
         const entry = document.createElement('div');
-        entry.className = 'list-group-item bg-dark text-light border-secondary';
+        entry.className = 'list-group-item nc-sev-' + severity;
         entry.innerHTML = `
             <div class="d-flex justify-content-between">
                 <strong>${iconMap[severity] || '🔔'} ${escapeHtml(title)}</strong>

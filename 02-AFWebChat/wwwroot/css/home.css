@@ -1,0 +1,200 @@
+/* ==========================================================================
+   Home / Index Page — diseño premium aislado
+   --------------------------------------------------------------------------
+   Esta hoja consume EXCLUSIVAMENTE los tokens globales --app-* definidos en
+   _Layout.cshtml a partir de AppBrandingSettings. Para rebrandear por cliente,
+   cambia el branding en appsettings (AppBranding sección): todas las páginas
+   (Home, Notifications, Documents, Voice...) se adaptan automáticamente.
+
+   No introduce nuevas variables privadas — todo se hereda del tema global.
+   ========================================================================== */
+
+.index-page {
+    position: relative;
+    overflow: hidden;
+    min-height: calc(100vh - 56px);
+    color: var(--app-text-color);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* ---------- Hero ---------- */
+.index-page .hero-section {
+    position: relative;
+    z-index: 1;
+    padding: 96px 20px 56px;
+    text-align: center;
+}
+.index-page .hero-content {
+    max-width: 780px;
+    margin: 0 auto;
+    animation: idx-fade-up 0.6s ease-out;
+}
+@keyframes idx-fade-up {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.index-page .hero-icon {
+    width: 96px;
+    height: 96px;
+    margin: 0 auto 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 24px;
+    background: linear-gradient(135deg, var(--app-accent-color), var(--app-shape2-from, var(--app-accent-color)));
+    box-shadow: 0 0 48px color-mix(in srgb, var(--app-accent-color) 35%, transparent),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    color: #fff;
+    font-size: 2.6rem;
+    animation: idx-pulse 3s ease-in-out infinite;
+}
+.index-page .hero-icon img { height: 64px; width: auto; object-fit: contain; }
+@keyframes idx-pulse {
+    0%, 100% { box-shadow: 0 0 48px color-mix(in srgb, var(--app-accent-color) 30%, transparent), inset 0 1px 0 rgba(255,255,255,0.15); }
+    50%      { box-shadow: 0 0 72px color-mix(in srgb, var(--app-accent-color) 50%, transparent), inset 0 1px 0 rgba(255,255,255,0.15); }
+}
+
+.index-page .hero-title {
+    color: var(--app-text-color) !important;
+    font-weight: 800;
+    margin: 0 0 14px;
+    font-size: clamp(2rem, 4vw, 3rem);
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, var(--app-text-color) 30%, var(--app-accent-color) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1.15;
+}
+
+.index-page .hero-subtitle {
+    color: var(--app-muted-color);
+    max-width: 620px;
+    margin: 0 auto 40px;
+    font-size: 1.05rem;
+    line-height: 1.55;
+}
+
+.index-page .hero-cta { margin-top: 0; }
+.index-page .hero-cta .btn {
+    background: linear-gradient(135deg, var(--app-accent-color), color-mix(in srgb, var(--app-accent-color) 70%, var(--app-shape2-from, var(--app-accent-color))));
+    border: 0;
+    padding: 14px 32px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 12px;
+    color: #fff !important;
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--app-accent-color) 30%, transparent);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+.index-page .hero-cta .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px color-mix(in srgb, var(--app-accent-color) 45%, transparent);
+    filter: brightness(1.08);
+}
+.index-page .hero-cta .btn:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--app-accent-color) 30%, transparent);
+}
+
+/* ---------- Features grid ---------- */
+.index-page .features-section {
+    position: relative;
+    z-index: 1;
+    padding: 24px 20px 80px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.index-page .feature-card {
+    background: color-mix(in srgb, var(--app-surface-color) 80%, transparent);
+    border: 1px solid var(--app-border-color);
+    border-radius: 16px;
+    padding: 28px;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    animation: idx-fade-up 0.5s ease-out both;
+}
+/* Stagger de entrada para las 6 cards */
+.index-page .features-section .col-md-4:nth-child(1) .feature-card { animation-delay: 0.05s; }
+.index-page .features-section .col-md-4:nth-child(2) .feature-card { animation-delay: 0.10s; }
+.index-page .features-section .col-md-4:nth-child(3) .feature-card { animation-delay: 0.15s; }
+.index-page .features-section .row:nth-child(2) .col-md-4:nth-child(1) .feature-card { animation-delay: 0.20s; }
+.index-page .features-section .row:nth-child(2) .col-md-4:nth-child(2) .feature-card { animation-delay: 0.25s; }
+.index-page .features-section .row:nth-child(2) .col-md-4:nth-child(3) .feature-card { animation-delay: 0.30s; }
+
+.index-page .feature-card:hover {
+    transform: translateY(-6px);
+    border-color: color-mix(in srgb, var(--app-accent-color) 50%, var(--app-border-color));
+    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.32),
+                0 0 0 1px color-mix(in srgb, var(--app-accent-color) 18%, transparent);
+}
+
+.index-page .feature-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    transition: transform 0.25s ease;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+}
+.index-page .feature-card:hover .feature-icon {
+    transform: scale(1.08) rotate(-3deg);
+}
+.index-page .feature-icon i { font-size: 26px; color: #fff; }
+
+/* Mantengo las paletas por feature (azul/verde/morado/...) que ya existían */
+.index-page .feature-icon--blue   { background: linear-gradient(135deg, #0078d4 0%, #00bcf2 100%); }
+.index-page .feature-icon--green  { background: linear-gradient(135deg, #238636 0%, #2ea043 100%); }
+.index-page .feature-icon--purple { background: linear-gradient(135deg, #8764b8 0%, #b392f0 100%); }
+.index-page .feature-icon--orange { background: linear-gradient(135deg, #d18616 0%, #ff8c00 100%); }
+.index-page .feature-icon--teal   { background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%); }
+.index-page .feature-icon--red    { background: linear-gradient(135deg, #e94560 0%, #c93a52 100%); }
+
+.index-page .feature-card h5 {
+    color: var(--app-text-color);
+    font-weight: 700;
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+    letter-spacing: -0.01em;
+}
+.index-page .feature-card p {
+    color: var(--app-muted-color);
+    font-size: 0.92rem;
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* Glow esquina sup-der de cada card (más sutil, dimensionado al hover) */
+.index-page .feature-gradient {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 140px;
+    height: 140px;
+    border-radius: 0 16px 0 100%;
+    opacity: 0.18;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.index-page .feature-card:hover .feature-gradient { opacity: 0.32; transform: scale(1.05); }
+.index-page .feature-gradient--blue   { background: linear-gradient(135deg, #0078d4 0%, transparent 70%); }
+.index-page .feature-gradient--green  { background: linear-gradient(135deg, #238636 0%, transparent 70%); }
+.index-page .feature-gradient--purple { background: linear-gradient(135deg, #8764b8 0%, transparent 70%); }
+.index-page .feature-gradient--orange { background: linear-gradient(135deg, #d18616 0%, transparent 70%); }
+.index-page .feature-gradient--teal   { background: linear-gradient(135deg, #0d9488 0%, transparent 70%); }
+.index-page .feature-gradient--red    { background: linear-gradient(135deg, #e94560 0%, transparent 70%); }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 768px) {
+    .index-page .hero-section { padding: 64px 20px 32px; }
+    .index-page .hero-icon { width: 80px; height: 80px; font-size: 2rem; }
+    .index-page .feature-card { padding: 22px; }
+}

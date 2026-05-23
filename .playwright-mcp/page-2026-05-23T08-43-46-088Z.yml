@@ -1,0 +1,121 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - navigation [ref=e3]:
+      - generic [ref=e4]:
+        - link " AF-WebChat" [ref=e5] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e7]: 
+          - generic [ref=e8]: AF-WebChat
+        - list [ref=e10]:
+          - listitem [ref=e11]:
+            - link " Inicio" [ref=e12] [cursor=pointer]:
+              - /url: /
+              - generic [ref=e13]: 
+              - text: Inicio
+          - listitem [ref=e14]:
+            - link " Chat de Agentes" [ref=e15] [cursor=pointer]:
+              - /url: /Home/Chat
+              - generic [ref=e16]: 
+              - text: Chat de Agentes
+          - listitem [ref=e17]:
+            - link " Documentos" [ref=e18] [cursor=pointer]:
+              - /url: /Home/Documents
+              - generic [ref=e19]: 
+              - text: Documentos
+          - listitem [ref=e20]:
+            - link " Notificaciones" [ref=e21] [cursor=pointer]:
+              - /url: /Home/Notifications
+              - generic [ref=e22]: 
+              - text: Notificaciones
+          - listitem [ref=e23]:
+            - link " Azure Speech Avatar" [ref=e24] [cursor=pointer]:
+              - /url: /Home/LiveAvatar
+              - generic [ref=e25]: 
+              - text: Azure Speech Avatar
+          - listitem [ref=e26]:
+            - link " Azure Voice Live" [ref=e27] [cursor=pointer]:
+              - /url: /Home/VoiceLive
+              - generic [ref=e28]: 
+              - text: Azure Voice Live
+  - main [ref=e30]:
+    - generic [ref=e32]:
+      - generic [ref=e33]:
+        - generic [ref=e35]: 
+        - heading "Centro de Notificaciones" [level=2] [ref=e36]
+        - paragraph [ref=e37]: Envía notificaciones proactivas a usuarios conectados vía Teams o WebChat
+      - generic [ref=e38]:
+        - generic [ref=e39]:
+          - generic [ref=e40]:
+            - generic [ref=e41]:
+              - heading " Conversaciones Conectadas" [level=5] [ref=e42]:
+                - generic [ref=e43]: 
+                - text: Conversaciones Conectadas
+              - button " Actualizar" [ref=e44] [cursor=pointer]:
+                - generic [ref=e45]: 
+                - text: Actualizar
+            - generic [ref=e48]:
+              - generic [ref=e49]: 
+              - text: No conversations yet.
+              - text: Users must first interact with the bot in Teams or WebChat.
+          - generic [ref=e50]:
+            - heading " ¿Cómo Funciona?" [level=6] [ref=e52]:
+              - generic [ref=e53]: 
+              - text: ¿Cómo Funciona?
+            - generic [ref=e54]:
+              - list [ref=e55]:
+                - listitem [ref=e56]: Un usuario interactúa con el bot en Teams o WebChat
+                - listitem [ref=e57]:
+                  - text: El bot almacena una
+                  - strong [ref=e58]: Referencia de Conversación
+                - listitem [ref=e59]: Tu sistema puede enviar mensajes al usuario en cualquier momento
+                - listitem [ref=e60]:
+                  - text: Los mensajes se envían como
+                  - strong [ref=e61]: Adaptive Cards
+                  - text: con formato enriquecido
+              - separator [ref=e62]
+              - paragraph [ref=e63]:
+                - generic [ref=e64]: 
+                - text: "Casos de uso: alertas, recordatorios, actualizaciones de estado, solicitudes de aprobación, reportes programados."
+        - generic [ref=e65]:
+          - generic [ref=e66]:
+            - heading " Enviar Notificación" [level=5] [ref=e68]:
+              - generic [ref=e69]: 
+              - text: Enviar Notificación
+            - generic [ref=e71]:
+              - generic [ref=e72]:
+                - generic [ref=e73]: Destino
+                - combobox "Destino" [ref=e74]:
+                  - option "Selecciona una conversación..." [disabled] [selected]
+                  - option "📢 Enviar a todas las conversaciones"
+              - generic [ref=e75]:
+                - generic [ref=e76]: Título
+                - textbox "Título" [ref=e77]:
+                  - /placeholder: ej. Despliegue completado
+              - generic [ref=e78]:
+                - generic [ref=e79]: Severidad
+                - group [ref=e80]:
+                  - radio "🔔 Info" [checked]
+                  - generic [ref=e81] [cursor=pointer]: 🔔 Info
+                  - radio "✅ Éxito"
+                  - generic [ref=e82] [cursor=pointer]: ✅ Éxito
+                  - radio "⚠️ Advertencia"
+                  - generic [ref=e83] [cursor=pointer]: ⚠️ Advertencia
+                  - radio "🚨 Error"
+                  - generic [ref=e84] [cursor=pointer]: 🚨 Error
+              - generic [ref=e85]:
+                - generic [ref=e86]: Mensaje
+                - textbox "Mensaje" [ref=e87]:
+                  - /placeholder: Escribe el mensaje de notificación...
+              - button " Enviar Notificación" [ref=e88] [cursor=pointer]:
+                - generic [ref=e89]: 
+                - text: Enviar Notificación
+          - generic [ref=e90]:
+            - heading " Historial de Envíos" [level=6] [ref=e92]:
+              - generic [ref=e93]: 
+              - text: Historial de Envíos
+            - generic [ref=e96]: Aún no se han enviado notificaciones.
+          - generic [ref=e97]:
+            - heading " Vista Previa del Adaptive Card (JSON)" [level=6] [ref=e99]:
+              - generic [ref=e100]: 
+              - text: Vista Previa del Adaptive Card (JSON)
+            - generic [ref=e102]: "{ \"type\": \"AdaptiveCard\", \"version\": \"1.5\", \"body\": [ { \"type\": \"Container\", \"style\": \"emphasis\", \"items\": [ { \"type\": \"TextBlock\", \"text\": \"🔔 Título de tu notificación aquí\", \"weight\": \"Bolder\", \"size\": \"Medium\" } ] }, { \"type\": \"TextBlock\", \"text\": \"Tu mensaje de notificación aquí...\", \"wrap\": true } ], \"actions\": [ { \"type\": \"Action.Submit\", \"title\": \"👍 Confirmar\" } ] }"

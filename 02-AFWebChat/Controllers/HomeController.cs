@@ -13,4 +13,8 @@ public class HomeController : Controller
     public IActionResult Notifications() => View();
 
     public IActionResult AgentChat() => View();
+
+    public IActionResult LiveAvatar() => View();
+
+    public IActionResult VoiceLive() => View();
 }

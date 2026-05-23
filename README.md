@@ -141,6 +141,12 @@ SE-AgentFramework.sln
 │  │    (solo si se habilitan los agentes SqlAzure / BingGrounding)            │  │
 │  └───────────────────────────────────────────────────────────────────────────┘  │
 │                                                                                 │
+│  ┌───────────────────────────────────────────────────────────────────────────┐  │
+│  │  🎙️ Opcionales (Voz y Avatar):                                           │  │
+│  │    Azure Speech Service · Azure VoiceLive (gpt-4o-realtime)              │  │
+│  │    (solo si se habilitan las páginas VoiceLive / LiveAvatar)              │  │
+│  └───────────────────────────────────────────────────────────────────────────┘  │
+│                                                                                 │
 └─────────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -197,8 +203,12 @@ AgentOrchestrationService
 | **Azure Cosmos DB** | Persistencia duradera de sesiones de conversación (alternativa al almacenamiento en memoria) | `SessionService` (configuración opcional) | `CosmosDB:ConnectionString`, `CosmosDB:DatabaseName` |
 | **Azure Bot Service** | Canal de comunicación con Microsoft Teams. Gestiona el registro del bot, autenticación y enrutamiento de mensajes | `TeamsBotAgent`, `ConversationReferenceStore` | `Connections:ServiceConnection`, `TokenValidation` |
 | **Bing Search API** ⚙️ | Grounding con búsqueda web en tiempo real. Permite a los agentes acceder a información actualizada de internet. **No se requiere si no se usa el agente BingGrounding** | `BingGroundingPlugin` | `BingSearch:ApiKey` |
+| **Azure Speech Service** 🎙️ | Síntesis de voz neural y reconocimiento de voz. Usado por la página LiveAvatar para generar audio+animación del avatar en tiempo real (AvatarSynthesizer) y transcribir al usuario (SpeechRecognizer). **No se requiere si no se usa la página LiveAvatar** | `LiveAvatarController`, `live-avatar.js` | `AzureSpeech:SubscriptionKey`, `AzureSpeech:Region` |
+| **Azure VoiceLive** 🎙️ | Conversaciones de voz en tiempo real con modelos GPT-4o Realtime. Soporta tres modos: Full Native S2S (voces OpenAI), Cascade (voces neurales Azure) e Hybrid (voces HD Azure). Opcionalmente renderiza un avatar animado vía WebRTC. **No se requiere si no se usa la página VoiceLive** | `VoiceLiveController`, `voice-live.js` | `VoiceLive:Endpoint`, `VoiceLive:ApiKey`, `VoiceLive:Model` |
 
 > ⚙️ = Completamente opcional. La aplicación funciona sin este servicio; solo se necesita si se habilitan los agentes que lo consumen.
+>
+> 🎙️ = Funcionalidad de voz y avatar opcional. No se requiere ninguna infraestructura adicional si no se usan las páginas VoiceLive/LiveAvatar. Los recursos de Azure Speech y los deployments de modelos realtime solo son necesarios si se activan estas funcionalidades.
 
 ### Diagrama de recursos Azure
 
@@ -242,6 +252,20 @@ AgentOrchestrationService
 │Foundry │ │ Intel.   │ │ API (opt) │
 │(Agents)│ │ (OCR)    │ │           │
 └────────┘ └──────────┘ └───────────┘
+
+┌────────────────────────────────────────────┐
+│ 🎙️ Voz y Avatar (opcionales)              │
+│                                            │
+│ ┌──────────┐  ┌─────────────────────────┐  │
+│ │ Azure    │  │ Azure VoiceLive         │  │
+│ │ Speech   │  │ (gpt-4o-realtime        │  │
+│ │ Service  │  │  + avatar WebRTC)       │  │
+│ │(LiveAvat)│  │                         │  │
+│ └──────────┘  └─────────────────────────┘  │
+│                                            │
+│  Solo si se usan las páginas               │
+│  VoiceLive / LiveAvatar                    │
+└────────────────────────────────────────────┘
                               ▲
                          (opcional)
 
@@ -258,6 +282,48 @@ La solución soporta dos modos de autenticación hacia los servicios de Azure:
 | **API Key** | Se configura `ApiKey` en `appsettings.Development.json` | Solo para desarrollo local rápido |
 
 La autenticación con Bot Framework (Teams) usa **Microsoft Entra ID** con `ClientId`, `ClientSecret` y `TenantId` configurados en la sección `Connections`.
+
+---
+
+## Vistazo a la interfaz
+
+La aplicación incluye seis páginas principales, todas con un sistema de theming unificado vía `--app-*` tokens (un solo cambio en `appsettings.json → AppBranding` recolorea toda la UI).
+
+### Home — Landing page
+
+Hero con gradiente del color de acento del cliente + 6 feature cards con glassmorphism y animación de entrada escalonada.
+
+![Home page](docs/screenshots/01-home.png)
+
+### Chat de Agentes
+
+Selector de agentes, streaming SSE en tiempo real, soporte de markdown y syntax highlight para código.
+
+![Chat de Agentes](docs/screenshots/02-chat.png)
+
+### Documentos (RAG)
+
+Drag & drop con metadata (Expediente, Documento, Tipo), subida a Azure Blob Storage, indexación en Azure AI Search y administración del índice. Iconos coloreados por tipo de archivo (PDF / Word / TXT).
+
+![Documentos](docs/screenshots/03-documents.png)
+
+### Centro de Notificaciones
+
+Envía notificaciones proactivas (Adaptive Cards) a usuarios conectados en Teams o WebChat. Severidad coloreada por chip e historial con barra lateral por nivel.
+
+![Notificaciones](docs/screenshots/04-notifications.png)
+
+### Azure Speech Avatar (Cascaded)
+
+Pipeline cascaded: Speech STT → Azure OpenAI → Speech Avatar TTS. Soporta Full body (3D) y Talking Heads (vasa-1). Render del avatar vía WebRTC.
+
+![Azure Speech Avatar](docs/screenshots/05-speech-avatar.png)
+
+### Azure Voice Live
+
+Speech-to-speech unificado con `gpt-realtime-mini` (Whisper-1 para transcripción del usuario). Avatar opcional, barge-in, catálogo de voces (S2S OpenAI, Azure HD, multilingüe, español) y centro de eventos en vivo.
+
+![Azure Voice Live](docs/screenshots/06-voice-live.png)
 
 ---
 
@@ -300,6 +366,39 @@ La autenticación con Bot Framework (Teams) usa **Microsoft Entra ID** con `Clie
 | **Microsoft Teams** | Bot Framework + Adaptive Cards | Cards interactivas, notificaciones proactivas |
 | **Azure AI Foundry** | `Azure.AI.Projects` SDK | Agentes versionados con RBAC y trazabilidad |
 | **REST API** | HTTP endpoints | Integración con cualquier cliente |
+| **VoiceLive** 🎙️ | Azure VoiceLive + WebSocket + WebRTC | Conversación de voz en tiempo real con GPT-4o Realtime. Tres modos: Full Native S2S, Cascade, Hybrid. Avatar animado opcional vía WebRTC |
+| **LiveAvatar** 🎙️ | Azure Speech SDK + WebRTC | Avatar parlante con síntesis neural. Reconocimiento de voz en navegador + AvatarSynthesizer. Siempre en modo Cascade |
+
+> 🎙️ = Canales de voz opcionales. Requieren Azure Speech Service y/o modelos GPT-4o Realtime. No afectan el funcionamiento de los demás canales.
+
+### 🎙️ Voz en tiempo real (opcional)
+
+La aplicación incluye **dos páginas de conversación de voz** que son **completamente opcionales**. Tanto las funcionalidades como la infraestructura de Azure que requieren solo son necesarias si se desea habilitar estas experiencias.
+
+#### Páginas disponibles
+
+| Página | Controlador | Script | Descripción |
+|---|---|---|---|
+| **VoiceLive** | `VoiceLiveController` | `voice-live.js` | Conversación de voz bidireccional con GPT-4o Realtime vía WebSocket. Audio PCM16 a 24kHz. Avatar animado opcional vía WebRTC |
+| **LiveAvatar** | `LiveAvatarController` | `live-avatar.js` | Avatar parlante con Azure Speech SDK en navegador. `SpeechRecognizer` (STT) + `AvatarSynthesizer` (TTS + animación). Siempre modo Cascade |
+
+#### Modos de procesamiento de voz (VoiceLive)
+
+| Modo | Voces | Flujo | Descripción |
+|---|---|---|---|
+| **Full Native S2S** | `alloy`, `coral`, `shimmer`, etc. | Audio → GPT-4o → Audio | El modelo procesa audio nativamente sin STT/TTS externo. Latencia más baja |
+| **Cascade** | `es-MX-DaliaNeural`, etc. | Audio → STT → LLM → TTS → Audio | Pipeline completo Speech-to-Text → LLM → Text-to-Speech. Voces neurales de Azure |
+| **Hybrid** | `DragonHDLatestNeural`, etc. | Audio nativo → LLM → TTS HD → Audio | Input nativo del modelo, salida con voces HD de Azure. Mejor calidad de voz |
+
+#### Infraestructura requerida (solo si se usan)
+
+| Recurso | Para qué | Configuración |
+|---|---|---|
+| **Azure Speech Service** | STT/TTS para LiveAvatar; voces Cascade/Hybrid en VoiceLive | `AzureSpeech:SubscriptionKey`, `AzureSpeech:Region` |
+| **Deployment GPT-4o Realtime** | Modelo realtime para VoiceLive | `VoiceLive:Endpoint`, `VoiceLive:ApiKey`, `VoiceLive:Model` |
+| **GPU de avatar** (Azure) | Renderizado del avatar animado en la nube | Incluido en Azure Speech (avatar feature) |
+
+> **Nota:** Si no se configuran las claves `AzureSpeech:SubscriptionKey` y `VoiceLive:ApiKey`, las páginas de voz simplemente no estarán disponibles. El resto de la aplicación (Web Chat, Teams, API, agentes) funciona con normalidad sin estos servicios.
 
 ---
 
@@ -323,6 +422,8 @@ La autenticación con Bot Framework (Teams) usa **Microsoft Entra ID** con `Clie
 | Bing Search API | Grounding con búsqueda web |
 | Azure AI Foundry | Publicar agentes como servicio |
 | Azure Cosmos DB | Persistencia de sesiones (opcional) |
+| Azure Speech Service 🎙️ | Voz y avatar para LiveAvatar (STT + TTS + avatar animado) |
+| Azure VoiceLive 🎙️ | Conversación de voz en tiempo real con GPT-4o Realtime (página VoiceLive) |
 
 ---
 
@@ -376,6 +477,8 @@ Abre `https://localhost:5001/Home/Chat` en tu navegador.
 | **Azure.Search.Documents** | 11.8.0 | Azure AI Search (RAG) |
 | **Azure.Identity** | 1.20.0 | DefaultAzureCredential |
 | **ModelContextProtocol** | 1.0.0 | MCP client para tools externos |
+| **Azure.AI.VoiceLive** 🎙️ | 1.1.0-beta.3 | Conversaciones de voz en tiempo real con GPT-4o Realtime (opcional) |
+| **Microsoft.CognitiveServices.Speech** 🎙️ | — | Azure Speech SDK para LiveAvatar: SpeechRecognizer + AvatarSynthesizer (opcional) |
 | **AdaptiveCards** | 3.1.0 | UI rica en Teams |
 | **.NET** | 9.0 | Runtime |
 | **Bootstrap** | 5.3 | UI web |
