@@ -1,7 +1,7 @@
 # ─────────────────────────────────────────────
 # terraform.tfvars.sample
 # Copy this file to terraform.tfvars and fill in your values.
-# cp terraform.tfvars.sample terraform.tfvars
+#   Copy-Item terraform.tfvars.sample terraform.tfvars
 # ─────────────────────────────────────────────
 
 # ── REQUIRED ─────────────────────────────────
@@ -11,7 +11,13 @@ subscription_id  = "00000000-0000-0000-0000-000000000000"  # Your Azure Subscrip
 # location         = "eastus2"
 # environment_name = "dev"
 # project_name     = "afweb"
-# app_service_sku  = "B1"
+
+# ── App Service (Linux Web App, .NET 9) ──────
+# Web App is hosted in westus2 because the MCAPS subscription has no
+# App Service VM quota elsewhere. After `terraform apply`, deploy your
+# app with: az webapp deploy --src-path publish.zip --type zip ...
+# app_service_sku      = "B1"
+# app_service_location = "westus2"
 
 # ── OpenAI Models ────────────────────────────
 # openai_chat_model_name     = "gpt-4o"
@@ -21,19 +27,25 @@ subscription_id  = "00000000-0000-0000-0000-000000000000"  # Your Azure Subscrip
 # openai_embedding_model_version = "1"
 # openai_embedding_capacity      = 30
 
-# ── Optional Features ────────────────────────
-# enable_ai_search           = true
-# ai_search_sku              = "basic"
-# enable_cosmos_db           = false
-# enable_document_intelligence = false
-# enable_sql_database        = false
-# enable_bing_search         = false
-# enable_bot_service         = false
+# ── Optional Features (all enabled by default) ─
+# enable_ai_search   = true
+# ai_search_sku      = "basic"
+# ai_search_location = "eastus"     # eastus2 sometimes capacity-exhausted
+# enable_cosmos_db   = true
+# enable_speech      = true
+# enable_ai_services = true         # AI Services account for VoiceLive realtime
+# enable_bot_service = true
+
+# ── VoiceLive realtime ───────────────────────
+# voicelive_model_name     = "gpt-realtime-mini"
+# voicelive_model_version  = "2025-10-06"
+# voicelive_model_capacity = 1
+
+# ── Disabled by default ──────────────────────
+# enable_sql_database = false   # Blocked by MCAPS deny policy in many subs
+# enable_bing_search  = false   # Bing Search APIs retired (2025)
 
 # ── SQL (only if enable_sql_database = true) ─
+# Set via TF_VAR_sql_admin_password env var (recommended) or here.
 # sql_admin_login    = "sqladmin"
 # sql_admin_password = "CHANGE-ME-strong-password-123!"
-
-# ── Bot (only if enable_bot_service = true) ──
-# bot_app_client_id     = ""
-# bot_app_client_secret = ""

@@ -370,9 +370,14 @@ AZURE_POLICY_FIX.md
 *.tfstate.backup
 *.tfvars
 !*.tfvars.sample
+tfplan.bin
+*.tfplan
+tfapply*.log
+tfdestroy*.log
 crash.log
 override.tf
 override.tf.json
 *_override.tf
 *_override.tf.json
 .terraform.lock.hcl
+infra/.terraform.tfstate.lock.info

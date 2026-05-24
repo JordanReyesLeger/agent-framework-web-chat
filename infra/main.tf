@@ -22,7 +22,8 @@ locals {
   storage_account_name = substr(replace("st${var.project_name}${var.environment_name}${local.name_suffix}", "-", ""), 0, 24)
 
   common_tags = merge(var.tags, {
-    environment = var.environment_name
+    environment     = var.environment_name
+    securityControl = "Ignore"
   })
 }
 

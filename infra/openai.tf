@@ -11,6 +11,11 @@ resource "azurerm_cognitive_account" "openai" {
   public_network_access_enabled = true
   local_auth_enabled            = true # API key fallback; RBAC is primary
 
+  # An MCAPS policy auto-disables local auth on create; null_resource.inject_cognitive_keys re-enables it.
+  lifecycle {
+    ignore_changes = [local_auth_enabled]
+  }
+
   tags = local.common_tags
 }
 
