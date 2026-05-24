@@ -429,14 +429,25 @@ La aplicación incluye **dos páginas de conversación de voz** que son **comple
 
 ## Inicio rápido
 
-### 1. Clonar el repositorio
+Hay dos formas de lanzar el proyecto:
+
+| Modo | Cuándo | Tiempo |
+|---|---|---|
+| 🖥️ **Local** | Desarrollo / debug | ~2 min |
+| ☁️ **Azure (Terraform)** | Demo / producción | ~15 min |
+
+---
+
+### 🖥️ Modo local
+
+#### 1. Clonar el repositorio
 
 ```bash
 git clone https://github.com/JordanReyesLeger/agent-framework-web-chat.git
 cd agent-framework-web-chat
 ```
 
-### 2. Configurar secretos
+#### 2. Configurar secretos
 
 Crea `02-AFWebChat/appsettings.Development.json` (ya está en `.gitignore`):
 
@@ -453,7 +464,7 @@ Crea `02-AFWebChat/appsettings.Development.json` (ya está en `.gitignore`):
 
 > Si no proporcionas `ApiKey`, se usará `DefaultAzureCredential` (requiere `az login`).
 
-### 3. Ejecutar
+#### 3. Ejecutar
 
 ```bash
 cd 02-AFWebChat
@@ -461,6 +472,120 @@ dotnet run
 ```
 
 Abre `https://localhost:5001/Home/Chat` en tu navegador.
+
+---
+
+### ☁️ Modo Azure (deploy completo con Terraform)
+
+El folder [infra/](infra) contiene un stack de Terraform que aprovisiona **toda la infraestructura** lista para usar (Web App + Azure OpenAI + AI Search + Cosmos + Speech + AI Services para VoiceLive + Bot Service) en una sola corrida, sin pasos manuales después de `apply`.
+
+#### Pre-requisitos
+
+| Componente | Notas |
+|---|---|
+| **Azure CLI** | `az login` con la suscripción destino |
+| **Terraform** | `>= 1.5` |
+| **PowerShell 7** | Usado por el `null_resource` que inyecta secretos post-deploy |
+| **.NET SDK 9** | Para `dotnet publish` |
+
+#### 1. Configurar `terraform.tfvars`
+
+```pwsh
+cd infra
+Copy-Item terraform.tfvars.sample terraform.tfvars
+```
+
+Edita `terraform.tfvars` y rellena al menos:
+
+```hcl
+subscription_id = "<tu-subscription-id>"
+```
+
+Todas las demás variables tienen defaults sensatos. Las features opcionales (AI Search, Speech, AI Services, Cosmos, Bot Service) están todas habilitadas por defecto.
+
+> **Notas de quota / policy:**
+> - El SKU del App Service por defecto es **B1 Linux en westus2** (la única región donde nuestra suscripción MCAPS tiene quota de App Service). Si tu suscripción tiene otras regiones disponibles, ajústalo en `terraform.tfvars`.
+> - SQL Database está deshabilitado por defecto porque varias suscripciones MCAPS lo bloquean por policy. Si tu suscripción lo permite, habilita `enable_sql_database = true` y define `sql_admin_password`.
+> - Si tu suscripción/management group tiene la policy modify de Cognitive Services que auto-deshabilita local auth, ya está manejada — un `null_resource` la revierte y re-inyecta las keys en el Web App.
+
+#### 2. Provisionar infraestructura
+
+```pwsh
+terraform init
+terraform apply -auto-approve
+```
+
+Provisiona **~33 recursos** (Resource Group, App Service Plan, Web App, UAMI, OpenAI + 2 deployments, AI Services para VoiceLive + realtime deployment, AI Services en región de Search, Speech, Cosmos DB + DB + container, Storage + 2 containers, AI Search + 4 role assignments, Bot Service, Log Analytics, App Insights). Salidas relevantes al final:
+
+```
+web_app_url     = "https://app-afweb-dev-<suffix>.azurewebsites.net"
+web_app_name    = "app-afweb-dev-<suffix>"
+resource_group_name = "rg-afweb-dev-<suffix>"
+```
+
+#### 3. Deployar el código de la app
+
+Desde la raíz del repo:
+
+```pwsh
+# Publish
+cd 02-AFWebChat
+dotnet publish AF-WebChat.csproj -c Release -o publish
+Compress-Archive -Path publish\* -DestinationPath publish.zip -Force
+
+# Habilitar SCM basic auth (necesario para `az webapp deploy`)
+$rg  = (terraform -chdir=..\infra output -raw resource_group_name)
+$app = (terraform -chdir=..\infra output -raw web_app_name)
+
+az resource update -g $rg -n scm `
+  --namespace Microsoft.Web --resource-type basicPublishingCredentialsPolicies `
+  --parent "sites/$app" --set properties.allow=true --api-version 2023-12-01
+
+# Quitar la app setting de la API key (forzar Managed Identity para OpenAI)
+# El null_resource ya inyectó la key, pero la policy MCAPS la re-deshabilita.
+# El código del Web App cae a DefaultAzureCredential cuando ApiKey está vacío.
+az webapp config appsettings delete -n $app -g $rg --setting-names AzureOpenAI__ApiKey
+
+# Stop / deploy / start (workaround para zip deploys en Linux Web Apps)
+az webapp stop  -n $app -g $rg
+Start-Sleep -Seconds 15
+az webapp deploy -n $app -g $rg --src-path publish.zip --type zip
+az webapp start -n $app -g $rg
+```
+
+> **¿Por qué `stop` + `deploy` + `start`?** El primer `az webapp deploy` en un Linux Web App recién creado a veces devuelve HTTP 400 mientras el deployment subyacente sí continúa. Parar el sitio antes del deploy es el truco que funciona consistentemente.
+
+#### 4. Abrir el portal y probar el chat
+
+Después de ~30 s para el cold start:
+
+1. Abre `https://app-afweb-dev-<suffix>.azurewebsites.net/Home/Chat`
+2. En el sidebar selecciona **GeneralAssistant**
+3. Escribe un mensaje y envía — la respuesta llega streameada vía SSE
+
+#### 5. (Opcional) Setup Index para RAG
+
+Una vez la app responde:
+
+1. Ve a `/Home/Documents` y haz clic en **Setup Index**, o
+2. Llama a la API directamente:
+
+```pwsh
+Invoke-WebRequest -Uri "https://app-afweb-dev-<suffix>.azurewebsites.net/api/document/setup-index" -Method POST
+```
+
+> Espera ~60-90 s después del `terraform apply` para que RBAC del Search MI propague a Azure OpenAI antes de pulsar Setup Index. Si el primer intento devuelve `transientFailure`, simplemente vuelve a darle clic — la asignación ya está en place.
+
+Esto crea el índice de Azure AI Search, el skillset (OCR + chunking + embeddings) y el indexer. Luego puedes subir documentos en la misma página y el indexer los procesará automáticamente.
+
+#### 6. (Opcional) Destruir todo
+
+```pwsh
+cd infra
+terraform destroy -auto-approve
+```
+
+Elimina los ~33 recursos. Las cuentas Cognitive Services se purgan duro (no quedan en soft-delete).
 
 ---
 
