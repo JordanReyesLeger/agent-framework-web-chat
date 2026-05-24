@@ -17,6 +17,11 @@ output "web_app_url" {
   value       = "https://${azurerm_linux_web_app.main.default_hostname}"
 }
 
+output "app_service_plan_name" {
+  description = "App Service Plan name"
+  value       = azurerm_service_plan.main.name
+}
+
 output "openai_endpoint" {
   description = "Azure OpenAI endpoint"
   value       = azurerm_cognitive_account.openai.endpoint
@@ -52,6 +57,36 @@ output "search_service_name" {
 output "cosmosdb_endpoint" {
   description = "Cosmos DB endpoint (if deployed)"
   value       = var.enable_cosmos_db ? azurerm_cosmosdb_account.main[0].endpoint : null
+}
+
+output "speech_service_endpoint" {
+  description = "Azure Speech Service endpoint (if deployed)"
+  value       = var.enable_speech ? azurerm_cognitive_account.speech[0].endpoint : null
+}
+
+output "speech_service_region" {
+  description = "Azure Speech Service region (if deployed)"
+  value       = var.enable_speech ? azurerm_cognitive_account.speech[0].location : null
+}
+
+output "ai_services_endpoint" {
+  description = "Azure AI Services (VoiceLive) endpoint (if deployed)"
+  value       = var.enable_ai_services ? azurerm_cognitive_account.aiservices[0].endpoint : null
+}
+
+output "bot_service_name" {
+  description = "Azure Bot Service name (if deployed)"
+  value       = var.enable_bot_service ? azurerm_bot_service_azure_bot.main[0].name : null
+}
+
+output "sql_server_fqdn" {
+  description = "SQL Server FQDN (if deployed)"
+  value       = var.enable_sql_database ? azurerm_mssql_server.main[0].fully_qualified_domain_name : null
+}
+
+output "sql_database_name" {
+  description = "SQL Database name (if deployed)"
+  value       = var.enable_sql_database ? azurerm_mssql_database.main[0].name : null
 }
 
 # ── azd required outputs ──

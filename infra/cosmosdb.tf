@@ -17,6 +17,10 @@ resource "azurerm_cosmosdb_account" "main" {
     failover_priority = 0
   }
 
+  lifecycle {
+    ignore_changes = [local_authentication_disabled]
+  }
+
   tags = local.common_tags
 }
 

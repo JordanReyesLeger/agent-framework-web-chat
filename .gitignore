@@ -370,6 +370,10 @@ AZURE_POLICY_FIX.md
 *.tfstate.backup
 *.tfvars
 !*.tfvars.sample
+tfplan.bin
+*.tfplan
+tfapply*.log
+tfdestroy*.log
 crash.log
 override.tf
 override.tf.json
