@@ -380,3 +380,4 @@ override.tf.json
 *_override.tf
 *_override.tf.json
 .terraform.lock.hcl
+infra/.terraform.tfstate.lock.info
