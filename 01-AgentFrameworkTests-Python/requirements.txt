@@ -1,0 +1,14 @@
+# Microsoft Agent Framework (core, OpenAI/Azure OpenAI clients, workflows, orchestrations)
+agent-framework>=1.6.0
+
+# Pydantic for structured output
+pydantic>=2.7.0
+
+# Azure identity (optional — only if using AzureCliCredential instead of API key)
+azure-identity>=1.19.0
+
+# Jupyter kernel (para abrir los notebooks/ en VS Code o Jupyter Lab)
+ipykernel>=6.29.0
+
+# Optional .env loader
+python-dotenv>=1.0.0
