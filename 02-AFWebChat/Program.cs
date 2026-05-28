@@ -4,6 +4,7 @@ using AFWebChat.Agents.Composite;
 using AFWebChat.Agents.ContextAware;
 using AFWebChat.Agents.Domain;
 using AFWebChat.Agents.Enterprise;
+using AFWebChat.Agents.HumanResources;
 using AFWebChat.Agents.Mcp;
 using AFWebChat.Agents.Multimodal;
 using AFWebChat.Agents.StructuredOutput;
@@ -36,6 +37,7 @@ builder.Services.AddSingleton<ToolRegistry>();
 builder.Services.AddSingleton<WorkflowFactory>();
 builder.Services.AddSingleton<OrchestrationFactory>();
 builder.Services.AddSingleton<DocumentService>();
+builder.Services.AddSingleton<IDocumentTextExtractor, DocumentTextExtractorService>();
 builder.Services.AddSingleton<IBlobStorageService, BlobStorageService>();
 builder.Services.AddSingleton<IDocumentIndexingService, DocumentIndexingService>();
 builder.Services.AddSingleton<VoiceConversationService>();
@@ -141,19 +143,14 @@ registry.Register(FoundryOrchestratorAgent.CreateDefinition());
 registry.Register(MultiAgentPlannerAgent.CreateDefinition());
 registry.Register(DataStorytellerAgent.CreateDefinition());
 
+// ── Human Resources agents ──
+registry.Register(EvaluadorDeCVAgent.CreateDefinition());
+
 // ── Workflow agents (used internally by orchestrations, not listed in sidebar) ──
 // Plan de Proyecto
 registry.Register(AnalistaDeNegocioAgent.CreateDefinition());
 registry.Register(EstimadorDeCostosAgent.CreateDefinition());
 registry.Register(PlanificadorDeProyectoAgent.CreateDefinition());
-// Reporte Ejecutivo
-registry.Register(AnalistaDeDatosAgent.CreateDefinition());
-registry.Register(RedactorEjecutivoAgent.CreateDefinition());
-registry.Register(DiseñadorDePresentacionAgent.CreateDefinition());
-// Propuesta Comercial
-registry.Register(ConsultorDeVentasAgent.CreateDefinition());
-registry.Register(EspecialistaEnSolucionAgent.CreateDefinition());
-registry.Register(GeneradorDePropuestaAgent.CreateDefinition());
 // Equipo Desarrollo (GroupChat)
 registry.Register(DesarrolladorAgent.CreateDefinition());
 registry.Register(ArquitectoAgent.CreateDefinition());
@@ -163,9 +160,6 @@ registry.Register(DBAAgent.CreateDefinition());
 registry.Register(EvaluadorDeUrgenciaAgent.CreateDefinition());
 registry.Register(BuscadorDeCorreosAgent.CreateDefinition());
 registry.Register(RedactorDeRespuestaAgent.CreateDefinition());
-// Marketing de Producto
-registry.Register(AnalistaDeProductoAgent.CreateDefinition());
-registry.Register(RedactorPublicitarioAgent.CreateDefinition());
 
 // Warm up Azure credential and OpenAI client at startup
 var chatFactory = app.Services.GetRequiredService<ChatClientFactory>();

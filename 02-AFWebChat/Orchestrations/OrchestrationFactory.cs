@@ -24,16 +24,6 @@ public class OrchestrationFactory
             ["AnalistaDeNegocio", "EstimadorDeCostos", "PlanificadorDeProyecto"],
             "Sequential"),
 
-        ["ReporteEjecutivo"] = new("ReporteEjecutivo",
-            "📊 Reporte Ejecutivo: Analista de Datos → Redactor Ejecutivo → Diseñador de Presentación. Transforma datos crudos en una presentación para directivos.",
-            ["AnalistaDeDatos", "RedactorEjecutivo", "DiseñadorDePresentacion"],
-            "Sequential"),
-
-        ["PropuestaComercial"] = new("PropuestaComercial",
-            "🎯 Propuesta Comercial: Consultor de Ventas → Especialista en Solución → Generador de Propuesta. De la oportunidad comercial a la cotización formal.",
-            ["ConsultorDeVentas", "EspecialistaEnSolucion", "GeneradorDePropuesta"],
-            "Sequential"),
-
         // ===== COLABORACIÓN EN EQUIPO =====
 
         ["EquipoDesarrollo"] = new("EquipoDesarrollo",
@@ -53,32 +43,6 @@ public class OrchestrationFactory
             ["BuscadorDeCorreos", "EvaluadorDeUrgencia", "RedactorDeRespuesta"],
             "Sequential"),
 
-        ["GestionDeCorreosAI"] = new("GestionDeCorreosAI",
-            "🧠 Gestión de Correos (Moderador IA): Un moderador IA dirige la conversación entre Evaluador, Buscador y Redactor — decide quién habla según el contexto.",
-            ["EvaluadorDeUrgencia", "BuscadorDeCorreos", "RedactorDeRespuesta"],
-            "GroupChatAI"),
-
-        ["GestionDeCorreosHandoff"] = new("GestionDeCorreosHandoff",
-            "🔀 Gestión de Correos (Handoff): El Evaluador actúa como triaje y delega al Buscador o Redactor según la necesidad — delegación inteligente.",
-            ["EvaluadorDeUrgencia", "BuscadorDeCorreos", "RedactorDeRespuesta"],
-            "Handoff"),
-
-        // ===== MARKETING DE PRODUCTO =====
-
-        ["MarketingDeProducto"] = new("MarketingDeProducto",
-            "🛍️ Marketing de Producto (Sequential): Analiza características de un producto → genera texto publicitario impactante. De la idea al anuncio.",
-            ["AnalistaDeProducto", "RedactorPublicitario"],
-            "Sequential"),
-
-        ["MarketingDeProductoAI"] = new("MarketingDeProductoAI",
-            "🧠 Marketing de Producto (Moderador IA): La IA modera la colaboración entre Analista de Producto y Redactor Publicitario para crear la mejor campaña.",
-            ["AnalistaDeProducto", "RedactorPublicitario"],
-            "GroupChatAI"),
-
-        ["MarketingDeProductoHandoff"] = new("MarketingDeProductoHandoff",
-            "🔀 Marketing de Producto (Handoff): El Analista de Producto triaja y delega al Redactor Publicitario cuando tiene las características listas.",
-            ["AnalistaDeProducto", "RedactorPublicitario"],
-            "Handoff")
     };
 
     public OrchestrationFactory(AgentRegistry registry, ChatClientFactory chatClientFactory, ILogger<OrchestrationFactory> logger)

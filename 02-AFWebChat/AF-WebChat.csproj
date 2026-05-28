@@ -32,6 +32,10 @@
     <!-- Azure Document Intelligence (OCR) -->
     <PackageReference Include="Azure.AI.DocumentIntelligence" Version="1.0.0" />
 
+    <!-- Document Text Extraction (inline analysis) -->
+    <PackageReference Include="PdfPig" Version="0.1.14" />
+    <PackageReference Include="DocumentFormat.OpenXml" Version="3.3.0" />
+
     <!-- Azure Blob Storage -->
     <PackageReference Include="Azure.Storage.Blobs" Version="12.26.0" />
     <PackageReference Include="Microsoft.Agents.Authentication.Msal" Version="1.4.83" />
