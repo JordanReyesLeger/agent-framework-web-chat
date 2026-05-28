@@ -691,6 +691,24 @@ body:has(.chat-page-wrapper) .app-footer {
     border-bottom-right-radius: 4px;
 }
 
+.af-msg-attachment {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-size: 0.8rem;
+    margin-bottom: 6px;
+    color: var(--af-accent);
+}
+
+[data-bs-theme="light"] .af-msg-attachment {
+    background: rgba(0,0,0,0.05);
+    border-color: rgba(0,0,0,0.1);
+}
+
 .af-msg-agent .af-msg-bubble {
     background: var(--af-msg-agent);
     border-bottom-left-radius: 4px;

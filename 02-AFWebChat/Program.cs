@@ -36,6 +36,7 @@ builder.Services.AddSingleton<ToolRegistry>();
 builder.Services.AddSingleton<WorkflowFactory>();
 builder.Services.AddSingleton<OrchestrationFactory>();
 builder.Services.AddSingleton<DocumentService>();
+builder.Services.AddSingleton<IDocumentTextExtractor, DocumentTextExtractorService>();
 builder.Services.AddSingleton<IBlobStorageService, BlobStorageService>();
 builder.Services.AddSingleton<IDocumentIndexingService, DocumentIndexingService>();
 builder.Services.AddSingleton<VoiceConversationService>();

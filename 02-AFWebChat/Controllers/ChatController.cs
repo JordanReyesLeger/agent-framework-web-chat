@@ -12,6 +12,7 @@ public class ChatController : ControllerBase
 {
     private readonly AgentOrchestrationService _orchestration;
     private readonly AgentRegistry _registry;
+    private readonly IDocumentTextExtractor _documentExtractor;
     private readonly ILogger<ChatController> _logger;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -23,27 +24,27 @@ public class ChatController : ControllerBase
     public ChatController(
         AgentOrchestrationService orchestration,
         AgentRegistry registry,
+        IDocumentTextExtractor documentExtractor,
         ILogger<ChatController> logger)
     {
         _orchestration = orchestration;
         _registry = registry;
+        _documentExtractor = documentExtractor;
         _logger = logger;
     }
 
     [HttpPost("stream")]
-    public async Task StreamChat([FromBody] ChatRequest request)
+    public async Task StreamChat()
     {
-        if (string.IsNullOrEmpty(request.Message))
+        ChatRequest request;
+        try
         {
-            Response.StatusCode = 400;
-            return;
+            request = await BuildChatRequestAsync();
         }
-
-        // Limit message size for security
-        if (request.Message.Length > 10240)
+        catch (ArgumentException ex)
         {
             Response.StatusCode = 400;
-            await Response.WriteAsync("Message too long. Maximum 10KB.");
+            await Response.WriteAsync(ex.Message);
             return;
         }
 
@@ -75,13 +76,17 @@ public class ChatController : ControllerBase
     }
 
     [HttpPost("send")]
-    public async Task<ActionResult<ChatResponse>> SendChat([FromBody] ChatRequest request)
+    public async Task<ActionResult<ChatResponse>> SendChat()
     {
-        if (string.IsNullOrEmpty(request.Message))
-            return BadRequest("Message is required.");
-
-        if (request.Message.Length > 10240)
-            return BadRequest("Message too long. Maximum 10KB.");
+        ChatRequest request;
+        try
+        {
+            request = await BuildChatRequestAsync();
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
 
         try
         {
@@ -101,5 +106,72 @@ public class ChatController : ControllerBase
         _logger.LogInformation("Tool approval: {RequestId} = {Approved}", response.RequestId, response.Approved);
         // In a full implementation, this would signal the pending approval
         return Ok();
+    }
+
+    /// <summary>
+    /// Builds a ChatRequest from either JSON body or multipart/form-data.
+    /// When a document file is attached, extracts its text and prepends it to the user message.
+    /// </summary>
+    private async Task<ChatRequest> BuildChatRequestAsync()
+    {
+        string sessionId, message, agentName;
+        string? workflowName = null, orchestrationName = null, customPattern = null;
+        string[]? attachmentUrls = null, customAgents = null;
+        IFormFile? document = null;
+
+        var contentType = Request.ContentType ?? "";
+
+        if (contentType.Contains("multipart/form-data", StringComparison.OrdinalIgnoreCase))
+        {
+            var form = await Request.ReadFormAsync();
+            sessionId = form["sessionId"].ToString();
+            message = form["message"].ToString();
+            agentName = form["agentName"].ToString();
+            workflowName = form["workflowName"].ToString() is { Length: > 0 } wf ? wf : null;
+            orchestrationName = form["orchestrationName"].ToString() is { Length: > 0 } orch ? orch : null;
+            customPattern = form["customPattern"].ToString() is { Length: > 0 } cp ? cp : null;
+            var customAgentValues = form["customAgents"];
+            customAgents = customAgentValues.Count > 0
+                ? customAgentValues.Where(v => v is not null).Select(v => v!).ToArray()
+                : null;
+            document = form.Files.GetFile("document");
+        }
+        else
+        {
+            var jsonRequest = await JsonSerializer.DeserializeAsync<ChatRequest>(Request.Body, JsonOptions);
+            if (jsonRequest is null)
+                throw new ArgumentException("Invalid request body.");
+
+            sessionId = jsonRequest.SessionId;
+            message = jsonRequest.Message;
+            agentName = jsonRequest.AgentName;
+            workflowName = jsonRequest.WorkflowName;
+            orchestrationName = jsonRequest.OrchestrationName;
+            attachmentUrls = jsonRequest.AttachmentUrls;
+            customAgents = jsonRequest.CustomAgents;
+            customPattern = jsonRequest.CustomPattern;
+        }
+
+        if (string.IsNullOrEmpty(message))
+            throw new ArgumentException("Message is required.");
+
+        if (message.Length > 10240)
+            throw new ArgumentException("Message too long. Maximum 10KB.");
+
+        // Extract text from attached document and prepend to message
+        if (document is { Length: > 0 })
+        {
+            _logger.LogInformation("Document attached: {FileName} ({Size} bytes)", document.FileName, document.Length);
+
+            using var stream = document.OpenReadStream();
+            var extractedText = await _documentExtractor.ExtractTextAsync(stream, document.FileName, HttpContext.RequestAborted);
+
+            message = $"[DOCUMENTO ADJUNTO: {document.FileName}]\n---\n{extractedText}\n---\n\n{message}";
+        }
+
+        return new ChatRequest(
+            sessionId, message, agentName,
+            workflowName, orchestrationName, attachmentUrls,
+            customAgents, customPattern);
     }
 }

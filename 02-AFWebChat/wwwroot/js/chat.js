@@ -887,14 +887,29 @@ function setupEventListeners() {
     const btnAttach = document.getElementById('btnAttach');
     const removeAttachmentBtn = document.getElementById('removeAttachmentBtn');
 
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+    const ALLOWED_EXTENSIONS = ['.pdf', '.docx', '.txt'];
+
     btnAttach?.addEventListener('click', () => documentInput?.click());
     documentInput?.addEventListener('change', () => {
         const file = documentInput.files[0];
-        if (file) {
-            state.attachedDocument = file;
-            document.getElementById('attachedFileName').textContent = file.name;
-            document.getElementById('attachedFileInfo').style.display = 'flex';
+        if (!file) return;
+
+        const ext = '.' + file.name.split('.').pop().toLowerCase();
+        if (!ALLOWED_EXTENSIONS.includes(ext)) {
+            alert(`Tipo de archivo no soportado (${ext}). Tipos permitidos: ${ALLOWED_EXTENSIONS.join(', ')}`);
+            documentInput.value = '';
+            return;
         }
+        if (file.size > MAX_FILE_SIZE) {
+            alert(`El archivo excede el límite de ${MAX_FILE_SIZE / (1024 * 1024)} MB.`);
+            documentInput.value = '';
+            return;
+        }
+
+        state.attachedDocument = file;
+        document.getElementById('attachedFileName').textContent = file.name;
+        document.getElementById('attachedFileInfo').style.display = 'flex';
     });
     removeAttachmentBtn?.addEventListener('click', () => {
         state.attachedDocument = null;
@@ -915,8 +930,12 @@ function setupEventListeners() {
 async function sendMessage(message) {
     removeWelcome();
     hideAgentContextAndPrompts();
-    appendUserMessage(message);
-    state.currentMessages.push({ role: 'user', text: message, timestamp: new Date().toISOString() });
+
+    // Capture attached file name before clearing
+    const attachedFileName = state.attachedDocument?.name || null;
+    appendUserMessage(message, attachedFileName);
+
+    state.currentMessages.push({ role: 'user', text: message, timestamp: new Date().toISOString(), attachment: attachedFileName });
     state.streaming = true;
     document.getElementById('btnSend').disabled = true;
 
@@ -1153,12 +1172,15 @@ function removeWelcome() {
     if (welcome) welcome.remove();
 }
 
-function appendUserMessage(text) {
+function appendUserMessage(text, attachedFileName) {
     const el = document.createElement('div');
     el.className = 'af-msg-with-avatar af-msg-user';
+    const attachmentHtml = attachedFileName
+        ? `<div class="af-msg-attachment"><i class="bi bi-file-earmark-text"></i> ${escapeHtml(attachedFileName)}</div>`
+        : '';
     el.innerHTML = `
         <div class="af-msg-avatar" style="background:var(--af-accent);"><i class="bi bi-person-fill" style="font-size:0.8rem;"></i></div>
-        <div class="af-msg-bubble">${escapeHtml(text)}</div>
+        <div class="af-msg-bubble">${attachmentHtml}${escapeHtml(text)}</div>
     `;
     document.getElementById('chatMessages').appendChild(el);
     scrollToBottom();
