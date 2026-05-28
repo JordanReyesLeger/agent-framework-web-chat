@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Framework vs Agent Service — Microsoft</title>
+    <link rel="icon" href="https://img.icons8.com/color/48/microsoft.png" type="image/png">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=Source+Sans+3:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+        :root {
+            --brand-primary: #0078D4;
+            --brand-primary-rgb: 0, 120, 212;
+            --brand-primary-dark: #002050;
+            --brand-primary-light: #50e6ff;
+            --brand-secondary: #5C2D91;
+            --brand-accent: #50e6ff;
+            --brand-green: #00A651;
+            --brand-orange: #FF8C00;
+            --brand-red: #E74856;
+
+            --bg-dark: #0a0e1a;
+            --bg-dark-2: #111827;
+            --bg-card: #1a2236;
+            --bg-light: #f6f8fc;
+            --bg-white: #ffffff;
+
+            --text-primary: #1a202c;
+            --text-secondary: #4a5568;
+            --text-light: #94a3b8;
+            --text-white: #ffffff;
+
+            --gradient-brand: linear-gradient(135deg, #0078D4 0%, #5C2D91 100%);
+            --gradient-dark: linear-gradient(135deg, #0a0e1a 0%, #111827 50%, #0a1628 100%);
+            --gradient-hero: linear-gradient(160deg, #000a1a 0%, #001d4a 30%, #0078D4 70%, #5C2D91 100%);
+            --gradient-cta: linear-gradient(135deg, #0078D4 0%, #002050 50%, #5C2D91 100%);
+            --gradient-accent: linear-gradient(135deg, #50e6ff 0%, #0078D4 100%);
+
+            --shadow-lg: 0 20px 40px rgba(0,0,0,0.12);
+            --shadow-xl: 0 25px 50px rgba(0,0,0,0.2);
+
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+            --radius-pill: 50px;
+
+            --font-display: 'Plus Jakarta Sans', sans-serif;
+            --font-body: 'Source Sans 3', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+
+            --space-xs: 0.25rem;
+            --space-sm: 0.5rem;
+            --space-md: 1rem;
+            --space-lg: 2rem;
+            --space-xl: 4rem;
+            --space-2xl: 6rem;
+
+            --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+            --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+            --duration-fast: 200ms;
+            --duration-normal: 350ms;
+            --duration-slow: 600ms;
+        }
+
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: var(--font-body);
+            color: var(--text-primary);
+            line-height: 1.65;
+            overflow-x: hidden;
+            background: var(--bg-dark);
+        }
+        h1, h2, h3, h4, h5 {
+            font-family: var(--font-display);
+            line-height: 1.15;
+            letter-spacing: -0.03em;
+        }
+
+        #particles-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        nav {
+            position: fixed;
+            top: 0; width: 100%;
+            z-index: 1000;
+            background: rgba(10, 14, 26, 0.88);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-bottom: 1px solid rgba(0, 120, 212, 0.1);
+            transition: all 0.3s;
+            padding: 0 var(--space-lg);
+        }
+        nav .nav-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 60px;
+        }
+        nav .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--text-white);
+            text-decoration: none;
+        }
+        nav .logo img { height: 20px; }
+        nav .nav-links { display: flex; gap: var(--space-md); list-style: none; }
+        nav .nav-links a {
+            color: var(--text-light);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: color var(--duration-fast);
+            font-family: var(--font-display);
+        }
+        nav .nav-links a:hover { color: var(--brand-accent); }
+        nav.scrolled { background: rgba(10, 14, 26, 0.96); }
+        @media (max-width: 768px) { nav .nav-links { display: none; } }
+
+        .reveal { opacity: 0; transform: translateY(40px); transition: opacity var(--duration-slow) var(--ease-out), transform var(--duration-slow) var(--ease-out); }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+        .reveal-left { opacity: 0; transform: translateX(-60px); transition: opacity var(--duration-slow) var(--ease-out), transform var(--duration-slow) var(--ease-out); }
+        .reveal-left.active { opacity: 1; transform: translateX(0); }
+        .reveal-right { opacity: 0; transform: translateX(60px); transition: opacity var(--duration-slow) var(--ease-out), transform var(--duration-slow) var(--ease-out); }
+        .reveal-right.active { opacity: 1; transform: translateX(0); }
+        .reveal-scale { opacity: 0; transform: scale(0.85); transition: opacity var(--duration-slow) var(--ease-out), transform var(--duration-slow) var(--ease-out); }
+        .reveal-scale.active { opacity: 1; transform: scale(1); }
+        .stagger > * { opacity: 0; transform: translateY(30px); transition: all var(--duration-slow) var(--ease-out); }
+        .stagger.active > *:nth-child(1) { transition-delay: 0ms; }
+        .stagger.active > *:nth-child(2) { transition-delay: 100ms; }
+        .stagger.active > *:nth-child(3) { transition-delay: 200ms; }
+        .stagger.active > *:nth-child(4) { transition-delay: 300ms; }
+        .stagger.active > *:nth-child(5) { transition-delay: 400ms; }
+        .stagger.active > *:nth-child(6) { transition-delay: 500ms; }
+        .stagger.active > * { opacity: 1; transform: translateY(0); }
+
+        section { position: relative; z-index: 1; }
+        .section-inner { max-width: 1200px; margin: 0 auto; padding: var(--space-2xl) var(--space-lg); }
+        .section-badge {
+            display: inline-block;
+            padding: 6px 18px;
+            border-radius: var(--radius-pill);
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            font-family: var(--font-display);
+            margin-bottom: var(--space-md);
+        }
+        .badge-blue { background: rgba(0, 120, 212, 0.15); color: var(--brand-primary); border: 1px solid rgba(0, 120, 212, 0.25); }
+        .badge-purple { background: rgba(92, 45, 145, 0.15); color: #a78bfa; border: 1px solid rgba(92, 45, 145, 0.25); }
+        .badge-green { background: rgba(0, 166, 81, 0.15); color: var(--brand-green); border: 1px solid rgba(0, 166, 81, 0.25); }
+        .badge-cyan { background: rgba(80, 230, 255, 0.1); color: var(--brand-accent); border: 1px solid rgba(80, 230, 255, 0.2); }
+        .section-title { font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 800; margin-bottom: var(--space-md); }
+        .section-subtitle { font-size: clamp(1rem, 1.3vw, 1.15rem); color: var(--text-light); max-width: 650px; line-height: 1.7; }
+
+        /* HERO */
+        .hero {
+            min-height: 100vh;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            text-align: center;
+            position: relative; overflow: hidden;
+            background: var(--gradient-hero);
+            padding: var(--space-2xl) var(--space-lg);
+        }
+        .hero::before {
+            content: ''; position: absolute;
+            width: 800px; height: 800px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(80, 230, 255, 0.08) 0%, transparent 70%);
+            top: -300px; right: -300px;
+            pointer-events: none;
+            animation: float 20s ease-in-out infinite;
+        }
+        .hero::after {
+            content: ''; position: absolute;
+            width: 600px; height: 600px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(92, 45, 145, 0.1) 0%, transparent 70%);
+            bottom: -200px; left: -200px;
+            pointer-events: none;
+            animation: float 25s ease-in-out infinite reverse;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            33% { transform: translateY(-25px) rotate(3deg); }
+            66% { transform: translateY(15px) rotate(-2deg); }
+        }
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 8px 20px; border-radius: var(--radius-pill);
+            background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+            color: var(--brand-accent); font-size: 0.8rem; font-weight: 600;
+            font-family: var(--font-display); letter-spacing: 0.05em;
+            margin-bottom: var(--space-lg); backdrop-filter: blur(10px);
+        }
+        .hero-badge .dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: var(--brand-accent);
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+        @keyframes pulse-dot { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.4); } }
+        .hero h1 {
+            font-size: clamp(2.5rem, 7vw, 5rem); font-weight: 900;
+            color: white; letter-spacing: -0.04em;
+            margin-bottom: var(--space-md); position: relative; z-index: 2;
+        }
+        .hero h1 .gradient-text {
+            background: linear-gradient(135deg, #fff 0%, var(--brand-accent) 50%, #a78bfa 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .hero h1 .vs {
+            font-size: 0.5em; font-weight: 400;
+            -webkit-text-fill-color: rgba(255,255,255,0.3);
+            vertical-align: middle; margin: 0 0.1em;
+        }
+        .hero-sub {
+            font-size: clamp(1rem, 1.8vw, 1.35rem);
+            color: rgba(255,255,255,0.6); max-width: 700px;
+            line-height: 1.7; margin-bottom: var(--space-xl);
+            position: relative; z-index: 2;
+        }
+        .hero-cta {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 14px 32px; border-radius: var(--radius-pill);
+            background: var(--brand-primary); color: white;
+            font-family: var(--font-display); font-weight: 700; font-size: 0.95rem;
+            text-decoration: none; transition: all var(--duration-normal) var(--ease-out);
+            position: relative; z-index: 2; border: none; cursor: pointer;
+        }
+        .hero-cta:hover { background: #1a8fe8; transform: translateY(-2px); box-shadow: 0 12px 40px rgba(0, 120, 212, 0.35); }
+        .hero-scroll {
+            position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+            display: flex; flex-direction: column; align-items: center; gap: 8px;
+            color: rgba(255,255,255,0.25); font-size: 0.7rem;
+            font-family: var(--font-display); letter-spacing: 0.15em; text-transform: uppercase;
+            animation: bounce-gentle 2.5s ease-in-out infinite;
+        }
+        @keyframes bounce-gentle { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(8px); } }
+        .hero-scroll .arrow { width: 20px; height: 20px; border-right: 2px solid rgba(255,255,255,0.2); border-bottom: 2px solid rgba(255,255,255,0.2); transform: rotate(45deg); }
+
+        /* ANALOGY SPLIT */
+        .analogy { background: var(--bg-light); color: var(--text-primary); }
+        .analogy-grid { display: grid; grid-template-columns: 1fr 1fr; min-height: 75vh; align-items: center; gap: var(--space-xl); }
+        .analogy-content { padding: var(--space-xl) 0; }
+        .analogy-content .section-subtitle { color: var(--text-secondary); }
+        .analogy-visual { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-lg); }
+        .analogy-box {
+            width: 100%; max-width: 380px; padding: var(--space-xl); border-radius: var(--radius-xl);
+            position: relative; overflow: hidden;
+            transition: transform var(--duration-normal) var(--ease-out);
+        }
+        .analogy-box:hover { transform: translateY(-4px); }
+        .analogy-box.framework { background: linear-gradient(135deg, #0078D4, #005a9e); color: white; }
+        .analogy-box.service { background: linear-gradient(135deg, #5C2D91, #3b1d5e); color: white; }
+        .analogy-box .box-icon { font-size: 2.2rem; margin-bottom: var(--space-sm); }
+        .analogy-box h4 { font-size: 1.2rem; font-weight: 800; margin-bottom: var(--space-xs); }
+        .analogy-box .box-analogy { font-size: 0.85rem; opacity: 0.8; margin-bottom: var(--space-sm); }
+        .analogy-box p { font-size: 0.9rem; opacity: 0.9; line-height: 1.6; }
+        .analogy-connector { display: flex; align-items: center; gap: 8px; color: var(--text-light); font-family: var(--font-display); font-weight: 700; font-size: 0.8rem; letter-spacing: 0.1em; }
+        .analogy-connector .line { width: 40px; height: 2px; background: linear-gradient(90deg, var(--brand-primary), var(--brand-secondary)); }
+        @media (max-width: 768px) { .analogy-grid { grid-template-columns: 1fr; } }
+
+        /* MEGA NUMBERS */
+        .mega-section { background: var(--gradient-dark); color: var(--text-white); text-align: center; padding: var(--space-2xl) var(--space-lg); }
+        .mega-numbers { display: flex; justify-content: space-around; flex-wrap: wrap; gap: var(--space-xl); margin-top: var(--space-xl); }
+        .mega-stat { flex: 1 1 200px; text-align: center; }
+        .mega-stat .number {
+            font-family: var(--font-display); font-size: clamp(3rem, 8vw, 5.5rem); font-weight: 900;
+            line-height: 1; letter-spacing: -0.05em;
+            background: var(--gradient-accent); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .mega-stat .label { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-light); margin-top: var(--space-sm); font-family: var(--font-display); font-weight: 600; }
+        .mega-stat .desc { font-size: 0.85rem; color: rgba(255,255,255,0.4); margin-top: 4px; max-width: 200px; margin-left: auto; margin-right: auto; }
+        .mega-stat + .mega-stat { border-left: 1px solid rgba(0, 120, 212, 0.15); padding-left: var(--space-xl); }
+        @media (max-width: 768px) { .mega-stat + .mega-stat { border-left: none; padding-left: 0; border-top: 1px solid rgba(0, 120, 212, 0.15); padding-top: var(--space-lg); } }
+
+        /* BENTO */
+        .bento-section { background: var(--bg-white); }
+        .bento { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: minmax(170px, auto); gap: var(--space-md); margin-top: var(--space-xl); }
+        .bento-item {
+            border-radius: var(--radius-lg); padding: var(--space-lg); display: flex; flex-direction: column; justify-content: flex-end;
+            position: relative; overflow: hidden; border: 1px solid rgba(0,0,0,0.06);
+            transition: transform var(--duration-normal) var(--ease-out), box-shadow var(--duration-normal) var(--ease-out);
+        }
+        .bento-item:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+        .bento-item--wide { grid-column: span 2; }
+        .bento-item--featured { grid-column: span 2; grid-row: span 2; }
+        .bento-item .bento-icon { font-size: 2rem; margin-bottom: var(--space-sm); }
+        .bento-item h4 { font-size: 1.05rem; font-weight: 800; margin-bottom: var(--space-xs); }
+        .bento-item p { font-size: 0.85rem; line-height: 1.6; opacity: 0.8; }
+        .bento-item.dark { background: var(--bg-dark-2); color: var(--text-white); border-color: rgba(255,255,255,0.05); }
+        .bento-item.blue { background: linear-gradient(135deg, #0078D4, #005a9e); color: white; border: none; }
+        .bento-item.light { background: var(--bg-light); color: var(--text-primary); }
+        .bento-item.purple { background: linear-gradient(135deg, #5C2D91, #7c3aed); color: white; border: none; }
+        .bento-item code { font-family: var(--font-mono); font-size: 0.8rem; background: rgba(0,0,0,0.15); padding: 2px 8px; border-radius: 4px; }
+        @media (max-width: 768px) { .bento { grid-template-columns: 1fr; } .bento-item--wide, .bento-item--featured { grid-column: span 1; grid-row: span 1; } }
+
+        /* TIMELINE */
+        .timeline-section { background: var(--gradient-dark); color: var(--text-white); }
+        .timeline { position: relative; max-width: 900px; margin: var(--space-xl) auto 0; padding: var(--space-lg) 0; }
+        .timeline::before { content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 3px; background: linear-gradient(to bottom, transparent, var(--brand-primary), var(--brand-accent), transparent); transform: translateX(-50%); }
+        .timeline-item { display: flex; align-items: flex-start; margin-bottom: var(--space-xl); position: relative; }
+        .timeline-item:nth-child(odd) { padding-right: 54%; }
+        .timeline-item:nth-child(even) { padding-left: 54%; }
+        .timeline-node { position: absolute; left: 50%; transform: translateX(-50%); width: 22px; height: 22px; border-radius: 50%; background: var(--brand-primary); border: 4px solid var(--bg-dark); z-index: 2; box-shadow: 0 0 20px rgba(0, 120, 212, 0.4); }
+        .timeline-item:last-child .timeline-node { background: var(--brand-accent); box-shadow: 0 0 25px rgba(80, 230, 255, 0.5); width: 26px; height: 26px; }
+        .timeline-content { padding: var(--space-md) var(--space-lg); border-left: 3px solid var(--brand-primary); background: rgba(255,255,255,0.03); border-radius: 0 var(--radius-md) var(--radius-md) 0; }
+        .timeline-item:nth-child(even) .timeline-content { border-left: none; border-right: 3px solid var(--brand-accent); border-radius: var(--radius-md) 0 0 var(--radius-md); }
+        .timeline-content .year { font-family: var(--font-mono); font-size: 0.75rem; color: var(--brand-accent); font-weight: 600; }
+        .timeline-content h4 { font-size: 1.15rem; font-weight: 800; margin: 4px 0 8px; }
+        .timeline-content p { font-size: 0.85rem; color: var(--text-light); line-height: 1.6; }
+        .timeline-content .tag { display: inline-block; padding: 3px 10px; border-radius: var(--radius-pill); font-size: 0.7rem; font-weight: 700; margin-top: 8px; }
+        .tag-legacy { background: rgba(255,140,0,0.15); color: var(--brand-orange); }
+        .tag-current { background: rgba(0,166,81,0.15); color: var(--brand-green); }
+        .tag-future { background: rgba(80,230,255,0.15); color: var(--brand-accent); }
+        @media (max-width: 768px) { .timeline::before { left: 20px; } .timeline-item { padding-left: 55px !important; padding-right: 0 !important; } .timeline-node { left: 20px; } .timeline-item:nth-child(even) .timeline-content { border-right: none; border-left: 3px solid var(--brand-accent); border-radius: 0 var(--radius-md) var(--radius-md) 0; } }
+
+        /* DIAGONAL SPLIT */
+        .diagonal-split { display: grid; grid-template-columns: 1fr 1fr; min-height: 80vh; position: relative; overflow: hidden; }
+        .diagonal-left, .diagonal-right { padding: var(--space-2xl) var(--space-xl); display: flex; flex-direction: column; justify-content: center; }
+        .diagonal-left { background: var(--bg-white); color: var(--text-primary); clip-path: polygon(0 0, 100% 0, 88% 100%, 0 100%); padding-right: calc(var(--space-2xl) + 6%); }
+        .diagonal-right { background: var(--bg-dark-2); color: var(--text-white); margin-left: -10%; padding-left: calc(var(--space-2xl) + 10%); }
+        .diagonal-left h3, .diagonal-right h3 { font-size: clamp(1.4rem, 2.5vw, 2rem); font-weight: 800; margin-bottom: var(--space-md); }
+        .type-list { list-style: none; display: flex; flex-direction: column; gap: var(--space-md); }
+        .type-list li { display: flex; align-items: flex-start; gap: var(--space-sm); }
+        .type-list .type-icon { flex-shrink: 0; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+        .type-list .type-text h5 { font-size: 0.95rem; font-weight: 700; margin-bottom: 2px; }
+        .type-list .type-text p { font-size: 0.8rem; opacity: 0.7; line-height: 1.5; }
+        @media (max-width: 768px) { .diagonal-split { grid-template-columns: 1fr; } .diagonal-left { clip-path: polygon(0 0, 100% 0, 100% 94%, 0 100%); padding-right: var(--space-xl); } .diagonal-right { margin-left: 0; padding-left: var(--space-xl); margin-top: -4%; } }
+
+        /* STEPPER */
+        .stepper-section { background: var(--bg-light); color: var(--text-primary); }
+        .stepper { display: flex; align-items: flex-start; justify-content: space-between; position: relative; margin-top: var(--space-xl); }
+        .stepper::before { content: ''; position: absolute; top: 35px; left: 8%; right: 8%; height: 3px; background: linear-gradient(90deg, var(--brand-primary), var(--brand-secondary), var(--brand-accent)); border-radius: 2px; }
+        .step { flex: 1; text-align: center; position: relative; z-index: 2; padding: 0 var(--space-sm); }
+        .step-number { width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; font-weight: 900; margin: 0 auto var(--space-md); font-family: var(--font-display); color: white; box-shadow: 0 8px 30px rgba(0,0,0,0.15); transition: transform var(--duration-normal) var(--ease-bounce); }
+        .step:hover .step-number { transform: scale(1.1); }
+        .step:nth-child(1) .step-number { background: var(--brand-primary); }
+        .step:nth-child(2) .step-number { background: var(--brand-secondary); }
+        .step:nth-child(3) .step-number { background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary)); }
+        .step h4 { font-size: 0.95rem; font-weight: 800; margin-bottom: var(--space-xs); }
+        .step p { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5; }
+        .step .step-tag { display: inline-block; padding: 3px 10px; border-radius: var(--radius-pill); font-size: 0.7rem; font-weight: 700; margin-top: 6px; font-family: var(--font-display); }
+        @media (max-width: 768px) { .stepper { flex-direction: column; align-items: center; gap: var(--space-lg); } .stepper::before { display: none; } }
+
+        /* DASHBOARD COSTS */
+        .dashboard-section { background: var(--gradient-dark); color: var(--text-white); }
+        .dashboard { display: grid; grid-template-columns: repeat(3, 1fr); grid-auto-rows: minmax(140px, auto); gap: var(--space-sm); margin-top: var(--space-xl); }
+        .dashboard-cell { padding: var(--space-lg); border-radius: var(--radius-md); border: 1px solid rgba(0, 120, 212, 0.1); background: rgba(255,255,255,0.03); transition: border-color var(--duration-normal), transform var(--duration-normal) var(--ease-out); }
+        .dashboard-cell:hover { border-color: rgba(0, 120, 212, 0.3); transform: translateY(-2px); }
+        .dashboard-cell--highlight { background: linear-gradient(135deg, rgba(0, 120, 212, 0.12), rgba(92, 45, 145, 0.08)); border-color: rgba(0, 120, 212, 0.2); grid-column: span 2; }
+        .dashboard-cell--accent { background: linear-gradient(135deg, rgba(0, 166, 81, 0.08), rgba(80, 230, 255, 0.05)); border-color: rgba(0, 166, 81, 0.15); }
+        .dashboard-cell .cell-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-light); font-family: var(--font-display); font-weight: 600; margin-bottom: 6px; }
+        .dashboard-cell .cell-value { font-family: var(--font-display); font-size: 1.6rem; font-weight: 900; margin-bottom: 4px; }
+        .dashboard-cell .cell-value.green { color: var(--brand-green); }
+        .dashboard-cell .cell-value.blue { color: var(--brand-accent); }
+        .dashboard-cell .cell-value.orange { color: var(--brand-orange); }
+        .dashboard-cell .cell-desc { font-size: 0.8rem; color: var(--text-light); line-height: 1.5; }
+        .cost-bar { height: 6px; border-radius: 3px; background: rgba(255,255,255,0.08); margin-top: 10px; overflow: hidden; }
+        .cost-bar .fill { height: 100%; border-radius: 3px; transition: width 1.5s var(--ease-out); width: 0; }
+        .cost-bar .fill.active { width: var(--progress); }
+        .cost-bar .fill.green { background: var(--brand-green); }
+        .cost-bar .fill.blue { background: var(--brand-primary); }
+        .cost-bar .fill.orange { background: var(--brand-orange); }
+        @media (max-width: 768px) { .dashboard { grid-template-columns: 1fr; } .dashboard-cell--highlight { grid-column: span 1; } }
+
+        /* PULLQUOTE */
+        .pullquote-section { background: var(--bg-white); color: var(--text-primary); }
+        .pullquote { text-align: center; padding: var(--space-2xl) var(--space-lg); max-width: 850px; margin: 0 auto; }
+        .pullquote blockquote { font-family: var(--font-display); font-size: clamp(1.4rem, 3vw, 2.4rem); font-weight: 600; line-height: 1.4; color: var(--text-primary); position: relative; }
+        .pullquote blockquote::before { content: '\201C'; font-size: 8rem; position: absolute; top: -50px; left: -20px; color: var(--brand-primary); opacity: 0.1; font-family: Georgia, serif; line-height: 1; }
+        .pullquote blockquote .highlight { background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-weight: 800; }
+        .pullquote cite { display: block; margin-top: var(--space-lg); font-size: 0.9rem; font-style: normal; color: var(--brand-primary); font-weight: 600; font-family: var(--font-display); }
+
+        /* CTA */
+        .cta-final {
+            text-align: center; padding: var(--space-2xl) var(--space-lg);
+            background: var(--gradient-cta); color: white; min-height: 65vh;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            position: relative; overflow: hidden;
+        }
+        .cta-final::before { content: ''; position: absolute; width: 500px; height: 500px; border-radius: 50%; background: radial-gradient(circle, rgba(80, 230, 255, 0.06) 0%, transparent 70%); top: -150px; left: -150px; pointer-events: none; }
+        .cta-final h2 { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 900; margin-bottom: var(--space-md); letter-spacing: -0.04em; }
+        .cta-final .cta-sub { font-size: clamp(1rem, 1.4vw, 1.15rem); opacity: 0.7; max-width: 600px; margin-bottom: var(--space-xl); line-height: 1.7; }
+        .cta-links { display: flex; gap: var(--space-md); flex-wrap: wrap; justify-content: center; }
+        .cta-link { display: inline-block; padding: 14px 28px; border-radius: var(--radius-pill); font-family: var(--font-display); font-weight: 700; font-size: 0.9rem; text-decoration: none; transition: all var(--duration-normal) var(--ease-out); }
+        .cta-link.primary { background: white; color: var(--brand-primary); }
+        .cta-link.primary:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(255,255,255,0.2); }
+        .cta-link.secondary { border: 2px solid rgba(255,255,255,0.35); color: white; }
+        .cta-link.secondary:hover { background: rgba(255,255,255,0.1); border-color: white; }
+        .cta-final .footer-note { margin-top: var(--space-2xl); font-size: 0.75rem; opacity: 0.35; font-family: var(--font-display); }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+            .reveal, .reveal-left, .reveal-right, .reveal-scale { opacity: 1; transform: none; }
+            .stagger > * { opacity: 1; transform: none; }
+            #particles-canvas { display: none; }
+        }
+    </style>
+</head>
+<body>
+<canvas id="particles-canvas"></canvas>
+
+<nav>
+    <div class="nav-inner">
+        <a href="#hero" class="logo">
+            <img src="https://img.icons8.com/color/48/microsoft.png" alt="Microsoft">
+            <span>Microsoft Foundry</span>
+        </a>
+        <ul class="nav-links">
+            <li><a href="#analogy">Analogía</a></li>
+            <li><a href="#framework">Framework</a></li>
+            <li><a href="#apis">APIs</a></li>
+            <li><a href="#service">Agent Service</a></li>
+            <li><a href="#decision">Decisión</a></li>
+            <li><a href="#costs">Costos</a></li>
+        </ul>
+    </div>
+</nav>
+
+<section class="hero" id="hero">
+    <div class="hero-badge reveal"><span class="dot"></span>Presentación Ejecutiva — Mayo 2026</div>
+    <h1 class="reveal"><span class="gradient-text">Agent Framework</span><br><span class="vs">vs</span> <span class="gradient-text">Agent Service</span></h1>
+    <p class="hero-sub reveal">No son competencia. Son complementarios.<br>Entiende cuándo usar cada uno, cómo combinarlos, y cuánto cuestan.</p>
+    <a href="#analogy" class="hero-cta reveal">Explorar ↓</a>
+    <div class="hero-scroll"><span>Scroll</span><div class="arrow"></div></div>
+</section>
+
+<section class="analogy" id="analogy">
+    <div class="section-inner">
+        <div class="analogy-grid">
+            <div class="analogy-content">
+                <span class="section-badge badge-blue reveal">La clave</span>
+                <h2 class="section-title reveal" style="color:var(--text-primary);">Operan en capas<br>diferentes</h2>
+                <p class="section-subtitle reveal">Agent Framework es el <strong>código</strong> — tú escribes la lógica del agente. Agent Service es la <strong>plataforma</strong> — Azure lo hospeda, escala y asegura. Puedes usar uno sin el otro, o combinarlos.</p>
+            </div>
+            <div class="analogy-visual stagger">
+                <div class="analogy-box framework reveal-right">
+                    <div class="box-icon">🔧</div>
+                    <h4>Agent Framework</h4>
+                    <div class="box-analogy">≈ Express.js</div>
+                    <p>SDK open-source para escribir agentes en C# o Python. Tú controlas todo el código.</p>
+                </div>
+                <div class="analogy-connector reveal-scale"><div class="line"></div><span>SE COMBINAN</span><div class="line"></div></div>
+                <div class="analogy-box service reveal-right">
+                    <div class="box-icon">☁️</div>
+                    <h4>Agent Service</h4>
+                    <div class="box-analogy">≈ Azure App Service</div>
+                    <p>Plataforma administrada para hospedar, escalar y publicar agentes con seguridad enterprise.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="mega-section" id="numbers">
+    <div class="section-inner">
+        <span class="section-badge badge-cyan reveal">En números</span>
+        <h2 class="section-title reveal" style="color:white;text-align:center;">Las diferencias clave</h2>
+        <div class="mega-numbers stagger">
+            <div class="mega-stat"><div class="number" data-count="0">$0</div><div class="label">Costo del SDK</div><div class="desc">Agent Framework es open-source y gratuito</div></div>
+            <div class="mega-stat"><div class="number">3</div><div class="label">Tipos de Agentes</div><div class="desc">Prompt, Workflow y Hosted en Agent Service</div></div>
+            <div class="mega-stat"><div class="number">20+</div><div class="label">Regiones Azure</div><div class="desc">Hosted Agents disponible globalmente</div></div>
+        </div>
+    </div>
+</section>
+
+<section class="bento-section" id="framework">
+    <div class="section-inner">
+        <span class="section-badge badge-blue reveal">Agent Framework</span>
+        <h2 class="section-title reveal">El SDK: <code style="font-family:var(--font-mono);font-weight:400;">AIAgent</code></h2>
+        <p class="section-subtitle reveal">Construido sobre <code>IChatClient</code> de Microsoft.Extensions.AI. No requiere Semantic Kernel.</p>
+        <div class="bento stagger">
+            <div class="bento-item blue bento-item--featured"><div class="bento-icon">⚡</div><h4>AIAgent + .AsAIAgent()</h4><p>Clase central. Envuelve cualquier <code>IChatClient</code> y le agrega instrucciones, tools, middleware y orquestación.</p></div>
+            <div class="bento-item light"><div class="bento-icon">🔌</div><h4>IChatClient</h4><p>Estándar .NET. Azure OpenAI, OpenAI, Ollama — cualquier proveedor.</p></div>
+            <div class="bento-item dark"><div class="bento-icon">🛠️</div><h4>Function Tools</h4><p>Convierte métodos C# en herramientas con <code>AIFunctionFactory.Create()</code></p></div>
+            <div class="bento-item purple bento-item--wide"><div class="bento-icon">🔀</div><h4>Orquestaciones Built-in</h4><p>Sequential, Concurrent, Handoff, Group Chat, Magentic — patrones listos para multi-agente.</p></div>
+        </div>
+    </div>
+</section>
+
+<section class="timeline-section" id="apis">
+    <div class="section-inner">
+        <div style="text-align:center;">
+            <span class="section-badge badge-purple reveal">Evolución de APIs</span>
+            <h2 class="section-title reveal" style="color:white;">Chat Completions → Assistants → Responses</h2>
+            <p class="section-subtitle reveal" style="margin:0 auto;color:var(--text-light);">Tres generaciones de APIs de OpenAI. Agent Framework usa Chat Completions. Foundry Agent Service usa Responses.</p>
+        </div>
+        <div class="timeline">
+            <div class="timeline-item reveal-left"><div class="timeline-node"></div><div class="timeline-content"><div class="year">2023 — Presente</div><h4>Chat Completions API</h4><p>La API más usada y estable. Es la que usa <strong>IChatClient</strong> y por tanto Agent Framework.</p><span class="tag tag-current">✅ Estable — Usa Agent Framework</span></div></div>
+            <div class="timeline-item reveal-right"><div class="timeline-node"></div><div class="timeline-content"><div class="year">2023 — 2024</div><h4>Assistants API (v2)</h4><p>Primera API con estado en servidor (Threads + Runs). Code Interpreter y File Search. Siendo reemplazada.</p><span class="tag tag-legacy">⚠️ Generación anterior</span></div></div>
+            <div class="timeline-item reveal-left"><div class="timeline-node"></div><div class="timeline-content"><div class="year">2025+</div><h4>Responses API</h4><p>Sucesor unificado. Web Search, MCP, Image Gen, Background Tasks. API interna de <strong>Foundry Agent Service</strong>.</p><span class="tag tag-future">🚀 El futuro — Usa Foundry</span></div></div>
+        </div>
+    </div>
+</section>
+
+<section id="service">
+    <div class="diagonal-split">
+        <div class="diagonal-left">
+            <span class="section-badge badge-blue reveal-left">Agent Framework</span>
+            <h3 class="reveal-left">Tu código.<br>Tu control.</h3>
+            <ul class="type-list stagger">
+                <li><div class="type-icon" style="background:rgba(0,120,212,0.15);">💻</div><div class="type-text"><h5>AIAgent + IChatClient</h5><p>Agentes en C#/Python. Tú los hospedas donde quieras.</p></div></li>
+                <li><div class="type-icon" style="background:rgba(0,120,212,0.15);">🔀</div><div class="type-text"><h5>Orquestaciones</h5><p>Multi-agente con Sequential, GroupChat, Handoff.</p></div></li>
+                <li><div class="type-icon" style="background:rgba(0,120,212,0.15);">🧩</div><div class="type-text"><h5>Middleware Pipeline</h5><p>Logging, auditoría, rate limiting en cada llamada.</p></div></li>
+            </ul>
+        </div>
+        <div class="diagonal-right">
+            <span class="section-badge badge-purple reveal-right">Agent Service</span>
+            <h3 class="reveal-right">Azure lo gestiona.<br>Tú lo publicas.</h3>
+            <ul class="type-list stagger">
+                <li><div class="type-icon" style="background:rgba(0,166,81,0.2);">📝</div><div class="type-text"><h5>Prompt Agents (No-Code)</h5><p>Desde el portal de Foundry sin código. GA.</p></div></li>
+                <li><div class="type-icon" style="background:rgba(255,140,0,0.2);">🔁</div><div class="type-text"><h5>Workflow Agents (Low-Code)</h5><p>Orquesta agentes con visual builder o YAML. Preview.</p></div></li>
+                <li><div class="type-icon" style="background:rgba(0,120,212,0.2);">📦</div><div class="type-text"><h5>Hosted Agents (Pro-Code)</h5><p>Tu código en container, gestionado por Azure. Preview.</p></div></li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<section class="stepper-section" id="decision">
+    <div class="section-inner">
+        <div style="text-align:center;"><span class="section-badge badge-green reveal">Guía de decisión</span><h2 class="section-title reveal" style="color:var(--text-primary);">¿Cuándo usar cada uno?</h2></div>
+        <div class="stepper stagger">
+            <div class="step"><div class="step-number">1</div><h4>Solo Framework</h4><p>Máximo control. Self-hosted. On-premises. Latencia mínima.</p><span class="step-tag" style="background:rgba(0,120,212,0.1);color:var(--brand-primary);">Pro-Code puro</span></div>
+            <div class="step"><div class="step-number">2</div><h4>Solo Agent Service</h4><p>No-code / low-code. Prototipos rápidos. Teams/M365. Seguridad enterprise.</p><span class="step-tag" style="background:rgba(92,45,145,0.1);color:var(--brand-secondary);">No-Code / Low-Code</span></div>
+            <div class="step"><div class="step-number">✦</div><h4>Ambos Juntos</h4><p>Control total + infraestructura administrada. Identidad Entra ID. Auto-scaling.</p><span class="step-tag" style="background:linear-gradient(90deg,rgba(0,120,212,0.1),rgba(92,45,145,0.1));color:var(--brand-primary);">⭐ Recomendado</span></div>
+        </div>
+    </div>
+</section>
+
+<section class="dashboard-section" id="costs">
+    <div class="section-inner">
+        <div style="text-align:center;"><span class="section-badge badge-cyan reveal">Pricing</span><h2 class="section-title reveal" style="color:white;">Estructura de Costos</h2><p class="section-subtitle reveal" style="margin:0 auto;">Sin sorpresas. Sin cargo por el SDK ni por agentes Prompt/Workflow.</p></div>
+        <div class="dashboard stagger">
+            <div class="dashboard-cell dashboard-cell--highlight"><div class="cell-label">Agent Framework SDK</div><div class="cell-value green">$0</div><div class="cell-desc">Open-source, MIT license. Solo infraestructura + tokens.</div><div class="cost-bar"><div class="fill green" style="--progress:5%"></div></div></div>
+            <div class="dashboard-cell dashboard-cell--accent"><div class="cell-label">Prompt / Workflow Agents</div><div class="cell-value green">$0</div><div class="cell-desc">Sin cargo adicional. Solo tokens del modelo.</div><div class="cost-bar"><div class="fill green" style="--progress:8%"></div></div></div>
+            <div class="dashboard-cell"><div class="cell-label">File Search (RAG)</div><div class="cell-value blue">$0.11</div><div class="cell-desc">/GB/día de vector storage. 1 GB gratis.</div></div>
+            <div class="dashboard-cell"><div class="cell-label">Code Interpreter</div><div class="cell-value blue">$0.03</div><div class="cell-desc">/sesión. Sandbox Python aislado.</div></div>
+            <div class="dashboard-cell"><div class="cell-label">Web Search</div><div class="cell-value orange">$14</div><div class="cell-desc">/1,000 transacciones. Internet en tiempo real.</div></div>
+            <div class="dashboard-cell dashboard-cell--highlight"><div class="cell-label">Hosted Agents (Preview)</div><div class="cell-value blue">vCPU/hr + GiB/hr</div><div class="cell-desc">Por consumo. 0.5–2 vCPU. Idle timeout 15 min. Máx 50 sesiones/región.</div><div class="cost-bar"><div class="fill blue" style="--progress:45%"></div></div></div>
+        </div>
+    </div>
+</section>
+
+<section class="pullquote-section">
+    <div class="pullquote reveal-scale">
+        <blockquote>No es "uno u otro" — la mejor arquitectura para producción empresarial es <span class="highlight">Agent Framework ejecutándose como Hosted Agent dentro de Agent Service</span>, obteniendo control total del código con infraestructura administrada.</blockquote>
+        <cite>— Arquitectura recomendada para producción</cite>
+    </div>
+</section>
+
+<section class="cta-final" id="next">
+    <h2 class="reveal">¿Listo para construir?</h2>
+    <p class="cta-sub reveal">Comienza con Agent Framework para prototipar en local, despliega como Hosted Agent en Foundry cuando estés listo para producción.</p>
+    <div class="cta-links stagger">
+        <a href="https://learn.microsoft.com/en-us/azure/foundry/agents/overview" target="_blank" rel="noopener" class="cta-link primary">Foundry Agent Service →</a>
+        <a href="https://github.com/microsoft/Agents-for-net" target="_blank" rel="noopener" class="cta-link secondary">Agent Framework (GitHub) →</a>
+    </div>
+    <div class="footer-note reveal">Microsoft Confidential — Mayo 2026 — Precios sujetos a cambios</div>
+</section>
+
+<script>
+(function(){const c=document.getElementById('particles-canvas'),x=c.getContext('2d');let p=[],w,h;const N=60,D=140,C=['rgba(0,120,212,','rgba(80,230,255,','rgba(92,45,145,'];function r(){w=c.width=innerWidth;h=c.height=innerHeight}function mk(){const co=C[Math.random()*C.length|0];return{x:Math.random()*w,y:Math.random()*h,vx:(Math.random()-.5)*.4,vy:(Math.random()-.5)*.4,r:Math.random()*2+.5,c:co,a:Math.random()*.5+.1}}function init(){r();p=[];for(let i=0;i<N;i++)p.push(mk())}function loop(){x.clearRect(0,0,w,h);for(let i=0;i<p.length;i++){const a=p[i];a.x+=a.vx;a.y+=a.vy;if(a.x<0||a.x>w)a.vx*=-1;if(a.y<0||a.y>h)a.vy*=-1;x.beginPath();x.arc(a.x,a.y,a.r,0,Math.PI*2);x.fillStyle=a.c+a.a+')';x.fill();for(let j=i+1;j<p.length;j++){const b=p[j],dx=a.x-b.x,dy=a.y-b.y,d=Math.sqrt(dx*dx+dy*dy);if(d<D){x.beginPath();x.moveTo(a.x,a.y);x.lineTo(b.x,b.y);x.strokeStyle='rgba(0,120,212,'+(1-d/D)*.12+')';x.lineWidth=.6;x.stroke()}}}requestAnimationFrame(loop)}addEventListener('resize',r);init();loop()})();
+const obs=new IntersectionObserver(e=>{e.forEach(en=>{if(en.isIntersecting)en.target.classList.add('active')})},{threshold:.1,rootMargin:'0px 0px -40px 0px'});
+document.querySelectorAll('.reveal,.reveal-left,.reveal-right,.reveal-scale,.stagger').forEach(el=>obs.observe(el));
+const bObs=new IntersectionObserver(e=>{e.forEach(en=>{if(en.isIntersecting)en.target.querySelectorAll('.fill').forEach(f=>f.classList.add('active'))})},{threshold:.3});
+document.querySelectorAll('.cost-bar').forEach(el=>bObs.observe(el));
+addEventListener('scroll',()=>{document.querySelector('nav').classList.toggle('scrolled',scrollY>50)},{passive:true});
+document.addEventListener('keydown',e=>{const s=[...document.querySelectorAll('section')];const c=s.findIndex(s=>{const r=s.getBoundingClientRect();return r.top>=-100&&r.top<=innerHeight/2});if(e.key==='ArrowDown'||e.key==='PageDown'){e.preventDefault();s[Math.min(c+1,s.length-1)]?.scrollIntoView({behavior:'smooth'})}if(e.key==='ArrowUp'||e.key==='PageUp'){e.preventDefault();s[Math.max(c-1,0)]?.scrollIntoView({behavior:'smooth'})}});
+</script>
+</body>
+</html>

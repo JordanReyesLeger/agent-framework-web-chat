@@ -27,7 +27,7 @@ Muchas personas confunden **Microsoft Agent Framework** con **Foundry Agent Serv
 
 ### El Agente Central: `AIAgent`
 
-En Microsoft Agent Framework, el concepto central es **`AIAgent`**. Se crea a partir de cualquier `IChatClient` (de `Microsoft.Extensions.AI`) usando el método de extensión `.AsAIAgent()`. No necesitas Semantic Kernel.
+En Microsoft Agent Framework, el concepto central es **`AIAgent`**. Se crea a partir de cualquier `IChatClient` (de `Microsoft.Extensions.AI`) usando el método de extensión `.AsAIAgent()`.
 
 | Concepto | Descripción |
 |---|---|
@@ -57,6 +57,151 @@ await foreach (var msg in agent.RunAsync("Cuéntame más", thread)) { ... }
 ```
 
 > **Nota clave:** `AIAgent` trabaja con `IChatClient`, que es una **abstracción estándar de .NET** (`Microsoft.Extensions.AI`). Esto significa que tu agente funciona con Azure OpenAI, OpenAI directo, Ollama, o cualquier proveedor que implemente `IChatClient`. **No estás atado a ningún vendor.**
+
+---
+
+### Providers: ¿Quién puede usar `.AsAIAgent()` y qué soporta cada uno?
+
+Un **Provider** en Agent Framework es la fuente de inteligencia de tu agente. Cada provider tiene su propio cliente, pero todos producen el mismo `AIAgent`. La diferencia está en **qué herramientas soporta** cada uno.
+
+#### Tabla oficial de providers
+
+| Provider | Chat | Function Tools | Structured Output | Code Interpreter | Web Search | Hosted MCP |
+|---|---|---|---|---|---|---|
+| **Azure OpenAI** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **OpenAI** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Microsoft Foundry** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Anthropic** | ✅ | ✅ | ✅ | ❌ | ✅ | ❌ |
+| **Ollama** | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| **Foundry Local** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **GitHub Copilot** | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ |
+| **Copilot Studio** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **Custom** | Varies | Varies | Varies | Varies | Varies | Varies |
+
+> Fuente: [Providers Overview — Microsoft Learn](https://learn.microsoft.com/en-us/agent-framework/agents/providers/)
+
+#### Azure OpenAI tiene DOS clientes (importante)
+
+Dentro de Azure OpenAI puedes crear el agente con **dos clientes diferentes**, y cada uno soporta herramientas distintas:
+
+```
+AzureOpenAIClient
+        │
+        ├── .GetResponseClient("gpt-4o")     ← Responses API (RECOMENDADO)
+        │       │
+        │       └── .AsAIAgent(...)
+        │              ✅ Function Tools
+        │              ✅ Code Interpreter
+        │              ✅ File Search
+        │              ✅ Web Search
+        │              ✅ Hosted MCP
+        │              ✅ Local MCP
+        │
+        └── .GetChatClient("gpt-4o")          ← Chat Completions API
+                │
+                └── .AsAIAgent(...)
+                       ✅ Function Tools
+                       ❌ Code Interpreter
+                       ❌ File Search
+                       ✅ Web Search
+                       ❌ Hosted MCP
+                       ✅ Local MCP
+```
+
+| Herramienta | Responses Client | Chat Completion Client |
+|---|---|---|
+| **Function Tools** | ✅ | ✅ |
+| **Tool Approval** | ✅ | ✅ |
+| **Code Interpreter** | ✅ | ❌ |
+| **File Search** | ✅ | ❌ |
+| **Web Search** | ✅ | ✅ |
+| **Hosted MCP** | ✅ | ❌ |
+| **Local MCP** | ✅ | ✅ |
+
+> **La doc oficial dice:** Responses Client es el **recomendado** y Assistants Client está **deprecado**. Chat Completion Client funciona perfecto pero tiene menos herramientas.
+
+#### Microsoft Foundry Provider — Dos sub-tipos
+
+El provider de Foundry tiene dos formas de crear agentes:
+
+| Sub-tipo | Clase resultado | Cómo se crea | Caso de uso |
+|---|---|---|---|
+| **Responses Agent** | `ChatClientAgent` | `AIProjectClient.AsAIAgent(model: "gpt-4o", instructions: "...")` | Code-first. Tú defines modelo, instrucciones y tools en código. No crea recurso en Foundry. |
+| **Foundry Agent (versioned)** | `FoundryAgent` | `AIProjectClient.AsAIAgent(agentRecord)` | El agente ya existe en el portal de Foundry. Las instrucciones y tools vienen del portal, no del código. |
+
+```csharp
+// Responses Agent (code-first, sin portal)
+AIAgent agent = new AIProjectClient(projectEndpoint, credential)
+    .AsAIAgent(
+        model: "gpt-4o",
+        name: "MiAgente",
+        instructions: "Eres un asistente útil.");
+
+// Foundry Agent (versioned, creado en el portal)
+var record = await projectClient.AgentAdministrationClient
+    .GetAgentAsync("MiAgenteDelPortal");
+FoundryAgent agent = projectClient.AsAIAgent(record);
+// ← Instrucciones y tools vienen del portal, NO se pueden cambiar en código
+```
+
+#### Cada provider con su código
+
+**Azure OpenAI (Responses — recomendado):**
+```csharp
+AIAgent agent = new AzureOpenAIClient(endpoint, credential)
+    .GetResponseClient("gpt-4o")
+    .AsAIAgent(instructions: "...");
+```
+
+**Azure OpenAI (Chat Completions — tu patrón actual):**
+```csharp
+AIAgent agent = new AzureOpenAIClient(endpoint, credential)
+    .GetChatClient("gpt-4o")
+    .AsAIAgent(instructions: "...");
+```
+
+**OpenAI directo:**
+```csharp
+AIAgent agent = new OpenAIClient("sk-...")
+    .GetChatClient("gpt-4o")
+    .AsAIAgent(instructions: "...");
+```
+
+**Anthropic (Claude):**
+```csharp
+AIAgent agent = new AnthropicClient() { APIKey = key }
+    .AsAIAgent(model: "claude-haiku-4-5", instructions: "...");
+
+// O vía Azure Foundry:
+AIAgent agent = new AnthropicFoundryClient(credentials)
+    .AsAIAgent(model: "claude-haiku-4-5", instructions: "...");
+```
+
+**Ollama (local, gratis, offline):**
+```csharp
+AIAgent agent = new OllamaChatClient("http://localhost:11434", "llama3.1")
+    .AsAIAgent(instructions: "...");
+```
+
+**Microsoft Foundry (code-first):**
+```csharp
+AIAgent agent = new AIProjectClient(projectEndpoint, credential)
+    .AsAIAgent(model: "gpt-4o", instructions: "...");
+```
+
+#### ¿Cuándo usar cada provider?
+
+| Escenario | Provider recomendado | ¿Por qué? |
+|---|---|---|
+| **Producción enterprise** | Azure OpenAI (Responses) | SLA, RBAC, VNet, content filters, todas las herramientas |
+| **Máxima compatibilidad** | Azure OpenAI (Chat Completions) | La API más estable y universal |
+| **Desarrollo sin costo** | Ollama | Gratis, offline, sin API keys |
+| **Modelos Claude** | Anthropic (directo o vía Foundry) | Modelos Claude con function tools |
+| **Modelos open-source en Azure** | Microsoft Foundry | DeepSeek, Llama, Grok con SLA de Azure |
+| **Agentes del portal de Foundry** | Microsoft Foundry (versioned) | Conectar con Prompt Agents existentes |
+| **Sin internet** | Ollama / Foundry Local | Todo corre en tu máquina |
+
+> **Patrón recomendado:** Usa una **factory** (como `ChatClientFactory` en este proyecto) que encapsula la creación del cliente. Si cambias de provider, solo cambias la factory — ningún agente se modifica.
 
 ---
 
