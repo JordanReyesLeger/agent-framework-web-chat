@@ -10,7 +10,7 @@ Soporta dos modos de autenticación (mismo patrón que el proyecto AF-WebChat):
 - **AzureCliCredential**: si no hay API key, usa `az login` (recomendado para dev)
 
 Expone una única función pública: `create_chat_client()` que devuelve un
-`AzureOpenAIChatClient` listo para pasar al constructor de `Agent(...)`.
+`OpenAIChatClient` listo para pasar al constructor de `Agent(...)`.
 """
 
 from __future__ import annotations
@@ -28,7 +28,7 @@ try:
 except ImportError:  # pragma: no cover
     pass
 
-from agent_framework.azure import AzureOpenAIChatClient
+from agent_framework.openai import OpenAIChatClient
 
 _BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -103,11 +103,11 @@ def get_deployment_name() -> str:
 
 
 def get_api_version() -> str:
-    return _get("ApiVersion", "AZURE_OPENAI_API_VERSION", default="2024-10-21")
+    return _get("ApiVersion", "AZURE_OPENAI_API_VERSION", default="2025-03-01-preview")
 
 
-def create_chat_client() -> AzureOpenAIChatClient:
-    """Crea un `AzureOpenAIChatClient` apuntando a tu recurso Azure OpenAI.
+def create_chat_client() -> OpenAIChatClient:
+    """Crea un `OpenAIChatClient` apuntando a tu recurso Azure OpenAI.
 
     Auth automática:
     - Si hay `AZURE_OPENAI_API_KEY` (o `AzureOpenAI.ApiKey` en settings) → usa API key.
@@ -124,29 +124,82 @@ def create_chat_client() -> AzureOpenAIChatClient:
             name="...",
         )
     """
+    endpoint = get_endpoint().rstrip("/")
+    # La v1 API requiere dominio .openai.azure.com (no .cognitiveservices.azure.com)
+    endpoint = endpoint.replace(".cognitiveservices.azure.com", ".openai.azure.com")
+    base_url = f"{endpoint}/openai/v1/"
     api_key = get_api_key()
 
     if api_key:
-        return AzureOpenAIChatClient(
+        return OpenAIChatClient(
+            model=get_deployment_name(),
             api_key=api_key,
-            endpoint=get_endpoint(),
-            deployment_name=get_deployment_name(),
-            api_version=get_api_version(),
+            base_url=base_url,
         )
 
     # Sin API key → AzureCliCredential (requiere `az login`)
     try:
-        from azure.identity import AzureCliCredential
+        from azure.identity import DefaultAzureCredential, get_bearer_token_provider
     except ImportError as e:  # pragma: no cover
         raise RuntimeError(
             "No hay AZURE_OPENAI_API_KEY definido y `azure-identity` no está instalado. "
             "Ejecuta: pip install azure-identity"
         ) from e
 
-    return AzureOpenAIChatClient(
+    token_provider = get_bearer_token_provider(
+        DefaultAzureCredential(), "https://cognitiveservices.azure.com/.default"
+    )
+
+    return OpenAIChatClient(
+        model=get_deployment_name(),
+        api_key=token_provider,
+        base_url=base_url,
+    )
+
+
+# ---------- Foundry ----------
+
+
+def get_foundry_endpoint() -> str:
+    """Endpoint del proyecto Foundry (FOUNDRY_PROJECT_ENDPOINT)."""
+    value = os.getenv("FOUNDRY_PROJECT_ENDPOINT")
+    if not value:
+        raise RuntimeError(
+            "Falta FOUNDRY_PROJECT_ENDPOINT. "
+            "Defínela en .env o como variable de entorno."
+        )
+    return value
+
+
+def get_foundry_model() -> str:
+    return os.getenv("FOUNDRY_MODEL") or get_deployment_name()
+
+
+def get_foundry_agent_name() -> str:
+    return os.getenv("FOUNDRY_AGENT_NAME", "mi-agente-taller")
+
+
+def create_foundry_client():
+    """Crea un `FoundryChatClient` apuntando a tu proyecto Foundry.
+
+    Requiere `az login` — Foundry no soporta API key.
+
+    Úsalo así::
+
+        from agent_framework import Agent
+        from helpers.config import create_foundry_client
+
+        agent = Agent(
+            client=create_foundry_client(),
+            instructions="...",
+        )
+    """
+    from agent_framework.foundry import FoundryChatClient
+    from azure.identity.aio import AzureCliCredential
+
+    return FoundryChatClient(
+        project_endpoint=get_foundry_endpoint(),
+        model=get_foundry_model(),
         credential=AzureCliCredential(),
-        endpoint=get_endpoint(),
-        deployment_name=get_deployment_name(),
-        api_version=get_api_version(),
     )
 
