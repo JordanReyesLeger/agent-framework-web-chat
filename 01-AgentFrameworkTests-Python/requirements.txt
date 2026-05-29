@@ -1,5 +1,7 @@
 # Microsoft Agent Framework (core, OpenAI/Azure OpenAI clients, workflows, orchestrations)
-agent-framework>=1.6.0
+agent-framework>=1.7.0
+agent-framework-orchestrations>=1.0.0rc2
+agent-framework-foundry>=1.0.0  # Para el módulo 18 (Foundry Agents)
 
 # Pydantic for structured output
 pydantic>=2.7.0

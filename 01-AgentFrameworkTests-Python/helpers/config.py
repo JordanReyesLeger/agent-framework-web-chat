@@ -10,7 +10,7 @@ Soporta dos modos de autenticación (mismo patrón que el proyecto AF-WebChat):
 - **AzureCliCredential**: si no hay API key, usa `az login` (recomendado para dev)
 
 Expone una única función pública: `create_chat_client()` que devuelve un
-`AzureOpenAIChatClient` listo para pasar al constructor de `Agent(...)`.
+`OpenAIChatClient` listo para pasar al constructor de `Agent(...)`.
 """
 
 from __future__ import annotations
@@ -154,5 +154,52 @@ def create_chat_client() -> OpenAIChatClient:
         model=get_deployment_name(),
         api_key=token_provider,
         base_url=base_url,
+    )
+
+
+# ---------- Foundry ----------
+
+
+def get_foundry_endpoint() -> str:
+    """Endpoint del proyecto Foundry (FOUNDRY_PROJECT_ENDPOINT)."""
+    value = os.getenv("FOUNDRY_PROJECT_ENDPOINT")
+    if not value:
+        raise RuntimeError(
+            "Falta FOUNDRY_PROJECT_ENDPOINT. "
+            "Defínela en .env o como variable de entorno."
+        )
+    return value
+
+
+def get_foundry_model() -> str:
+    return os.getenv("FOUNDRY_MODEL") or get_deployment_name()
+
+
+def get_foundry_agent_name() -> str:
+    return os.getenv("FOUNDRY_AGENT_NAME", "mi-agente-taller")
+
+
+def create_foundry_client():
+    """Crea un `FoundryChatClient` apuntando a tu proyecto Foundry.
+
+    Requiere `az login` — Foundry no soporta API key.
+
+    Úsalo así::
+
+        from agent_framework import Agent
+        from helpers.config import create_foundry_client
+
+        agent = Agent(
+            client=create_foundry_client(),
+            instructions="...",
+        )
+    """
+    from agent_framework.foundry import FoundryChatClient
+    from azure.identity.aio import AzureCliCredential
+
+    return FoundryChatClient(
+        project_endpoint=get_foundry_endpoint(),
+        model=get_foundry_model(),
+        credential=AzureCliCredential(),
     )
 

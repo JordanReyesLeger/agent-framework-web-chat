@@ -50,8 +50,11 @@ Contenido del `.env`:
 AZURE_OPENAI_ENDPOINT=https://tu-recurso.openai.azure.com/
 AZURE_OPENAI_API_KEY=tu-api-key
 AZURE_OPENAI_MODEL=gpt-4o
-AZURE_OPENAI_API_VERSION=2024-10-21
 ```
+
+> ⚠️ **Nota:** El workshop usa la **v1 API** de Azure OpenAI (endpoint `/openai/v1/`).
+> El helper `config.py` convierte automáticamente el endpoint al formato correcto
+> y no requiere `api-version` explícito.
 
 ✔️ `.env` está en `.gitignore` (no se sube por accidente).
 ✔️ `python-dotenv` lo carga automáticamente cuando importas `helpers.config`.
@@ -70,8 +73,7 @@ copy appsettings.json appsettings.Development.json
   "AzureOpenAI": {
     "Endpoint": "https://tu-recurso.openai.azure.com/",
     "ApiKey": "tu-api-key",
-    "DeploymentName": "gpt-4o",
-    "ApiVersion": "2024-10-21"
+    "DeploymentName": "gpt-4o"
   }
 }
 ```
@@ -88,13 +90,11 @@ Si prefieres no tener ningún archivo de secretos en disco, exporta las variable
 $env:AZURE_OPENAI_ENDPOINT = "https://tu-recurso.openai.azure.com/"
 $env:AZURE_OPENAI_API_KEY = "tu-api-key"
 $env:AZURE_OPENAI_MODEL = "gpt-4o"
-$env:AZURE_OPENAI_API_VERSION = "2024-10-21"
 
 # Bash / Zsh
 export AZURE_OPENAI_ENDPOINT="https://tu-recurso.openai.azure.com/"
 export AZURE_OPENAI_API_KEY="tu-api-key"
 export AZURE_OPENAI_MODEL="gpt-4o"
-export AZURE_OPENAI_API_VERSION="2024-10-21"
 ```
 
 ✔️ Recomendado para **CI/CD** y entornos cloud (App Service, Azure Container Apps, etc.) donde inyectas secretos vía variables de entorno gestionadas (Key Vault, secretos de pipeline).
@@ -130,15 +130,27 @@ Sigue el orden numérico — cada notebook explica conceptos nuevos basándose e
 | 15 | [15_workflows_events.ipynb](notebooks/15_workflows_events.ipynb) | Workflows: eventos y loops |
 | 16 | [16_multiple_agents.ipynb](notebooks/16_multiple_agents.ipynb) | Múltiples agentes coordinados manualmente |
 | 17 | [17_agents_in_workflows.ipynb](notebooks/17_agents_in_workflows.ipynb) | Agentes como nodos en `WorkflowBuilder` |
+| 18 | [18_foundry_agents.ipynb](notebooks/18_foundry_agents.ipynb) | 🆕 Agentes con **Microsoft Foundry** |
 
 > 💡 Los **Módulos 13-15** (workflows determinísticos) no necesitan Azure OpenAI — puedes probarlos sin credenciales.
+> 💡 El **Módulo 18** (Foundry) requiere un proyecto de Microsoft Foundry configurado.
 
 ## 📋 Requisitos
 
 - **Python 3.10+**
 - **Azure OpenAI** con un deployment de `gpt-4o` (o compatible con tool-calling y visión multimodal)
 - VS Code con la extensión **Jupyter** (para abrir los notebooks interactivamente)
-- (Opcional) `python-dotenv` si prefieres `.env` en lugar de `appsettings.Development.json`
+- `python-dotenv` para carga automática de `.env`
+- (Opcional) **Microsoft Foundry** para el módulo 18 (`pip install agent-framework-foundry`)
+
+### ⚠️ Versiones importantes
+
+| Paquete | Versión mínima | Notas |
+|---------|---------------|-------|
+| `agent-framework` | `>=1.7.0` | Usa la v1 Responses API de Azure OpenAI |
+| `agent-framework-orchestrations` | `>=1.0.0rc2` | Requerido para módulos 09-12 (orquestaciones) |
+| `agent-framework-foundry` | `>=1.0.0` | Solo para el módulo 18 (Foundry) |
+| `openai` | `>=2.14.0` | Instalado automáticamente como dependencia |
 
 ## 🗂️ Estructura
 
@@ -151,7 +163,7 @@ Sigue el orden numérico — cada notebook explica conceptos nuevos basándose e
 ├── appsettings.Development.json         # tus credenciales (gitignored)
 ├── helpers/
 │   └── config.py                        # create_chat_client() — carga Azure OpenAI desde appsettings
-└── notebooks/                           # 14 notebooks del workshop ⭐
+└── notebooks/                           # 19 notebooks del workshop ⭐
     ├── 00_basic_agent_creation.ipynb
     ├── 01_running_agents.ipynb
     └── ...
