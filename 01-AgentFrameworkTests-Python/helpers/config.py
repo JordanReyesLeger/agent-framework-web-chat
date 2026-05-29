@@ -28,7 +28,7 @@ try:
 except ImportError:  # pragma: no cover
     pass
 
-from agent_framework.azure import AzureOpenAIChatClient
+from agent_framework.openai import OpenAIChatClient
 
 _BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -103,11 +103,11 @@ def get_deployment_name() -> str:
 
 
 def get_api_version() -> str:
-    return _get("ApiVersion", "AZURE_OPENAI_API_VERSION", default="2024-10-21")
+    return _get("ApiVersion", "AZURE_OPENAI_API_VERSION", default="2025-03-01-preview")
 
 
-def create_chat_client() -> AzureOpenAIChatClient:
-    """Crea un `AzureOpenAIChatClient` apuntando a tu recurso Azure OpenAI.
+def create_chat_client() -> OpenAIChatClient:
+    """Crea un `OpenAIChatClient` apuntando a tu recurso Azure OpenAI.
 
     Auth automática:
     - Si hay `AZURE_OPENAI_API_KEY` (o `AzureOpenAI.ApiKey` en settings) → usa API key.
@@ -124,29 +124,35 @@ def create_chat_client() -> AzureOpenAIChatClient:
             name="...",
         )
     """
+    endpoint = get_endpoint().rstrip("/")
+    # La v1 API requiere dominio .openai.azure.com (no .cognitiveservices.azure.com)
+    endpoint = endpoint.replace(".cognitiveservices.azure.com", ".openai.azure.com")
+    base_url = f"{endpoint}/openai/v1/"
     api_key = get_api_key()
 
     if api_key:
-        return AzureOpenAIChatClient(
+        return OpenAIChatClient(
+            model=get_deployment_name(),
             api_key=api_key,
-            endpoint=get_endpoint(),
-            deployment_name=get_deployment_name(),
-            api_version=get_api_version(),
+            base_url=base_url,
         )
 
     # Sin API key → AzureCliCredential (requiere `az login`)
     try:
-        from azure.identity import AzureCliCredential
+        from azure.identity import DefaultAzureCredential, get_bearer_token_provider
     except ImportError as e:  # pragma: no cover
         raise RuntimeError(
             "No hay AZURE_OPENAI_API_KEY definido y `azure-identity` no está instalado. "
             "Ejecuta: pip install azure-identity"
         ) from e
 
-    return AzureOpenAIChatClient(
-        credential=AzureCliCredential(),
-        endpoint=get_endpoint(),
-        deployment_name=get_deployment_name(),
-        api_version=get_api_version(),
+    token_provider = get_bearer_token_provider(
+        DefaultAzureCredential(), "https://cognitiveservices.azure.com/.default"
+    )
+
+    return OpenAIChatClient(
+        model=get_deployment_name(),
+        api_key=token_provider,
+        base_url=base_url,
     )
 
