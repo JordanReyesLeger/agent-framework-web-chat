@@ -29,6 +29,7 @@
         model: document.getElementById('vu-model'),
         styleRow: document.getElementById('vu-style-row'),
         style: document.getElementById('vu-style'),
+        ragEnabled: document.getElementById('vu-rag-enable'),
         avatarEnabled: document.getElementById('vu-avatar-enable'),
         avatarFields: document.getElementById('vu-avatar-fields'),
         avatarCharacter: document.getElementById('vu-avatar-character'),
@@ -321,6 +322,7 @@
         if (els.style && els.style.value) params.set('style', els.style.value);
         const instr = (els.instructions.value || '').trim();
         if (instr) params.set('instructions', instr);
+        if (els.ragEnabled && els.ragEnabled.checked) params.set('rag', '1');
         if (els.avatarEnabled && els.avatarEnabled.checked) {
             params.set('avatar', '1');
             if (els.avatarCharacter.value) params.set('avatarCharacter', els.avatarCharacter.value);

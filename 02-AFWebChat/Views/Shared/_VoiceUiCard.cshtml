@@ -123,6 +123,14 @@
                     </div>
                 }
 
+                @if (hasCatalog)
+                {
+                    <label class="vu-field-toggle">
+                        <input type="checkbox" id="vu-rag-enable" />
+                        <span>🔍 Habilitar RAG (búsqueda en documentos)</span>
+                    </label>
+                }
+
                 @if (hasAvatarToggle)
                 {
                     <label class="vu-field-toggle">

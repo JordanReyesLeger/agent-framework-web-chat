@@ -4,6 +4,7 @@ using System.Text.Json;
 using Azure;
 using Azure.AI.VoiceLive;
 using Azure.Identity;
+using AFWebChat.Tools.Plugins;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AFWebChat.Controllers;
@@ -30,11 +31,13 @@ public class VoiceLiveController : ControllerBase
 {
     private readonly IConfiguration _config;
     private readonly ILogger<VoiceLiveController> _logger;
+    private readonly AzureSearchPlugin _searchPlugin;
 
-    public VoiceLiveController(IConfiguration config, ILogger<VoiceLiveController> logger)
+    public VoiceLiveController(IConfiguration config, ILogger<VoiceLiveController> logger, AzureSearchPlugin searchPlugin)
     {
         _config = config;
         _logger = logger;
+        _searchPlugin = searchPlugin;
     }
 
     [HttpGet("config")]
@@ -306,6 +309,36 @@ public class VoiceLiveController : ControllerBase
                     RemoveFillerWords = true
                 }
             };
+            // RAG tool: Azure Search (solo si el usuario activó el checkbox)
+            var ragEnabled = Request.Query["rag"].FirstOrDefault() is string ragVal
+                && (ragVal == "1" || string.Equals(ragVal, "true", StringComparison.OrdinalIgnoreCase));
+            if (ragEnabled)
+            {
+                sessionOptions.Tools.Add(new VoiceLiveFunctionDefinition("search_documents")
+                {
+                    Description = "Busca información en documentos indexados usando Azure Search. Utiliza búsqueda híbrida semántica para encontrar contenido relevante. Usa esta herramienta cuando el usuario pregunte sobre documentos, expedientes o información específica.",
+                    Parameters = BinaryData.FromObjectAsJson(new
+                    {
+                        type = "object",
+                        properties = new
+                        {
+                            query = new
+                            {
+                                type = "string",
+                                description = "La consulta de búsqueda en lenguaje natural"
+                            },
+                            max_results = new
+                            {
+                                type = "integer",
+                                description = "Número máximo de resultados (default: 5, máximo: 15)"
+                            }
+                        },
+                        required = new[] { "query" }
+                    })
+                });
+                _logger.LogInformation("VoiceLive: RAG tool (search_documents) habilitado");
+            }
+
             sessionOptions.Modalities.Clear();
             sessionOptions.Modalities.Add(InteractionModality.Text);
             sessionOptions.Modalities.Add(InteractionModality.Audio);
@@ -447,6 +480,29 @@ public class VoiceLiveController : ControllerBase
                                     }
                                 }
                                 break;
+
+                            case SessionUpdateResponseFunctionCallArgumentsDone funcCall:
+                                {
+                                    _logger.LogInformation("VoiceLive: function call received name={Name} callId={CallId}", funcCall.Name, funcCall.CallId);
+                                    await SendJsonAsync(socket, new { type = "function_call", name = funcCall.Name, callId = funcCall.CallId }, pumpCt);
+
+                                    string toolOutput;
+                                    try
+                                    {
+                                        toolOutput = await HandleFunctionCallAsync(funcCall.Name, funcCall.Arguments, pumpCt);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        _logger.LogError(ex, "Tool execution failed for {Name}", funcCall.Name);
+                                        toolOutput = $"Error ejecutando herramienta: {ex.Message}";
+                                    }
+
+                                    // Return the tool output to the model and let it generate a spoken response.
+                                    await session.AddItemAsync(new FunctionCallOutputItem(funcCall.CallId, toolOutput), pumpCt);
+                                    await session.StartResponseAsync(pumpCt);
+                                    await SendJsonAsync(socket, new { type = "function_call_done", name = funcCall.Name, callId = funcCall.CallId }, pumpCt);
+                                    break;
+                                }
 
                             case SessionUpdateResponseAudioDone:
                                 await SendJsonAsync(socket, new { type = "audio_done" }, pumpCt);
@@ -686,6 +742,26 @@ public class VoiceLiveController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Bad client control message");
+        }
+    }
+
+    private async Task<string> HandleFunctionCallAsync(string functionName, string argumentsJson, CancellationToken ct)
+    {
+        switch (functionName)
+        {
+            case "search_documents":
+                using (var doc = JsonDocument.Parse(argumentsJson))
+                {
+                    var root = doc.RootElement;
+                    var query = root.GetProperty("query").GetString() ?? string.Empty;
+                    var maxResults = root.TryGetProperty("max_results", out var mr) ? mr.GetInt32() : 5;
+                    _logger.LogInformation("VoiceLive tool: search_documents query={Query} maxResults={Max}", query, maxResults);
+                    return await _searchPlugin.SearchDocuments(query, maxResults, ct);
+                }
+
+            default:
+                _logger.LogWarning("VoiceLive: unknown function call '{Name}'", functionName);
+                return $"Función '{functionName}' no reconocida.";
         }
     }
 
