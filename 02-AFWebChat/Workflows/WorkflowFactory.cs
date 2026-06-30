@@ -237,14 +237,21 @@ public class WorkflowFactory
             yield break;
         }
 
-        // Last agent is synthesizer, rest are parallel workers
+        // Last agent is the synthesizer; the rest run in parallel as workers.
         var workerAgents = agents.Take(agents.Count - 1).ToList();
         var workerNames = wf.Agents.Take(wf.Agents.Length - 1).ToArray();
         var synthesizerAgent = agents.Last();
-        var synthesizerName = wf.Agents.Last();
+        // Display the final step as "Synthesizer" so the chat matches the FanOut diagram.
+        const string synthesizerName = "Synthesizer";
 
-        foreach (var agentName in wf.Agents)
-            yield return StreamEventService.WorkflowStep(agentName, "pending");
+        // Map a concurrent ExecutorId (e.g. "SentimentAnalyzer_<guid>") back to its clean agent name.
+        string MapWorkerName(string executorId) =>
+            workerNames.FirstOrDefault(n => executorId.StartsWith(n, System.StringComparison.OrdinalIgnoreCase)) ?? executorId;
+
+        // Pending nodes: the parallel workers + the synthesizer (mirrors renderFanOutFlow on the client).
+        foreach (var name in workerNames)
+            yield return StreamEventService.WorkflowStep(name, "pending");
+        yield return StreamEventService.WorkflowStep(synthesizerName, "pending");
 
         // ── Run workers in parallel via BuildConcurrent ──
         var concurrentWorkflow = AgentWorkflowBuilder.BuildConcurrent(workerAgents);
@@ -270,11 +277,11 @@ public class WorkflowFactory
                     if (responseUpdate.ExecutorId != lastExecutorId)
                     {
                         lastExecutorId = responseUpdate.ExecutorId;
-                        yield return StreamEventService.AgentStart(responseUpdate.ExecutorId);
+                        yield return StreamEventService.AgentStart(MapWorkerName(responseUpdate.ExecutorId));
                     }
                     var text = responseUpdate.Update?.Text;
                     if (!string.IsNullOrEmpty(text))
-                        yield return StreamEventService.AgentToken(responseUpdate.ExecutorId, text);
+                        yield return StreamEventService.AgentToken(MapWorkerName(responseUpdate.ExecutorId), text);
                     break;
 
                 case WorkflowOutputEvent outputEvent:
@@ -295,8 +302,18 @@ public class WorkflowFactory
         yield return StreamEventService.AgentStart(synthesizerName);
         yield return StreamEventService.WorkflowStep(synthesizerName, "running");
 
-        var synthesisPrompt = "You received analyses from different agents. Synthesize them into a single comprehensive response.\n\n"
-            + string.Join("\n\n---\n\n", workerResults.Select((r, i) => $"Agent {i + 1}:\n{r}"));
+        var analysisBlocks = string.Join("\n\n---\n\n",
+            workerResults.Select((r, i) => $"{(i < workerNames.Length ? workerNames[i] : $"Agente {i + 1}")}:\n{r}"));
+
+        var synthesisPrompt =
+            "Eres un sintetizador. Recibiste varios análisis hechos en paralelo por distintos agentes " +
+            "sobre el siguiente texto del usuario. Intégralos en UN solo reporte claro y unificado.\n\n" +
+            "Reglas:\n" +
+            "- Responde SIEMPRE en español, sin importar el idioma de los análisis.\n" +
+            "- No repitas los JSON crudos; redacta un resumen ejecutivo en prosa.\n" +
+            "- Integra de forma coherente el sentimiento y las entidades detectadas.\n\n" +
+            $"Texto original del usuario:\n\"{request.Message}\"\n\n" +
+            $"Análisis de los agentes:\n{analysisBlocks}";
 
         var synthResponse = await synthesizerAgent.RunAsync(synthesisPrompt);
         var synthText = synthResponse.ToString() ?? "";
