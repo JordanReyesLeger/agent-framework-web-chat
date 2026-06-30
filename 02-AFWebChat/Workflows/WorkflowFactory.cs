@@ -254,17 +254,18 @@ public class WorkflowFactory
         yield return StreamEventService.WorkflowStep(synthesizerName, "pending");
 
         // ── Run workers in parallel via BuildConcurrent ──
+        // The two workers stream their tokens interleaved, and the client opens a new
+        // chat bubble on every executor switch — which chops each JSON into fragments.
+        // To avoid that, we BUFFER each worker's output and emit it as ONE clean block.
         var concurrentWorkflow = AgentWorkflowBuilder.BuildConcurrent(workerAgents);
         var messages = new List<ChatMessage> { new(ChatRole.User, request.Message) };
 
+        // Light up the worker nodes on the diagram while they run.
         foreach (var name in workerNames)
-        {
-            yield return StreamEventService.AgentStart(name);
             yield return StreamEventService.WorkflowStep(name, "running");
-        }
 
-        string? lastExecutorId = null;
-        var workerResults = new List<string>();
+        var buffers = new Dictionary<string, System.Text.StringBuilder>(System.StringComparer.OrdinalIgnoreCase);
+        var outputFallback = new List<string>();
 
         await using var run = await InProcessExecution.RunStreamingAsync(concurrentWorkflow, messages);
         await run.TrySendMessageAsync(new TurnToken(emitEvents: true));
@@ -274,14 +275,17 @@ public class WorkflowFactory
             switch (wfEvent)
             {
                 case AgentResponseUpdateEvent responseUpdate:
-                    if (responseUpdate.ExecutorId != lastExecutorId)
-                    {
-                        lastExecutorId = responseUpdate.ExecutorId;
-                        yield return StreamEventService.AgentStart(MapWorkerName(responseUpdate.ExecutorId));
-                    }
                     var text = responseUpdate.Update?.Text;
                     if (!string.IsNullOrEmpty(text))
-                        yield return StreamEventService.AgentToken(MapWorkerName(responseUpdate.ExecutorId), text);
+                    {
+                        var name = MapWorkerName(responseUpdate.ExecutorId);
+                        if (!buffers.TryGetValue(name, out var sb))
+                        {
+                            sb = new System.Text.StringBuilder();
+                            buffers[name] = sb;
+                        }
+                        sb.Append(text);
+                    }
                     break;
 
                 case WorkflowOutputEvent outputEvent:
@@ -289,14 +293,27 @@ public class WorkflowFactory
                     if (finalMessages is not null)
                     {
                         foreach (var msg in finalMessages.Where(m => m.Role == ChatRole.Assistant && !string.IsNullOrEmpty(m.Text)))
-                            workerResults.Add(msg.Text!);
+                            outputFallback.Add(msg.Text!);
                     }
                     break;
             }
         }
 
-        foreach (var name in workerNames)
+        // Emit each worker's full result as a single, complete bubble (no interleaving).
+        var workerResults = new List<string>();
+        for (int i = 0; i < workerNames.Length; i++)
+        {
+            var name = workerNames[i];
+            var full = buffers.TryGetValue(name, out var sb) && sb.Length > 0
+                ? sb.ToString().Trim()
+                : (i < outputFallback.Count ? outputFallback[i] : "");
+            workerResults.Add(full);
+
+            yield return StreamEventService.AgentStart(name);
+            if (!string.IsNullOrEmpty(full))
+                yield return StreamEventService.AgentToken(name, full);
             yield return StreamEventService.WorkflowStep(name, "completed");
+        }
 
         // ── Synthesizer step ──
         yield return StreamEventService.AgentStart(synthesizerName);
