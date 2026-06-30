@@ -11,10 +11,10 @@ resource "azurerm_user_assigned_identity" "app" {
 
 # ─────────────────────────────────────────────
 # RBAC: Cognitive Services OpenAI User
-# Allows App Service to call Azure OpenAI
+# Allows App Service to call the Azure AI Foundry account
 # ─────────────────────────────────────────────
 resource "azurerm_role_assignment" "openai_user" {
-  scope                = azurerm_cognitive_account.openai.id
+  scope                = azurerm_cognitive_account.foundry.id
   role_definition_name = "Cognitive Services OpenAI User"
   principal_id         = azurerm_user_assigned_identity.app.principal_id
 }
@@ -58,18 +58,18 @@ resource "azurerm_role_assignment" "speech_user" {
 }
 
 # ─────────────────────────────────────────────
-# RBAC: Cognitive Services OpenAI User (AI Services / VoiceLive)
+# RBAC: Cognitive Services OpenAI User (VoiceLive Foundry account)
 # ─────────────────────────────────────────────
 resource "azurerm_role_assignment" "aiservices_openai_user" {
-  count                = var.enable_ai_services ? 1 : 0
-  scope                = azurerm_cognitive_account.aiservices[0].id
+  count                = var.enable_voicelive ? 1 : 0
+  scope                = azurerm_cognitive_account.voicelive[0].id
   role_definition_name = "Cognitive Services OpenAI User"
   principal_id         = azurerm_user_assigned_identity.app.principal_id
 }
 
 resource "azurerm_role_assignment" "aiservices_user" {
-  count                = var.enable_ai_services ? 1 : 0
-  scope                = azurerm_cognitive_account.aiservices[0].id
+  count                = var.enable_voicelive ? 1 : 0
+  scope                = azurerm_cognitive_account.voicelive[0].id
   role_definition_name = "Cognitive Services User"
   principal_id         = azurerm_user_assigned_identity.app.principal_id
 }
@@ -105,7 +105,7 @@ resource "azurerm_role_assignment" "search_storage_blob_reader" {
 # ─────────────────────────────────────────────
 resource "azurerm_role_assignment" "search_openai_user" {
   count                = var.enable_ai_search ? 1 : 0
-  scope                = azurerm_cognitive_account.openai.id
+  scope                = azurerm_cognitive_account.foundry.id
   role_definition_name = "Cognitive Services OpenAI User"
   principal_id         = azurerm_search_service.main[0].identity[0].principal_id
 }

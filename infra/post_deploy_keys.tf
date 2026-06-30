@@ -16,15 +16,15 @@ locals {
 
 resource "null_resource" "inject_cognitive_keys" {
   triggers = {
-    web_app_id              = azurerm_linux_web_app.main.id
-    openai_id               = azurerm_cognitive_account.openai.id
-    speech_id               = var.enable_speech ? azurerm_cognitive_account.speech[0].id : ""
-    ai_services_id          = var.enable_ai_services ? azurerm_cognitive_account.aiservices[0].id : ""
-    ai_services_search_id   = var.enable_ai_search ? azurerm_cognitive_account.aiservices_search[0].id : ""
-    voicelive_dep_id        = var.enable_ai_services ? azurerm_cognitive_deployment.voicelive_realtime[0].id : ""
-    enable_speech           = tostring(var.enable_speech)
-    enable_ai_services      = tostring(var.enable_ai_services)
-    enable_ai_search        = tostring(var.enable_ai_search)
+    web_app_id            = azurerm_linux_web_app.main.id
+    openai_id             = azurerm_cognitive_account.foundry.id
+    speech_id             = var.enable_speech ? azurerm_cognitive_account.speech[0].id : ""
+    ai_services_id        = var.enable_voicelive ? azurerm_cognitive_account.voicelive[0].id : ""
+    ai_services_search_id = var.enable_ai_search ? azurerm_cognitive_account.aiservices_search[0].id : ""
+    voicelive_dep_id      = var.enable_voicelive ? azurerm_cognitive_deployment.voicelive_realtime[0].id : ""
+    enable_speech         = tostring(var.enable_speech)
+    enable_voicelive      = tostring(var.enable_voicelive)
+    enable_ai_search      = tostring(var.enable_ai_search)
   }
 
   provisioner "local-exec" {
@@ -51,27 +51,27 @@ resource "null_resource" "inject_cognitive_keys" {
       $settings = @()
 
       # OpenAI (optional fallback; MI also works)
-      $openaiKey = UnlockAndKey -accountName "${azurerm_cognitive_account.openai.name}"
+      $openaiKey = UnlockAndKey -accountName "${azurerm_cognitive_account.foundry.name}"
       $settings += "AzureOpenAI__ApiKey=$openaiKey"
 
-      %{ if var.enable_speech ~}
+      %{if var.enable_speech~}
       $speechKey = UnlockAndKey -accountName "${azurerm_cognitive_account.speech[0].name}"
       $settings += "AzureSpeech__SubscriptionKey=$speechKey"
-      %{ endif ~}
+      %{endif~}
 
-      %{ if var.enable_ai_services ~}
-      $aisKey = UnlockAndKey -accountName "${azurerm_cognitive_account.aiservices[0].name}"
+      %{if var.enable_voicelive~}
+      $aisKey = UnlockAndKey -accountName "${azurerm_cognitive_account.voicelive[0].name}"
       $settings += "VoiceLive__ApiKey=$aisKey"
-      %{ endif ~}
+      %{endif~}
 
       # AzureAI__ServicesKey is consumed by the AI Search skillset, which
       # requires a multi-service Cognitive Services key co-located with the
       # search service (var.ai_search_location). Source it from the secondary
       # AI Services account, NOT from the primary (different region).
-      %{ if var.enable_ai_search ~}
+      %{if var.enable_ai_search~}
       $aisSearchKey = UnlockAndKey -accountName "${azurerm_cognitive_account.aiservices_search[0].name}"
       $settings += "AzureAI__ServicesKey=$aisSearchKey"
-      %{ endif ~}
+      %{endif~}
 
       Write-Host "[inject-keys] Updating Web App app_settings ($($settings.Count))"
       az webapp config appsettings set -n $app -g $rg --settings $settings | Out-Null
@@ -82,9 +82,9 @@ resource "null_resource" "inject_cognitive_keys" {
 
   depends_on = [
     azurerm_linux_web_app.main,
-    azurerm_cognitive_account.openai,
+    azurerm_cognitive_account.foundry,
     azurerm_cognitive_account.speech,
-    azurerm_cognitive_account.aiservices,
+    azurerm_cognitive_account.voicelive,
     azurerm_cognitive_account.aiservices_search,
     azurerm_cognitive_deployment.voicelive_realtime,
   ]

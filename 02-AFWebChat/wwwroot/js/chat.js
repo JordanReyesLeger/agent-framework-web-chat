@@ -741,13 +741,15 @@ function renderConditionalFlow(agents) {
 }
 
 function renderFanOutFlow(agents) {
+    // Last agent is the synthesizer; the rest fan out as parallel workers.
+    const workers = agents.length > 1 ? agents.slice(0, -1) : agents;
     return `
         <div class="af-wf-fanout-parallel">
-            ${agents.map(a => buildNodeHtml(a)).join('')}
+            ${workers.map(a => buildNodeHtml(a)).join('')}
         </div>
         <div class="af-wf-fanout-merge">
             <div class="af-wf-fanout-lines">
-                ${agents.map(() => '<div class="af-wf-fanout-line"></div>').join('')}
+                ${workers.map(() => '<div class="af-wf-fanout-line"></div>').join('')}
             </div>
             <div class="af-wf-arrow-down"><i class="bi bi-arrow-down"></i></div>
             ${buildNodeHtml('Synthesizer', 'synthesizer')}

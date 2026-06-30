@@ -22,14 +22,14 @@ output "app_service_plan_name" {
   value       = azurerm_service_plan.main.name
 }
 
-output "openai_endpoint" {
-  description = "Azure OpenAI endpoint"
-  value       = azurerm_cognitive_account.openai.endpoint
+output "foundry_endpoint" {
+  description = "Azure AI Foundry (AIServices) endpoint used for chat + embeddings"
+  value       = azurerm_cognitive_account.foundry.endpoint
 }
 
-output "openai_account_name" {
-  description = "Azure OpenAI account name"
-  value       = azurerm_cognitive_account.openai.name
+output "foundry_account_name" {
+  description = "Azure AI Foundry account name"
+  value       = azurerm_cognitive_account.foundry.name
 }
 
 output "storage_account_name" {
@@ -69,9 +69,9 @@ output "speech_service_region" {
   value       = var.enable_speech ? azurerm_cognitive_account.speech[0].location : null
 }
 
-output "ai_services_endpoint" {
-  description = "Azure AI Services (VoiceLive) endpoint (if deployed)"
-  value       = var.enable_ai_services ? azurerm_cognitive_account.aiservices[0].endpoint : null
+output "voicelive_endpoint" {
+  description = "VoiceLive Azure AI Foundry endpoint (if deployed)"
+  value       = var.enable_voicelive ? azurerm_cognitive_account.voicelive[0].endpoint : null
 }
 
 output "bot_service_name" {

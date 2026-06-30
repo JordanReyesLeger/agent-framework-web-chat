@@ -33,10 +33,12 @@ subscription_id  = "00000000-0000-0000-0000-000000000000"  # Your Azure Subscrip
 # ai_search_location = "eastus"     # eastus2 sometimes capacity-exhausted
 # enable_cosmos_db   = true
 # enable_speech      = true
-# enable_ai_services = true         # AI Services account for VoiceLive realtime
+# enable_voicelive   = true         # Optional AI Foundry account for VoiceLive realtime
 # enable_bot_service = true
 
-# ── VoiceLive realtime ───────────────────────
+# ── VoiceLive realtime (optional) ────────────
+# voicelive_sku            = "S0"
+# voicelive_location       = "eastus2"
 # voicelive_model_name     = "gpt-realtime-mini"
 # voicelive_model_version  = "2025-10-06"
 # voicelive_model_capacity = 1

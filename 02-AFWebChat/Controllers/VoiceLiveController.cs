@@ -6,6 +6,7 @@ using Azure.AI.VoiceLive;
 using Azure.Identity;
 using AFWebChat.Tools.Plugins;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace AFWebChat.Controllers;
 
@@ -32,12 +33,14 @@ public class VoiceLiveController : ControllerBase
     private readonly IConfiguration _config;
     private readonly ILogger<VoiceLiveController> _logger;
     private readonly AzureSearchPlugin _searchPlugin;
+    private readonly IMemoryCache _memoryCache;
 
-    public VoiceLiveController(IConfiguration config, ILogger<VoiceLiveController> logger, AzureSearchPlugin searchPlugin)
+    public VoiceLiveController(IConfiguration config, ILogger<VoiceLiveController> logger, AzureSearchPlugin searchPlugin, IMemoryCache memoryCache)
     {
         _config = config;
         _logger = logger;
         _searchPlugin = searchPlugin;
+        _memoryCache = memoryCache;
     }
 
     [HttpGet("config")]
@@ -184,7 +187,29 @@ public class VoiceLiveController : ControllerBase
         => string.Equals(voiceType, "openai", StringComparison.OrdinalIgnoreCase)
             || (string.IsNullOrEmpty(voiceType) && OpenAIVoiceNames.Contains(voiceName));
 
-    [HttpGet("ws")]
+    [HttpPost("prompt-session")]
+    public IActionResult CreatePromptSession([FromBody] VoiceLivePromptSessionRequest request)
+    {
+        var instructions = string.IsNullOrWhiteSpace(request.Instructions)
+            ? VoicePrompt.Load()
+            : request.Instructions.Trim();
+
+        if (instructions.Length > 32_000)
+        {
+            return BadRequest(new { error = "Prompt demasiado largo. Máximo 32,000 caracteres." });
+        }
+
+        var id = Guid.NewGuid().ToString("N");
+        _memoryCache.Set(GetPromptCacheKey(id), instructions, TimeSpan.FromMinutes(15));
+        _logger.LogInformation("VoiceLive: prompt session created id={PromptId} length={Length} preview={Preview}",
+            id, instructions.Length, instructions[..Math.Min(instructions.Length, 80)].ReplaceLineEndings(" "));
+
+        return Ok(new { promptId = id });
+    }
+
+    // Use a method-agnostic route so WebSocket handshakes work both over
+    // HTTP/1.1 (GET + Upgrade) and HTTP/2 (CONNECT + :protocol=websocket).
+    [Route("ws")]
     public async Task ConnectWebSocket()
     {
         if (!HttpContext.WebSockets.IsWebSocketRequest)
@@ -246,8 +271,8 @@ public class VoiceLiveController : ControllerBase
             var voiceType = Request.Query["voiceType"].FirstOrDefault();
             var style = Request.Query["style"].FirstOrDefault();
 
-            var instructions = Request.Query["instructions"].FirstOrDefault();
-            if (string.IsNullOrWhiteSpace(instructions)) instructions = defaultInstructions;
+            var promptId = Request.Query["promptId"].FirstOrDefault();
+            var instructions = ResolveInstructions(promptId, Request.Query["instructions"].FirstOrDefault(), defaultInstructions);
 
             var avatarEnabled = Request.Query["avatar"].FirstOrDefault() is string a
                 && (a == "1" || string.Equals(a, "true", StringComparison.OrdinalIgnoreCase));
@@ -259,8 +284,9 @@ public class VoiceLiveController : ControllerBase
                 && (ap == "1" || string.Equals(ap, "true", StringComparison.OrdinalIgnoreCase));
 
             _logger.LogInformation(
-                "VoiceLive: starting session model={Model} voice={Voice} type={Type} style={Style} avatar={Avatar}",
-                model, voiceName, voiceType ?? "auto", style ?? "-", avatarEnabled);
+                "VoiceLive: starting session model={Model} voice={Voice} type={Type} style={Style} avatar={Avatar} promptLength={PromptLength} promptPreview={PromptPreview}",
+                model, voiceName, voiceType ?? "auto", style ?? "-", avatarEnabled,
+                instructions.Length, instructions[..Math.Min(instructions.Length, 80)].ReplaceLineEndings(" "));
 
             try
             {
@@ -428,19 +454,26 @@ public class VoiceLiveController : ControllerBase
                                 _logger.LogInformation("VoiceLive: session updated modalities={Modalities}",
                                     string.Join(",", upd.Session?.Modalities?.Select(m => m.ToString()) ?? Array.Empty<string>()));
                                 await SendJsonAsync(socket, new { type = "session_updated" }, pumpCt);
+                                if (upd.Session?.Avatar?.IceServers is { Count: > 0 } iceServers)
+                                {
+                                    await SendJsonAsync(socket, new
+                                    {
+                                        type = "avatar_ice",
+                                        iceServers = ConvertIceServers(iceServers)
+                                    }, pumpCt);
+                                    _logger.LogInformation("VoiceLive: avatar ICE servers received from Azure ({Count})", iceServers.Count);
+                                }
                                 break;
 
                             case SessionUpdateAvatarConnecting avatarConnecting:
                                 // Azure responded with the WebRTC ANSWER to our client offer.
                                 // Forward the server_sdp so the browser can setRemoteDescription(answer).
-                                var (iceList, serverSdp) = ExtractAvatarOffer(avatarConnecting);
                                 await SendJsonAsync(socket, new
                                 {
                                     type = "avatar_answer",
-                                    iceServers = iceList,
-                                    sdp = serverSdp
+                                    sdp = avatarConnecting.ServerSdp
                                 }, pumpCt);
-                                _logger.LogInformation("VoiceLive: server SDP answer received from Azure ({Len} chars, {Ice} ICE servers)", serverSdp?.Length ?? 0, iceList.Length);
+                                _logger.LogInformation("VoiceLive: server SDP answer received from Azure ({Len} chars)", avatarConnecting.ServerSdp?.Length ?? 0);
                                 break;
 
                             case SessionUpdateInputAudioBufferSpeechStarted:
@@ -745,6 +778,25 @@ public class VoiceLiveController : ControllerBase
         }
     }
 
+    private string ResolveInstructions(string? promptId, string? queryInstructions, string defaultInstructions)
+    {
+        if (!string.IsNullOrWhiteSpace(promptId)
+            && _memoryCache.TryGetValue(GetPromptCacheKey(promptId), out string? cachedInstructions)
+            && !string.IsNullOrWhiteSpace(cachedInstructions))
+        {
+            return cachedInstructions;
+        }
+
+        if (!string.IsNullOrWhiteSpace(queryInstructions))
+        {
+            return queryInstructions;
+        }
+
+        return defaultInstructions;
+    }
+
+    private static string GetPromptCacheKey(string promptId) => $"voicelive:prompt:{promptId}";
+
     private async Task<string> HandleFunctionCallAsync(string functionName, string argumentsJson, CancellationToken ct)
     {
         switch (functionName)
@@ -782,45 +834,13 @@ public class VoiceLiveController : ControllerBase
     private static bool IsSocketWritable(WebSocket socket)
         => socket.State == WebSocketState.Open;
 
-    // ---------- Avatar WebRTC payload extraction (reflective, version-tolerant) ----------
-    private static (object[] iceServers, string? serverSdp) ExtractAvatarOffer(SessionUpdateAvatarConnecting evt)
-    {
-        var payload = FindFirstNonNullProperty(evt, new[] { "Avatar", "SessionAvatarConnecting", "Connecting", "Value" }) ?? (object)evt;
-        var iceProp = payload.GetType().GetProperty("IceServers");
-        var sdpProp = payload.GetType().GetProperty("ServerSdp");
-
-        var list = new List<object>();
-        if (iceProp?.GetValue(payload) is System.Collections.IEnumerable iceEnumerable)
+    private static object[] ConvertIceServers(IEnumerable<IceServer> iceServers)
+        => iceServers.Select(server => new
         {
-            foreach (var server in iceEnumerable)
-            {
-                if (server is null) continue;
-                var t = server.GetType();
-                var urls = t.GetProperty("Urls")?.GetValue(server) as System.Collections.IEnumerable;
-                var urlsArr = urls is null
-                    ? Array.Empty<string>()
-                    : urls.Cast<object>().Select(o => o?.ToString() ?? string.Empty).ToArray();
-                list.Add(new
-                {
-                    urls = urlsArr,
-                    username = t.GetProperty("Username")?.GetValue(server)?.ToString(),
-                    credential = t.GetProperty("Credential")?.GetValue(server)?.ToString()
-                });
-            }
-        }
-        return (list.ToArray(), sdpProp?.GetValue(payload)?.ToString());
-    }
-
-    private static object? FindFirstNonNullProperty(object source, string[] names)
-    {
-        var type = source.GetType();
-        foreach (var n in names)
-        {
-            var p = type.GetProperty(n);
-            if (p is null) continue;
-            var v = p.GetValue(source);
-            if (v is not null) return v;
-        }
-        return null;
-    }
+            urls = server.Uris.Select(uri => uri.ToString()).ToArray(),
+            username = server.Username,
+            credential = server.Credential
+        }).ToArray();
 }
+
+public record VoiceLivePromptSessionRequest(string? Instructions);

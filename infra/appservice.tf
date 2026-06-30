@@ -51,7 +51,7 @@ resource "azurerm_linux_web_app" "main" {
       "ASPNETCORE_ENVIRONMENT"         = "Production"
 
       # ── Azure OpenAI (uses Managed Identity; ApiKey injected post-create) ──
-      "AzureOpenAI__Endpoint"            = azurerm_cognitive_account.openai.endpoint
+      "AzureOpenAI__Endpoint"            = azurerm_cognitive_account.foundry.endpoint
       "AzureOpenAI__ChatDeployment"      = var.openai_chat_model_name
       "AzureOpenAI__EmbeddingDeployment" = var.openai_embedding_model_name
 
@@ -98,9 +98,9 @@ resource "azurerm_linux_web_app" "main" {
       "AzureSpeech__SynthesisVoiceName"  = "es-MX-DaliaNeural"
     } : {},
 
-    # ── AI Services / VoiceLive (key injected post-create) ──
-    var.enable_ai_services ? {
-      "VoiceLive__Endpoint" = azurerm_cognitive_account.aiservices[0].endpoint
+    # ── VoiceLive (optional; key injected post-create) ──
+    var.enable_voicelive ? {
+      "VoiceLive__Endpoint" = azurerm_cognitive_account.voicelive[0].endpoint
       "VoiceLive__Model"    = azurerm_cognitive_deployment.voicelive_realtime[0].name
       "VoiceLive__Voice"    = "en-US-Andrew3:DragonHDLatestNeural"
     } : {},

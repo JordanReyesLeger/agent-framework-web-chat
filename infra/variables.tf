@@ -63,10 +63,10 @@ variable "app_service_location" {
 }
 
 # ─────────────────────────────────────────────
-# Azure OpenAI
+# Azure AI Foundry (chat + embeddings)
 # ─────────────────────────────────────────────
-variable "openai_sku" {
-  description = "SKU for Azure OpenAI account"
+variable "foundry_sku" {
+  description = "SKU for the Azure AI Foundry (AIServices) account"
   type        = string
   default     = "S0"
 }
@@ -206,22 +206,23 @@ variable "speech_location" {
 }
 
 # ─────────────────────────────────────────────
-# AI Services account (multi-service, for VoiceLive realtime)
+# VoiceLive (optional) — dedicated Azure AI Foundry account hosting a
+# realtime (speech-to-speech) model for the VoiceLive page.
 # ─────────────────────────────────────────────
-variable "enable_ai_services" {
-  description = "Deploy Azure AI Services account with a realtime model deployment for the VoiceLive page"
+variable "enable_voicelive" {
+  description = "Deploy an optional Azure AI Foundry account with a realtime model deployment for the VoiceLive page"
   type        = bool
   default     = true
 }
 
-variable "ai_services_sku" {
-  description = "SKU for AI Services account"
+variable "voicelive_sku" {
+  description = "SKU for the VoiceLive AI Foundry account"
   type        = string
   default     = "S0"
 }
 
-variable "ai_services_location" {
-  description = "Region for AI Services (must support gpt-4o realtime models, e.g. eastus2)"
+variable "voicelive_location" {
+  description = "Region for the VoiceLive account (must support gpt realtime models, e.g. eastus2)"
   type        = string
   default     = "eastus2"
 }
