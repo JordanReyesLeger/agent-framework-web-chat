@@ -76,6 +76,8 @@
         currentUserLine: null,
         avatarPc: null,
         avatarStream: null,
+        avatarIceServers: null,
+        avatarEnabledForSession: false,
     };
 
     function setStatus(text, kind) {
@@ -310,7 +312,25 @@
         }
     }
 
-    function buildWsUrl() {
+    async function createPromptSession() {
+        const instructions = (els.instructions.value || '').trim();
+        if (!instructions) return null;
+
+        const response = await fetch('/api/VoiceLive/prompt-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ instructions })
+        });
+
+        if (!response.ok) {
+            throw new Error('No se pudo registrar el prompt del sistema (' + response.status + ')');
+        }
+
+        const payload = await response.json();
+        return payload.promptId || null;
+    }
+
+    async function buildWsUrl() {
         const scheme = location.protocol === 'https:' ? 'wss' : 'ws';
         const params = new URLSearchParams();
         if (els.voice.value) {
@@ -320,8 +340,10 @@
             if (vt) params.set('voiceType', vt);
         }
         if (els.style && els.style.value) params.set('style', els.style.value);
-        const instr = (els.instructions.value || '').trim();
-        if (instr) params.set('instructions', instr);
+        // Keep the WebSocket URL small: register the editable prompt with the
+        // backend first, then pass only a short promptId in the WS query string.
+        const promptId = await createPromptSession();
+        if (promptId) params.set('promptId', promptId);
         if (els.ragEnabled && els.ragEnabled.checked) params.set('rag', '1');
         if (els.avatarEnabled && els.avatarEnabled.checked) {
             params.set('avatar', '1');
@@ -341,7 +363,7 @@
             logEvent('Probando Talking Head en Voice Live (preview, no oficial). Si falla, el servicio devolverá un error.', 'warn');
         }
         try {
-            state.ws = new WebSocket(buildWsUrl());
+            state.ws = new WebSocket(await buildWsUrl());
             state.ws.binaryType = 'arraybuffer';
 
             state.ws.onopen = () => {
@@ -391,11 +413,13 @@
                     setStatus('Conectado', 'connected');
                     logEvent(`Listo · modelo=${msg.model} voz=${msg.voice}` + (msg.style ? ` estilo=${msg.style}` : ''), 'info');
                     if (msg.avatar && msg.avatar.enabled) {
+                        state.avatarEnabledForSession = true;
                         if (els.stage) els.stage.classList.add('is-connected');
                         if (els.caption) els.caption.textContent = `Avatar ${msg.avatar.character || ''} · ${msg.avatar.style || ''}`;
-                        logEvent(`🎭 Avatar activo: ${msg.avatar.character} (${msg.avatar.style})`, 'info');
-                        await initiateAvatarWebRtc();
+                        logEvent(`🎭 Avatar solicitado: ${msg.avatar.character} (${msg.avatar.style || 'sin estilo'})`, 'info');
+                        setAvatarStatus('esperando ICE servers de Azure…');
                     } else {
+                        state.avatarEnabledForSession = false;
                         teardownAvatar();
                     }
                     els.mic.disabled = false;
@@ -455,6 +479,11 @@
                 case 'avatar_answer':
                     await applyAvatarAnswer(msg);
                     break;
+                case 'avatar_ice':
+                    state.avatarIceServers = Array.isArray(msg.iceServers) ? msg.iceServers : [];
+                    logEvent(`🧊 ICE servers de Azure recibidos: ${state.avatarIceServers.length}`, 'info');
+                    if (state.avatarEnabledForSession) await initiateAvatarWebRtc();
+                    break;
                 case 'viseme':
                 case 'animation':
                 case 'blendshape':
@@ -492,16 +521,14 @@
                 state.avatarStream = null;
             }
 
-            const pc = new RTCPeerConnection({
-                iceServers: [
-                    { urls: 'stun:stun.l.google.com:19302' },
-                    { urls: 'stun:stun1.l.google.com:19302' }
-                ]
-            });
+            const iceServers = (state.avatarIceServers && state.avatarIceServers.length)
+                ? state.avatarIceServers
+                : [{ urls: 'stun:stun.l.google.com:19302' }];
+            const pc = new RTCPeerConnection({ iceServers });
             state.avatarPc = pc;
 
-            pc.addTransceiver('video', { direction: 'sendrecv' });
-            pc.addTransceiver('audio', { direction: 'sendrecv' });
+            pc.addTransceiver('video', { direction: 'recvonly' });
+            pc.addTransceiver('audio', { direction: 'recvonly' });
 
             pc.ontrack = (event) => {
                 logEvent(`📺 Avatar track recibido: ${event.track.kind}`, 'info');

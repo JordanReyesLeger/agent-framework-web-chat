@@ -25,6 +25,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add MVC + Controllers
 builder.Services.AddControllersWithViews();
+builder.Services.AddMemoryCache();
 
 // Branding
 builder.Services.Configure<AppBrandingSettings>(builder.Configuration.GetSection("AppBranding"));
