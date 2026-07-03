@@ -1,5 +1,6 @@
 using AFWebChat.Agents;
 using AFWebChat.Agents.Basic;
+using AFWebChat.Agents.CFE;
 using AFWebChat.Agents.Composite;
 using AFWebChat.Agents.ContextAware;
 using AFWebChat.Agents.Domain;
@@ -109,6 +110,15 @@ var registry = app.Services.GetRequiredService<AgentRegistry>();
 
 // ── Core agents ──
 registry.Register(GeneralAssistantAgent.CreateDefinition());
+
+// ── CFE demo agents (simulación de venta · solo prompts, sin herramientas) ──
+registry.Register(CFEAvatarAgent.CreateDefinition());
+registry.Register(CFEMesaDeAyudaAgent.CreateDefinition());
+registry.Register(CFEIdentidadAgent.CreateDefinition());
+registry.Register(CFEInfraestructuraAgent.CreateDefinition());
+registry.Register(CFESeguridadAgent.CreateDefinition());
+registry.Register(CFECumplimientoAgent.CreateDefinition());
+registry.Register(CFEEjecutivoAgent.CreateDefinition());
 
 // ── Tool agents ──
 registry.Register(DatabaseQueryAgent.CreateDefinition());

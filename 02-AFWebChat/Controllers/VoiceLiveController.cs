@@ -207,6 +207,28 @@ public class VoiceLiveController : ControllerBase
         return Ok(new { promptId = id });
     }
 
+    /// <summary>
+    /// Persiste el prompt del sistema editado desde la UI (compartido por
+    /// Voice Live y Live Avatar). Se guarda en Prompts/voice-system-prompt.txt
+    /// y queda disponible de inmediato porque el prompt se relee por conexión.
+    /// </summary>
+    [HttpPost("prompt")]
+    public IActionResult SavePrompt([FromBody] VoiceLivePromptSessionRequest request)
+    {
+        var text = (request?.Instructions ?? string.Empty).Trim();
+
+        if (string.IsNullOrWhiteSpace(text))
+            return BadRequest(new { error = "El prompt del sistema no puede estar vacío." });
+
+        if (text.Length > 32_000)
+            return BadRequest(new { error = "Prompt demasiado largo. Máximo 32,000 caracteres." });
+
+        VoicePrompt.Save(text);
+        _logger.LogInformation("VoiceLive: prompt del sistema actualizado desde la UI (length={Length})", text.Length);
+
+        return Ok(new { saved = true, length = text.Length });
+    }
+
     // Use a method-agnostic route so WebSocket handshakes work both over
     // HTTP/1.1 (GET + Upgrade) and HTTP/2 (CONNECT + :protocol=websocket).
     [Route("ws")]

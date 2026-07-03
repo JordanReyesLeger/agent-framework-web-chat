@@ -334,3 +334,54 @@
 .vu-events .ev-error { color: #f85149; }
 .vu-events .ev-speech { color: #d29922; }
 .vu-events .ev-response { color: #58a6ff; }
+
+/* ============================================================
+   Theme integration — align the Voice UI with the active app
+   branding tokens (--app-*), so it matches the client theme
+   (e.g. CFE green) instead of the default GitHub blue.
+   Declared last so it overrides the hardcoded rules above.
+   ============================================================ */
+.vu-header-titles h1 {
+    background: linear-gradient(135deg, var(--app-secondary-color, #34e29a) 0%, var(--app-accent-color, #008d5a) 75%);
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+.vu-header-titles .vu-badge {
+    background: color-mix(in srgb, var(--app-accent-color, #008d5a) 16%, transparent);
+    color: var(--app-accent-color, #008d5a);
+    border-color: color-mix(in srgb, var(--app-accent-color, #008d5a) 35%, transparent);
+    -webkit-text-fill-color: var(--app-accent-color, #008d5a);
+}
+.vu-header-pill.connected {
+    background: color-mix(in srgb, var(--app-accent-color, #008d5a) 18%, transparent);
+    border-color: color-mix(in srgb, var(--app-accent-color, #008d5a) 50%, transparent);
+    color: var(--app-secondary-color, #34e29a);
+}
+.vu-panel-header { background: linear-gradient(180deg, color-mix(in srgb, var(--app-accent-color, #008d5a) 10%, transparent), transparent); }
+.vu-panel-header h2 i { color: var(--app-accent-color, #008d5a); }
+.vu-btn:hover:not(:disabled) { border-color: var(--app-accent-color, #008d5a); }
+.vu-btn-primary { background: linear-gradient(135deg, var(--app-accent-color, #008d5a), var(--app-success-color, #00b46f)); }
+.vu-btn-primary:hover:not(:disabled) { background: linear-gradient(135deg, var(--app-success-color, #00b46f), var(--app-secondary-color, #34e29a)); }
+.vu-stage-placeholder i {
+    background: linear-gradient(135deg, var(--app-secondary-color, #34e29a), var(--app-accent-color, #008d5a));
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+.vu-stage.is-connected { border-color: color-mix(in srgb, var(--app-accent-color, #008d5a) 45%, transparent); }
+.vu-stage.is-speaking { box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 0 0 2px color-mix(in srgb, var(--app-accent-color, #008d5a) 55%, transparent), inset 0 1px 0 rgba(255,255,255,0.04); }
+.vu-status.is-speaking { border-color: color-mix(in srgb, var(--app-accent-color, #008d5a) 55%, transparent); }
+.vu-status.is-speaking .vu-status-dot { background: var(--app-accent-color, #008d5a); box-shadow: 0 0 12px var(--app-accent-color, #008d5a); }
+.vu-field input:focus, .vu-field select:focus, .vu-field textarea:focus {
+    border-color: var(--app-accent-color, #008d5a);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--app-accent-color, #008d5a) 20%, transparent);
+}
+.vu-field select optgroup { color: var(--app-accent-color, #008d5a); }
+.vu-tab.is-active { color: var(--app-accent-color, #008d5a); border-bottom-color: var(--app-accent-color, #008d5a); }
+.vu-input button { background: linear-gradient(135deg, var(--app-accent-color, #008d5a), var(--app-success-color, #00b46f)); }
+.vu-msg.user { border-left-color: var(--app-secondary-color, #34e29a); }
+.vu-events .ev-response { color: var(--app-secondary-color, #34e29a); }
+
+/* Save-prompt control (persist system prompt from the UI) */
+.vu-prompt-actions { display: flex; align-items: center; gap: 10px; margin-top: 2px; flex-wrap: wrap; }
+.vu-btn-savep { width: auto; align-self: flex-start; padding: 6px 12px; font-size: 0.8rem; }
+.vu-prompt-status { font-size: 0.78rem; color: var(--app-success-color, #00b46f); opacity: 0; transition: opacity 0.2s ease; }
+.vu-prompt-status.is-visible { opacity: 1; }
+.vu-prompt-status.is-error { color: var(--app-error-color, #e0556f); }

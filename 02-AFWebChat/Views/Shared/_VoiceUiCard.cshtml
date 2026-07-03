@@ -71,6 +71,10 @@
                 <div class="vu-field">
                     <label for="vu-system-prompt">Prompt del sistema</label>
                     <textarea id="vu-system-prompt" rows="3" placeholder="Eres un asistente útil..."></textarea>
+                    <div class="vu-prompt-actions">
+                        <button type="button" class="vu-btn vu-btn-savep" id="vu-btn-save-prompt"><i class="bi bi-save"></i> Guardar prompt</button>
+                        <span class="vu-prompt-status" id="vu-prompt-status" aria-live="polite"></span>
+                    </div>
                 </div>
 
                 @if (hasCatalog)
@@ -246,5 +250,48 @@
         const target = t.dataset.tab;
         document.querySelector('.vu-tab-pane[data-tab="' + target + '"]').classList.add('is-active');
     }));
+})();
+
+// Save system prompt (shared) — persists to Prompts/voice-system-prompt.txt
+(function () {
+    const btn = document.getElementById('vu-btn-save-prompt');
+    const ta = document.getElementById('vu-system-prompt');
+    const status = document.getElementById('vu-prompt-status');
+    if (!btn || !ta) return;
+
+    function showStatus(msg, isError) {
+        if (!status) return;
+        status.textContent = msg;
+        status.classList.toggle('is-error', !!isError);
+        status.classList.add('is-visible');
+        clearTimeout(status._t);
+        status._t = setTimeout(() => status.classList.remove('is-visible'), 2800);
+    }
+
+    btn.addEventListener('click', async () => {
+        const text = (ta.value || '').trim();
+        if (!text) { showStatus('El prompt no puede estar vacío.', true); return; }
+        const original = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Guardando…';
+        try {
+            const r = await fetch('/api/VoiceLive/prompt', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ instructions: text })
+            });
+            if (r.ok) {
+                showStatus('Guardado \u2713', false);
+            } else {
+                const err = await r.json().catch(() => ({}));
+                showStatus(err.error || 'No se pudo guardar.', true);
+            }
+        } catch (e) {
+            showStatus('Error de red al guardar.', true);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = original;
+        }
+    });
 })();
 </script>
