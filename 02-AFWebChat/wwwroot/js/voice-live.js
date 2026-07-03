@@ -170,6 +170,9 @@
     async function loadConfig() {
         const r = await fetch('/api/VoiceLive/config');
         const cfg = await r.json();
+        // Siempre arranca con el prompt por default del servidor. Los cambios en el
+        // textarea viven solo en memoria durante la sesión (se envían al conectar) y
+        // NO persisten: al recargar la página se vuelve al default.
         els.instructions.value = cfg.instructions || '';
         els.model.value = cfg.model || '';
         await loadVoices(cfg.voice);
