@@ -5,6 +5,9 @@ using Azure.Identity;
 using Microsoft.Extensions.AI;
 using OpenAI;
 using OpenAI.Chat;
+using OpenAI.Responses;
+
+#pragma warning disable OPENAI001 // Responses reasoning APIs are experimental in this SDK.
 
 namespace AFWebChat.Services;
 
@@ -74,6 +77,46 @@ public class ChatClientFactory
     {
         return CreateAzureOpenAIChatClient(deployment).AsIChatClient();
     }
+
+    /// <summary>
+    /// Crea un <see cref="IChatClient"/> basado en la Responses API con el resumen de
+    /// razonamiento habilitado. Úsalo con modelos de razonamiento (serie GPT-5, o-series)
+    /// para que la UI muestre el bloque "Pensando…" al estilo GitHub Copilot.
+    ///
+    /// El resumen de razonamiento NO está disponible vía Chat Completions (los tokens
+    /// de razonamiento están ocultos); solo se expone por la Responses API.
+    /// </summary>
+    public IChatClient CreateReasoningChatClient(string? deployment = null)
+    {
+        deployment ??= _config["AzureOpenAI:ChatDeployment"] ?? "gpt-4o";
+
+        var effort = ParseEffort(_config["AzureOpenAI:ReasoningEffort"]);
+        var summary = ParseSummary(_config["AzureOpenAI:ReasoningSummary"]);
+
+        _logger.LogInformation(
+            "Created Azure OpenAI ResponsesClient (reasoning) for deployment: {Deployment} (effort={Effort}, summary={Summary})",
+            deployment, effort, summary);
+
+        var responsesClient = _azureClient.Value.GetResponsesClient();
+        var innerClient = responsesClient.AsIChatClient(deployment);
+        return new ReasoningChatClient(innerClient, effort, summary);
+    }
+
+    private static ResponseReasoningEffortLevel ParseEffort(string? value) => value?.Trim().ToLowerInvariant() switch
+    {
+        "none" => ResponseReasoningEffortLevel.None,
+        "minimal" => ResponseReasoningEffortLevel.Minimal,
+        "low" => ResponseReasoningEffortLevel.Low,
+        "high" => ResponseReasoningEffortLevel.High,
+        _ => ResponseReasoningEffortLevel.Medium,
+    };
+
+    private static ResponseReasoningSummaryVerbosity ParseSummary(string? value) => value?.Trim().ToLowerInvariant() switch
+    {
+        "concise" => ResponseReasoningSummaryVerbosity.Concise,
+        "detailed" => ResponseReasoningSummaryVerbosity.Detailed,
+        _ => ResponseReasoningSummaryVerbosity.Auto,
+    };
 
     public OpenAI.Embeddings.EmbeddingClient CreateEmbeddingClient()
     {

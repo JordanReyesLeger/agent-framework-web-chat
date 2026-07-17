@@ -20,7 +20,9 @@ public static class GeneralAssistantAgent
         Factory = sp =>
         {
             var factory = sp.GetRequiredService<ChatClientFactory>();
-            var chatClient = factory.CreateChatClient();
+            // Usa la Responses API con resumen de razonamiento para mostrar el bloque
+            // "Pensando…" en la UI (requiere un modelo de razonamiento como gpt-5.1).
+            var chatClient = factory.CreateReasoningChatClient();
 
             return chatClient.AsAIAgent(
                 name: Name,

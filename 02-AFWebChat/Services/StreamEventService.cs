@@ -20,6 +20,9 @@ public class StreamEventService
     public static StreamEvent AgentToken(string agentName, string text)
         => new("agent-token", agentName, text, null);
 
+    public static StreamEvent AgentReasoning(string agentName, string text)
+        => new("agent-reasoning", agentName, text, null);
+
     public static StreamEvent ToolCall(string agentName, string toolName, object? args)
         => new("tool-call", agentName, null, new { toolName, args });
 

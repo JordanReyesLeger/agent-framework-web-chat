@@ -213,6 +213,20 @@ public class OrchestrationFactory
                         yield return StreamEventService.WorkflowStep(responseUpdate.ExecutorId, "running");
                     }
 
+                    // Razonamiento ("thinking"): solo lo emiten modelos de razonamiento (p. ej. gpt-5.1).
+                    // Si el modelo no razona, Contents no trae TextReasoningContent y no se emite nada.
+                    if (responseUpdate.Update is not null)
+                    {
+                        foreach (var content in responseUpdate.Update.Contents)
+                        {
+                            if (content is Microsoft.Extensions.AI.TextReasoningContent reasoning
+                                && !string.IsNullOrEmpty(reasoning.Text))
+                            {
+                                yield return StreamEventService.AgentReasoning(responseUpdate.ExecutorId, reasoning.Text);
+                            }
+                        }
+                    }
+
                     // Stream the agent token
                     var text = responseUpdate.Update?.Text;
                     if (!string.IsNullOrEmpty(text))

@@ -330,6 +330,56 @@ body:has(.chat-page-wrapper) .app-footer {
     margin: 4px 0;
 }
 
+/* Reasoning ("thinking") block — estilo GitHub Copilot */
+.af-reasoning-card {
+    background: color-mix(in srgb, var(--af-accent) 7%, var(--af-surface));
+    border: 1px solid var(--af-border);
+    border-left: 3px solid var(--af-highlight);
+    border-radius: 8px;
+    margin: 2px 0 8px;
+    font-size: 0.85rem;
+    overflow: hidden;
+}
+.af-reasoning-card .af-reasoning-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    color: var(--af-highlight);
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+}
+.af-reasoning-card .af-reasoning-icon { opacity: .9; }
+.af-reasoning-card .af-reasoning-chevron { transition: transform .2s ease; opacity: .7; }
+.af-reasoning-card.expanded .af-reasoning-chevron { transform: rotate(180deg); }
+.af-reasoning-card .af-reasoning-body {
+    display: none;
+    padding: 0 12px 10px 12px;
+    max-height: 220px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    color: color-mix(in srgb, var(--af-text) 72%, transparent);
+    font-size: 0.82rem;
+    line-height: 1.5;
+    font-style: italic;
+}
+.af-reasoning-card.expanded .af-reasoning-body { display: block; }
+
+/* Spinner mientras piensa; se oculta al terminar */
+.af-reasoning-spinner {
+    width: 12px; height: 12px; flex-shrink: 0;
+    border: 2px solid color-mix(in srgb, var(--af-highlight) 40%, transparent);
+    border-top-color: var(--af-highlight);
+    border-radius: 50%;
+    animation: af-reasoning-spin .7s linear infinite;
+}
+.af-reasoning-card.af-reasoning-done .af-reasoning-spinner { display: none; }
+@keyframes af-reasoning-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+    .af-reasoning-spinner { animation: none; }
+}
+
 /* Input Area */
 .af-input-area {
     padding: 12px 24px 16px;
@@ -2433,6 +2483,13 @@ body:has(.chat-page-wrapper) .app-footer {
 [data-bs-theme="light"] .af-tool-card {
     background: rgba(0, 0, 0, 0.03);
     border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* ── Reasoning block ── */
+[data-bs-theme="light"] .af-reasoning-card {
+    background: rgba(0, 0, 0, 0.025);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-left: 3px solid var(--af-highlight);
 }
 
 /* ── Input area ── */
