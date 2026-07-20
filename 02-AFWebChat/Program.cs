@@ -109,6 +109,9 @@ var registry = app.Services.GetRequiredService<AgentRegistry>();
 
 // ── Core agents ──
 registry.Register(GeneralAssistantAgent.CreateDefinition());
+// Summarizer = único agente que permanece en Chat Completions (demo). Translator usa Responses.
+registry.Register(SummarizerAgent.CreateDefinition());
+registry.Register(TranslatorAgent.CreateDefinition());
 
 // ── Tool agents ──
 registry.Register(DatabaseQueryAgent.CreateDefinition());

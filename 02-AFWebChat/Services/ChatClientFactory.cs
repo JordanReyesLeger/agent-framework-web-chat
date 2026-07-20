@@ -73,10 +73,35 @@ public class ChatClientFactory
         return _azureClient.Value.GetChatClient(deployment);
     }
 
+    /// <summary>
+    /// Cliente por defecto para TODOS los agentes, orquestaciones y workflows.
+    /// Por defecto usa la Responses API con razonamiento habilitado (nivel global
+    /// configurable en <c>AzureOpenAI:ReasoningEffort</c>). Se puede desactivar
+    /// globalmente con <c>AzureOpenAI:UseResponsesApi = false</c>.
+    ///
+    /// Para forzar el Chat Completions clásico en un agente concreto (demo), usa
+    /// <see cref="CreateChatCompletionsClient"/> directamente.
+    /// </summary>
     public IChatClient CreateChatClient(string? deployment = null)
+    {
+        return UseResponsesApi
+            ? CreateReasoningChatClient(deployment)
+            : CreateChatCompletionsClient(deployment);
+    }
+
+    /// <summary>
+    /// Cliente clásico basado en la <b>Chat Completions API</b> (sin razonamiento expuesto).
+    /// Reservado para el agente de demostración que debe seguir en Chat Completions.
+    /// </summary>
+    public IChatClient CreateChatCompletionsClient(string? deployment = null)
     {
         return CreateAzureOpenAIChatClient(deployment).AsIChatClient();
     }
+
+    /// <summary>Interruptor global: true = Responses+razonamiento (default); false = Chat Completions.</summary>
+    private bool UseResponsesApi =>
+        !bool.TryParse(_config["AzureOpenAI:UseResponsesApi"], out var value) || value;
+
 
     /// <summary>
     /// Crea un <see cref="IChatClient"/> basado en la Responses API con el resumen de
