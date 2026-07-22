@@ -18,9 +18,22 @@ namespace AFWebChat.Services;
 /// </summary>
 public sealed class ReasoningChatClient : DelegatingChatClient
 {
+    private readonly ReasoningSettings? _settings;
     private readonly ResponseReasoningEffortLevel _effort;
     private readonly ResponseReasoningSummaryVerbosity _summary;
 
+    /// <summary>
+    /// Cliente que lee el nivel de razonamiento GLOBAL en cada llamada. Cambiar
+    /// <see cref="ReasoningSettings.Effort"/> en runtime afecta al instante a todos
+    /// los agentes que compartan estas settings.
+    /// </summary>
+    public ReasoningChatClient(IChatClient innerClient, ReasoningSettings settings)
+        : base(innerClient)
+    {
+        _settings = settings;
+    }
+
+    /// <summary>Cliente con esfuerzo/verbosidad FIJOS (p. ej. para el warm-up).</summary>
     public ReasoningChatClient(
         IChatClient innerClient,
         ResponseReasoningEffortLevel effort,
@@ -31,9 +44,16 @@ public sealed class ReasoningChatClient : DelegatingChatClient
         _summary = summary;
     }
 
+    private (ResponseReasoningEffortLevel Effort, ResponseReasoningSummaryVerbosity Summary) CurrentReasoning()
+        => _settings is not null
+            ? (_settings.EffortLevel, _settings.SummaryVerbosity)
+            : (_effort, _summary);
+
     private ChatOptions ApplyReasoning(ChatOptions? options)
     {
         options = options?.Clone() ?? new ChatOptions();
+
+        var (effort, summary) = CurrentReasoning();
 
         var previousFactory = options.RawRepresentationFactory;
         options.RawRepresentationFactory = client =>
@@ -46,8 +66,8 @@ public sealed class ReasoningChatClient : DelegatingChatClient
             }
 
             createOptions.ReasoningOptions ??= new ResponseReasoningOptions();
-            createOptions.ReasoningOptions.ReasoningEffortLevel ??= _effort;
-            createOptions.ReasoningOptions.ReasoningSummaryVerbosity ??= _summary;
+            createOptions.ReasoningOptions.ReasoningEffortLevel ??= effort;
+            createOptions.ReasoningOptions.ReasoningSummaryVerbosity ??= summary;
 
             return createOptions;
         };

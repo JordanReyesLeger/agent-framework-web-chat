@@ -31,6 +31,7 @@ builder.Services.AddMemoryCache();
 builder.Services.Configure<AppBrandingSettings>(builder.Configuration.GetSection("AppBranding"));
 
 // Register services
+builder.Services.AddSingleton<ReasoningSettings>();
 builder.Services.AddSingleton<ChatClientFactory>();
 builder.Services.AddSingleton<SessionService>();
 builder.Services.AddSingleton<AgentRegistry>();

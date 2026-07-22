@@ -211,6 +211,9 @@ public class OrchestrationFactory
                         lastExecutorId = responseUpdate.ExecutorId;
                         yield return StreamEventService.AgentStart(responseUpdate.ExecutorId);
                         yield return StreamEventService.WorkflowStep(responseUpdate.ExecutorId, "running");
+                        // Feedback inmediato: cada agente muestra "Pensando…" en cuanto toma el turno,
+                        // sin esperar al primer token de razonamiento del modelo.
+                        yield return StreamEventService.AgentThinking(responseUpdate.ExecutorId);
                     }
 
                     // Razonamiento ("thinking"): solo lo emiten modelos de razonamiento (p. ej. gpt-5.1).

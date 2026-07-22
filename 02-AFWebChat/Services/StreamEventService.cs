@@ -23,6 +23,14 @@ public class StreamEventService
     public static StreamEvent AgentReasoning(string agentName, string text)
         => new("agent-reasoning", agentName, text, null);
 
+    /// <summary>
+    /// Señal inmediata de que el agente empezó a "pensar". Permite a la UI mostrar el
+    /// indicador "Pensando…" al instante, sin esperar al primer token de razonamiento del
+    /// modelo (que en modelos de razonamiento puede tardar decenas de segundos).
+    /// </summary>
+    public static StreamEvent AgentThinking(string agentName)
+        => new("agent-thinking", agentName, null, null);
+
     public static StreamEvent ToolCall(string agentName, string toolName, object? args)
         => new("tool-call", agentName, null, new { toolName, args });
 

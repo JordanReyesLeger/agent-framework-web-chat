@@ -13,6 +13,7 @@ public class ChatController : ControllerBase
     private readonly AgentOrchestrationService _orchestration;
     private readonly AgentRegistry _registry;
     private readonly IDocumentTextExtractor _documentExtractor;
+    private readonly ReasoningSettings _reasoning;
     private readonly ILogger<ChatController> _logger;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -25,11 +26,13 @@ public class ChatController : ControllerBase
         AgentOrchestrationService orchestration,
         AgentRegistry registry,
         IDocumentTextExtractor documentExtractor,
+        ReasoningSettings reasoning,
         ILogger<ChatController> logger)
     {
         _orchestration = orchestration;
         _registry = registry;
         _documentExtractor = documentExtractor;
+        _reasoning = reasoning;
         _logger = logger;
     }
 
@@ -106,6 +109,44 @@ public class ChatController : ControllerBase
         _logger.LogInformation("Tool approval: {RequestId} = {Approved}", response.RequestId, response.Approved);
         // In a full implementation, this would signal the pending approval
         return Ok();
+    }
+
+    /// <summary>Devuelve el nivel de razonamiento global actual y las opciones válidas.</summary>
+    [HttpGet("reasoning")]
+    public ActionResult GetReasoning()
+        => Ok(new
+        {
+            effort = _reasoning.Effort,
+            summary = _reasoning.Summary,
+            efforts = ReasoningSettings.AllowedEfforts,
+            summaries = ReasoningSettings.AllowedSummaries
+        });
+
+    /// <summary>
+    /// Cambia en caliente el nivel de razonamiento GLOBAL para todos los agentes.
+    /// No requiere reiniciar: el cambio aplica en la siguiente petición.
+    /// </summary>
+    [HttpPost("reasoning")]
+    public ActionResult SetReasoning([FromBody] ReasoningUpdate update)
+    {
+        if (!string.IsNullOrWhiteSpace(update.Effort))
+        {
+            var wanted = update.Effort.Trim().ToLowerInvariant();
+            if (!ReasoningSettings.AllowedEfforts.Contains(wanted))
+                return BadRequest($"Nivel de esfuerzo inválido: '{update.Effort}'. Válidos: {string.Join(", ", ReasoningSettings.AllowedEfforts)}.");
+            _reasoning.Effort = wanted;
+        }
+
+        if (!string.IsNullOrWhiteSpace(update.Summary))
+        {
+            var wanted = update.Summary.Trim().ToLowerInvariant();
+            if (!ReasoningSettings.AllowedSummaries.Contains(wanted))
+                return BadRequest($"Resumen inválido: '{update.Summary}'. Válidos: {string.Join(", ", ReasoningSettings.AllowedSummaries)}.");
+            _reasoning.Summary = wanted;
+        }
+
+        _logger.LogInformation("Nivel de razonamiento global actualizado: effort={Effort}, summary={Summary}", _reasoning.Effort, _reasoning.Summary);
+        return Ok(new { effort = _reasoning.Effort, summary = _reasoning.Summary });
     }
 
     /// <summary>

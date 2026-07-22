@@ -41,11 +41,63 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadWorkflows();
     injectNavbarChatActions();
     setupEventListeners();
+    initReasoningControl();
     updateSessionBadge();
     updateAgentContext();
     renderExamplePrompts();
     loadSessionHistory();
 });
+
+// ---- Reasoning effort (global) ----
+// Control segmentado en la barra del chat para cambiar el nivel de razonamiento de TODOS
+// los agentes en caliente (sin reiniciar). Lee el valor actual del backend y persiste cada cambio.
+async function initReasoningControl() {
+    const seg = document.getElementById('reasoningSeg');
+    if (!seg) return;
+    const pills = Array.from(seg.querySelectorAll('.af-reason-pill'));
+
+    const setActive = (effort) => {
+        pills.forEach(p => p.classList.toggle('active', p.dataset.effort === effort));
+    };
+
+    // Estado inicial desde el backend
+    let current = 'low';
+    try {
+        const res = await fetch('/api/chat/reasoning');
+        if (res.ok) {
+            const data = await res.json();
+            if (data.effort) current = data.effort;
+        }
+    } catch (e) {
+        console.warn('No se pudo leer el nivel de razonamiento', e);
+    }
+    setActive(current);
+
+    pills.forEach(pill => {
+        pill.addEventListener('click', async () => {
+            const effort = pill.dataset.effort;
+            if (pill.classList.contains('active')) return; // sin cambios
+            const prev = seg.querySelector('.af-reason-pill.active')?.dataset.effort;
+            setActive(effort); // feedback optimista
+            seg.classList.add('af-reason-busy');
+            try {
+                const res = await fetch('/api/chat/reasoning', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ effort })
+                });
+                if (!res.ok) throw new Error('bad status');
+                pill.classList.add('af-reason-flash');
+                setTimeout(() => pill.classList.remove('af-reason-flash'), 500);
+            } catch (e) {
+                if (prev) setActive(prev); // revierte si falló
+                console.warn('No se pudo cambiar el razonamiento', e);
+            } finally {
+                seg.classList.remove('af-reason-busy');
+            }
+        });
+    });
+}
 
 function injectNavbarChatActions() {
     const container = document.getElementById('navbarChatActions');
@@ -1105,6 +1157,15 @@ function appendReasoning(stream, text) {
 // Colapsa el bloque cuando el razonamiento terminó (idempotente).
 function finalizeReasoning(stream) {
     if (!stream || !stream.reasoningCard) return;
+    // Si nunca llegó texto de razonamiento (p. ej. modelo sin razonamiento como Summarizer,
+    // o la tarjeta se creó solo por el indicador inmediato "Pensando…"), elimina la tarjeta
+    // para no mostrar un "Razonó durante Ns" engañoso.
+    if (!stream.reasoningText) {
+        stream.reasoningCard.remove();
+        stream.reasoningCard = null;
+        stream.reasoningBody = null;
+        return;
+    }
     const secs = stream.reasoningStart
         ? Math.max(1, Math.round((performance.now() - stream.reasoningStart) / 1000))
         : null;
@@ -1134,6 +1195,12 @@ function handleStreamEvent(evt, stream) {
         case 'agent-start':
             switchStreamAgent(stream, evt.data?.agentName || 'Agent');
             updateInlineFlowProgress(evt.data?.agentName || 'Agent', 'running');
+            break;
+
+        case 'agent-thinking':
+            // Muestra el indicador "Pensando…" al instante, sin esperar al modelo.
+            ensureReasoningBlock(stream);
+            scrollToBottom();
             break;
 
         case 'agent-reasoning':

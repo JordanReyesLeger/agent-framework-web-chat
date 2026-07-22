@@ -116,6 +116,11 @@ public class AgentOrchestrationService
 
         bool hasContent = false;
 
+        // Feedback inmediato: avisa a la UI que el agente empezó a pensar ANTES de llamar al
+        // modelo. Los modelos de razonamiento (gpt-5.1) pueden tardar decenas de segundos en
+        // emitir el primer token de resumen; sin esto el usuario no ve nada durante ese tiempo.
+        yield return StreamEventService.AgentThinking(request.AgentName);
+
         await foreach (var update in agent.RunStreamingAsync(request.Message, session))
         {
             // Razonamiento ("thinking"): solo lo emiten modelos de razonamiento (p. ej. gpt-5.1).

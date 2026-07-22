@@ -15,14 +15,16 @@ public class ChatClientFactory
 {
     private readonly IConfiguration _config;
     private readonly ILogger<ChatClientFactory> _logger;
+    private readonly ReasoningSettings _reasoning;
     private readonly Lazy<DefaultAzureCredential> _credential;
     private readonly Lazy<AzureOpenAIClient> _azureClient;
     private readonly bool _usesApiKey;
 
-    public ChatClientFactory(IConfiguration config, ILogger<ChatClientFactory> logger)
+    public ChatClientFactory(IConfiguration config, ILogger<ChatClientFactory> logger, ReasoningSettings reasoning)
     {
         _config = config;
         _logger = logger;
+        _reasoning = reasoning;
 
         var apiKey = config["AzureOpenAI:ApiKey"];
         _usesApiKey = !string.IsNullOrEmpty(apiKey);
@@ -45,10 +47,14 @@ public class ChatClientFactory
     }
 
     /// <summary>
-    /// Pre-warm the credential, token cache, and client so the first real request is fast.
+    /// Pre-warm the credential, token cache, client, HTTP/2 connection pool y el pipeline
+    /// completo de streaming (JIT + serialización de la Responses API) para que la PRIMERA
+    /// conversación real no pague el arranque en frío (~20 s). Se ejecuta en segundo plano
+    /// al iniciar la aplicación.
     /// </summary>
     public async Task WarmUpAsync()
     {
+        var sw = System.Diagnostics.Stopwatch.StartNew();
         _logger.LogInformation("Warming up Azure OpenAI client...");
         try
         {
@@ -58,11 +64,45 @@ public class ChatClientFactory
                 await _credential.Value.GetTokenAsync(tokenRequest);
             }
             _ = _azureClient.Value;
-            _logger.LogInformation("Azure OpenAI client warmed up successfully.");
+            _logger.LogInformation("Azure OpenAI credential/client ready ({Elapsed} ms). Warming inference pipeline...", sw.ElapsedMilliseconds);
+
+            // Ejecuta una inferencia mínima REAL por el mismo pipeline de streaming que usa la UI.
+            // Esto compila (JIT) el pipeline de Agent Framework + Responses, abre la conexión
+            // HTTP/2 al endpoint y calienta el modelo de razonamiento, moviendo ese costo del
+            // primer usuario al arranque en background.
+            await WarmUpInferenceAsync();
+            _logger.LogInformation("Azure OpenAI warmup complete ({Elapsed} ms).", sw.ElapsedMilliseconds);
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Warmup failed (non-fatal). First request may be slower.");
+        }
+    }
+
+    /// <summary>
+    /// Dispara una inferencia trivial por el pipeline de streaming por defecto.
+    /// Usa esfuerzo de razonamiento mínimo para que el calentamiento sea barato,
+    /// pero recorre exactamente las mismas rutas de código que las peticiones reales.
+    /// </summary>
+    private async Task WarmUpInferenceAsync()
+    {
+        IChatClient client = UseResponsesApi
+            ? new ReasoningChatClient(
+                _azureClient.Value.GetResponsesClient().AsIChatClient(
+                    _config["AzureOpenAI:ChatDeployment"] ?? "gpt-4o"),
+                ResponseReasoningEffortLevel.Low,
+                ResponseReasoningSummaryVerbosity.Auto)
+            : CreateChatCompletionsClient();
+
+        var messages = new List<Microsoft.Extensions.AI.ChatMessage>
+        {
+            new(ChatRole.User, "ping")
+        };
+        var options = new ChatOptions { MaxOutputTokens = 16 };
+
+        await foreach (var _ in client.GetStreamingResponseAsync(messages, options))
+        {
+            // Descartamos la salida; solo nos interesa calentar el pipeline.
         }
     }
 
@@ -115,33 +155,16 @@ public class ChatClientFactory
     {
         deployment ??= _config["AzureOpenAI:ChatDeployment"] ?? "gpt-4o";
 
-        var effort = ParseEffort(_config["AzureOpenAI:ReasoningEffort"]);
-        var summary = ParseSummary(_config["AzureOpenAI:ReasoningSummary"]);
-
         _logger.LogInformation(
-            "Created Azure OpenAI ResponsesClient (reasoning) for deployment: {Deployment} (effort={Effort}, summary={Summary})",
-            deployment, effort, summary);
+            "Created Azure OpenAI ResponsesClient (reasoning) for deployment: {Deployment} (effort={Effort}, summary={Summary}, global)",
+            deployment, _reasoning.Effort, _reasoning.Summary);
 
         var responsesClient = _azureClient.Value.GetResponsesClient();
         var innerClient = responsesClient.AsIChatClient(deployment);
-        return new ReasoningChatClient(innerClient, effort, summary);
+        // Lee el nivel de razonamiento GLOBAL en cada llamada → cambiar ReasoningSettings
+        // desde la UI afecta al instante a todos los agentes.
+        return new ReasoningChatClient(innerClient, _reasoning);
     }
-
-    private static ResponseReasoningEffortLevel ParseEffort(string? value) => value?.Trim().ToLowerInvariant() switch
-    {
-        "none" => ResponseReasoningEffortLevel.None,
-        "minimal" => ResponseReasoningEffortLevel.Minimal,
-        "low" => ResponseReasoningEffortLevel.Low,
-        "high" => ResponseReasoningEffortLevel.High,
-        _ => ResponseReasoningEffortLevel.Medium,
-    };
-
-    private static ResponseReasoningSummaryVerbosity ParseSummary(string? value) => value?.Trim().ToLowerInvariant() switch
-    {
-        "concise" => ResponseReasoningSummaryVerbosity.Concise,
-        "detailed" => ResponseReasoningSummaryVerbosity.Detailed,
-        _ => ResponseReasoningSummaryVerbosity.Auto,
-    };
 
     public OpenAI.Embeddings.EmbeddingClient CreateEmbeddingClient()
     {
