@@ -34,6 +34,48 @@
     </div>
 
     <div class="vu-grid">
+        <!-- ============== SESSION + CONVERSATION ============== -->
+        <aside class="vu-ops-panel">
+            <div class="vu-panel-header">
+                <div>
+                    <h2><i class="bi bi-headset"></i> Sesión en vivo</h2>
+                    <p>Conecta, habla y sigue la conversación.</p>
+                </div>
+            </div>
+
+            <div class="vu-controls">
+                <button class="vu-btn vu-btn-primary vu-btn-wide" id="vu-btn-connect"><i class="bi bi-broadcast"></i> Conectar</button>
+                <button class="vu-btn" id="vu-btn-disconnect" disabled><i class="bi bi-x-circle"></i> Desconectar</button>
+                <button class="vu-btn vu-btn-success" id="vu-btn-mic" disabled><i class="bi bi-mic"></i> Micrófono</button>
+                <button class="vu-btn vu-btn-danger vu-btn-wide" id="vu-btn-stop" disabled><i class="bi bi-stop-circle"></i> Interrumpir</button>
+            </div>
+
+            <div class="vu-tabs">
+                <button class="vu-tab is-active" data-tab="chat"><i class="bi bi-chat-dots"></i> Conversación</button>
+                @if (hasEvents)
+                {
+                    <button class="vu-tab" data-tab="events"><i class="bi bi-activity"></i> Eventos</button>
+                }
+            </div>
+
+            <div class="vu-tab-pane is-active" data-tab="chat">
+                <div class="vu-transcript" id="vu-transcript">
+                    <div class="vu-empty">La conversación aparecerá aquí.</div>
+                </div>
+                <div class="vu-input">
+                    <input id="vu-text-input" placeholder="Escribe o habla…" disabled />
+                    <button id="vu-btn-send" disabled aria-label="Enviar mensaje"><i class="bi bi-send"></i></button>
+                </div>
+            </div>
+
+            @if (hasEvents)
+            {
+                <div class="vu-tab-pane" data-tab="events">
+                    <div class="vu-events" id="vu-events"></div>
+                </div>
+            }
+        </aside>
+
         <!-- ============== AVATAR STAGE ============== -->
         <section class="vu-stage" id="vu-stage">
             <div class="vu-stage-placeholder" id="vu-placeholder">
@@ -53,32 +95,51 @@
             </div>
         </section>
 
-        <!-- ============== SIDE PANEL ============== -->
-        <aside class="vu-panel">
+        <!-- ============== CONFIGURATION ============== -->
+        <aside class="vu-panel vu-config-panel">
             <div class="vu-panel-header">
-                <h2><i class="bi bi-sliders"></i> @modeTitle</h2>
-                <p>@(mode == "live-avatar" ? "WebRTC + Speech SDK directo en el navegador." : "Sesión unificada vía WebSocket bridge.")</p>
-            </div>
-
-            <div class="vu-controls">
-                <button class="vu-btn vu-btn-primary vu-btn-wide" id="vu-btn-connect"><i class="bi bi-broadcast"></i> Conectar</button>
-                <button class="vu-btn" id="vu-btn-disconnect" disabled><i class="bi bi-x-circle"></i> Desconectar</button>
-                <button class="vu-btn vu-btn-success" id="vu-btn-mic" disabled><i class="bi bi-mic"></i> Micrófono</button>
-                <button class="vu-btn vu-btn-danger vu-btn-wide" id="vu-btn-stop" disabled><i class="bi bi-stop-circle"></i> Interrumpir</button>
+                <div>
+                    <h2><i class="bi bi-sliders"></i> @modeTitle</h2>
+                    <p>@(mode == "live-avatar" ? "WebRTC + Speech SDK directo en el navegador." : "Sesión unificada vía WebSocket bridge.")</p>
+                </div>
+                <button type="button" class="vu-prompt-open" id="vu-prompt-open" aria-haspopup="dialog">
+                    <i class="bi bi-card-text"></i> Prompt
+                </button>
             </div>
 
             <div class="vu-config">
-                <div class="vu-field">
-                    <label for="vu-system-prompt">Prompt del sistema</label>
-                    <textarea id="vu-system-prompt" rows="3" placeholder="Eres un asistente útil..."></textarea>
-                </div>
-
                 @if (hasCatalog)
                 {
+                    <div class="vu-voice-browser">
+                        <div class="vu-field-heading">
+                            <label id="vu-voice-label" for="vu-voice">Voz del asistente</label>
+                            <span id="vu-voice-count" class="vu-field-count"></span>
+                        </div>
+                        <select id="vu-voice" class="vu-visually-hidden" aria-labelledby="vu-voice-label"></select>
+                        <button type="button" class="vu-selection-card vu-voice-picker-open" id="vu-voice-picker-open" aria-haspopup="dialog">
+                            <span class="vu-selection-avatar" id="vu-voice-icon" aria-hidden="true">🎙️</span>
+                            <span class="vu-selection-copy">
+                                <strong id="vu-voice-name">Selecciona una voz</strong>
+                                <small id="vu-voice-meta">El género, idioma y proveedor aparecerán aquí.</small>
+                            </span>
+                            <span class="vu-change-voice"><i class="bi bi-search"></i> Cambiar</span>
+                        </button>
+                        <div class="vu-field" id="vu-output-locale-row">
+                            <label for="vu-output-locale">Idioma de salida <span class="vu-label-hint">(compatible con esta voz)</span></label>
+                            <select id="vu-output-locale"></select>
+                            <small class="vu-field-help" id="vu-output-locale-help">Automático detecta el idioma del texto; también puedes forzar un locale compatible.</small>
+                        </div>
+                    </div>
                     <div class="vu-field-grid">
                         <div class="vu-field">
-                            <label for="vu-voice">Voz</label>
-                            <select id="vu-voice"></select>
+                            <label for="vu-input-language">Idioma del micrófono <span class="vu-label-hint">(lo que escucha)</span></label>
+                            <select id="vu-input-language">
+                                <option value="">Automático multilingüe · recomendado</option>
+                                <option value="es-MX">Español (México) · es-MX</option>
+                                <option value="es-ES">Español (España) · es-ES</option>
+                                <option value="en-US">English (United States) · en-US</option>
+                            </select>
+                            <small class="vu-field-help">Automático envía <code>language=""</code>; un idioma específico restringe la transcripción.</small>
                         </div>
                         <div class="vu-field">
                             <label for="vu-model">Modelo</label>
@@ -125,35 +186,48 @@
 
                 @if (hasCatalog)
                 {
-                    <label class="vu-field-toggle">
+                    <label class="vu-feature-toggle" for="vu-rag-enable">
+                        <span class="vu-feature-icon"><i class="bi bi-database-check"></i></span>
+                        <span class="vu-feature-copy">
+                            <strong>RAG en documentos</strong>
+                            <small>Permite buscar contexto en Azure AI Search.</small>
+                        </span>
                         <input type="checkbox" id="vu-rag-enable" />
-                        <span>🔍 Habilitar RAG (búsqueda en documentos)</span>
+                        <span class="vu-switch" aria-hidden="true"></span>
                     </label>
                 }
 
                 @if (hasAvatarToggle)
                 {
-                    <label class="vu-field-toggle">
+                    <label class="vu-feature-toggle" for="vu-avatar-enable">
+                        <span class="vu-feature-icon"><i class="bi bi-person-video3"></i></span>
+                        <span class="vu-feature-copy">
+                            <strong>Avatar en tiempo real</strong>
+                            <small>Agrega video sincronizado mediante WebRTC.</small>
+                        </span>
                         <input type="checkbox" id="vu-avatar-enable" />
-                        <span>🎭 Habilitar Avatar (video en tiempo real)</span>
+                        <span class="vu-switch" aria-hidden="true"></span>
                     </label>
                 }
 
-                <div class="vu-field-grid" id="vu-avatar-fields" @(hasAvatarToggle ? "style=display:none;" : "")>
-                    <div class="vu-field">
-                        <label for="vu-avatar-character">Personaje</label>
-                        <select id="vu-avatar-character">
+                <div class="vu-avatar-config" id="vu-avatar-fields" @(hasAvatarToggle ? "style=display:none;" : "")>
+                    <div class="vu-field vu-avatar-picker-field">
+                        <div class="vu-field-heading">
+                            <label id="vu-avatar-picker-label" for="vu-avatar-character">Elige un personaje</label>
+                            <span id="vu-avatar-count" class="vu-field-count"></span>
+                        </div>
+                        <select id="vu-avatar-character" class="vu-visually-hidden" aria-labelledby="vu-avatar-picker-label">
                             <optgroup label="👥 Full body (3D)">
-                                <option value="lisa" data-photo="false">Lisa</option>
-                                <option value="meg" data-photo="false">Meg</option>
-                                <option value="lori" data-photo="false">Lori</option>
-                                <option value="max" data-photo="false">Max</option>
-                                <option value="harry" data-photo="false">Harry</option>
-                                <option value="jeff" data-photo="false">Jeff (retiro Dic 2026)</option>
-                                <option value="rowan" data-photo="false">Rowan</option>
-                                <option value="celine" data-photo="false">Celine</option>
-                                <option value="nia" data-photo="false">Nia</option>
-                                <option value="malik" data-photo="false">Malik</option>
+                                <option value="lisa" data-photo="false" data-styles='["casual-sitting"]'>Lisa</option>
+                                <option value="meg" data-photo="false" data-styles='["formal","casual","business"]'>Meg</option>
+                                <option value="lori" data-photo="false" data-styles='["casual","formal","graceful"]'>Lori</option>
+                                <option value="max" data-photo="false" data-styles='["formal","casual","business"]'>Max</option>
+                                <option value="harry" data-photo="false" data-styles='["business","casual","youthful"]'>Harry</option>
+                                <option value="jeff" data-photo="false" data-styles='["business","formal"]'>Jeff (retiro Dic 2026)</option>
+                                <option value="rowan" data-photo="false" data-styles='[]'>Rowan</option>
+                                <option value="celine" data-photo="false" data-styles='[]'>Celine</option>
+                                <option value="nia" data-photo="false" data-styles='[]'>Nia</option>
+                                <option value="malik" data-photo="false" data-styles='[]'>Malik</option>
                             </optgroup>
                             <optgroup label="🎭 Talking Heads (Preview · foto avatar)">
                                 <option value="adrian" data-photo="true">Adrian (Preview)</option>
@@ -188,6 +262,11 @@
                                 <option value="zoe" data-photo="true">Zoe (Preview)</option>
                             </optgroup>
                         </select>
+                        <div class="vu-avatar-type-tabs" id="vu-avatar-type-tabs" role="group" aria-label="Tipo de avatar">
+                            <button type="button" class="is-active" data-avatar-type="fullbody" aria-pressed="true"><i class="bi bi-person-standing"></i> Cuerpo completo</button>
+                            <button type="button" data-avatar-type="photo" aria-pressed="false"><i class="bi bi-person-bounding-box"></i> Talking heads</button>
+                        </div>
+                        <div class="vu-avatar-gallery" id="vu-avatar-gallery" role="listbox" aria-labelledby="vu-avatar-picker-label"></div>
                     </div>
                     <div class="vu-field" id="vu-avatar-style-field">
                         <label for="vu-avatar-style">Pose / estilo</label>
@@ -202,37 +281,80 @@
                             <option value="formal">formal</option>
                             <option value="casual">casual</option>
                         </select>
+                        <div class="vu-pose-empty" id="vu-avatar-style-empty" hidden>
+                            <i class="bi bi-check-circle"></i>
+                            <span><strong>Sin pose requerida</strong><small>Este personaje usa una presentación predeterminada.</small></span>
+                        </div>
                     </div>
+                    <figure class="vu-avatar-preview">
+                        <div class="vu-avatar-image-wrap">
+                            <img id="vu-avatar-preview-image" alt="Vista previa del avatar seleccionado" loading="eager" />
+                            <span id="vu-avatar-preview-fallback" class="vu-avatar-fallback" aria-hidden="true"><i class="bi bi-person-bounding-box"></i></span>
+                        </div>
+                        <figcaption>
+                            <span class="vu-avatar-title-row">
+                                <strong id="vu-avatar-preview-name">Avatar</strong>
+                                <span id="vu-avatar-preview-type" class="vu-mini-badge">Full body</span>
+                            </span>
+                            <small id="vu-avatar-preview-meta">Selecciona un personaje y una pose.</small>
+                            <a href="https://learn.microsoft.com/azure/ai-services/speech-service/text-to-speech-avatar/standard-avatars"
+                               target="_blank" rel="noopener noreferrer" class="vu-doc-link">
+                                Ver galería oficial de avatares <i class="bi bi-box-arrow-up-right"></i>
+                            </a>
+                        </figcaption>
+                    </figure>
                 </div>
             </div>
 
-            <div class="vu-tabs">
-                <button class="vu-tab is-active" data-tab="chat"><i class="bi bi-chat-dots"></i> Conversación</button>
-                @if (hasEvents)
-                {
-                    <button class="vu-tab" data-tab="events"><i class="bi bi-activity"></i> Eventos</button>
-                }
-            </div>
-
-            <div class="vu-tab-pane is-active" data-tab="chat">
-                <div class="vu-transcript" id="vu-transcript">
-                    <div class="vu-empty">La conversación aparecerá aquí.</div>
-                </div>
-                <div class="vu-input">
-                    <input id="vu-text-input" placeholder="Escribe un mensaje o habla con el micrófono…" disabled />
-                    <button id="vu-btn-send" disabled><i class="bi bi-send"></i></button>
-                </div>
-            </div>
-
-            @if (hasEvents)
-            {
-                <div class="vu-tab-pane" data-tab="events">
-                    <div class="vu-events" id="vu-events"></div>
-                </div>
-            }
         </aside>
     </div>
 </div>
+
+<dialog class="vu-prompt-dialog" id="vu-prompt-dialog" aria-labelledby="vu-prompt-title">
+    <div class="vu-prompt-dialog-header">
+        <div>
+            <span class="vu-dialog-kicker">Comportamiento del agente</span>
+            <h2 id="vu-prompt-title"><i class="bi bi-card-text"></i> Prompt del sistema</h2>
+        </div>
+        <button type="button" class="vu-dialog-close" id="vu-prompt-close" aria-label="Cerrar prompt"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <p>Define la personalidad, el idioma y las reglas que seguirá el asistente durante esta sesión.</p>
+    <textarea id="vu-system-prompt" rows="14" placeholder="Eres un asistente útil..."></textarea>
+    <div class="vu-prompt-dialog-actions">
+        <small>Los cambios se aplican al conectar una sesión nueva.</small>
+        <button type="button" class="vu-btn vu-btn-primary" id="vu-prompt-done"><i class="bi bi-check2"></i> Listo</button>
+    </div>
+</dialog>
+
+<dialog class="vu-voice-dialog" id="vu-voice-dialog" aria-labelledby="vu-voice-dialog-title">
+    <div class="vu-prompt-dialog-header">
+        <div>
+            <span class="vu-dialog-kicker">Catálogo de Azure Voice Live</span>
+            <h2 id="vu-voice-dialog-title"><i class="bi bi-soundwave"></i> Selecciona una voz</h2>
+        </div>
+        <button type="button" class="vu-dialog-close" id="vu-voice-dialog-close" aria-label="Cerrar catálogo de voces"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="vu-voice-search-wrap">
+        <i class="bi bi-search"></i>
+        <input id="vu-voice-search" type="search" placeholder="Buscar por nombre, idioma, país o tipo…" autocomplete="off" />
+    </div>
+    <div class="vu-voice-filter-bar" id="vu-voice-filter-bar" role="group" aria-label="Filtrar catálogo de voces">
+        <button type="button" class="is-active" data-filter="all" aria-pressed="true">Todas</button>
+        <button type="button" data-filter="es">Español</button>
+        <button type="button" data-filter="es-ES">España</button>
+        <button type="button" data-filter="es-MX">México</button>
+        <button type="button" data-filter="en-US">English US</button>
+        <button type="button" data-filter="hd">HD</button>
+        <button type="button" data-filter="omni">Omni HD</button>
+        <button type="button" data-filter="multi">Multilingüe</button>
+        <button type="button" data-filter="realtime">Tiempo real</button>
+    </div>
+    <div class="vu-voice-results-heading">
+        <strong id="vu-voice-results-count">0 voces</strong>
+        <small>Selecciona una tarjeta para aplicarla.</small>
+    </div>
+    <div class="vu-voice-gallery" id="vu-voice-gallery" role="listbox" aria-label="Resultados de voces"></div>
+</dialog>
 
 <script>
 // Tab switcher (shared)
@@ -246,5 +368,159 @@
         const target = t.dataset.tab;
         document.querySelector('.vu-tab-pane[data-tab="' + target + '"]').classList.add('is-active');
     }));
+
+    const character = document.getElementById('vu-avatar-character');
+    const style = document.getElementById('vu-avatar-style');
+    const image = document.getElementById('vu-avatar-preview-image');
+    const fallback = document.getElementById('vu-avatar-preview-fallback');
+    const name = document.getElementById('vu-avatar-preview-name');
+    const type = document.getElementById('vu-avatar-preview-type');
+    const meta = document.getElementById('vu-avatar-preview-meta');
+    const gallery = document.getElementById('vu-avatar-gallery');
+    const avatarCount = document.getElementById('vu-avatar-count');
+    const typeTabs = document.getElementById('vu-avatar-type-tabs');
+    const styleField = document.getElementById('vu-avatar-style-field');
+    const styleEmpty = document.getElementById('vu-avatar-style-empty');
+    const mediaRoot = 'https://learn.microsoft.com/en-us/azure/ai-services/speech-service/text-to-speech-avatar/media/';
+    const avatarSuffix = new Set(['amira', 'anika', 'farhan', 'faris', 'hyejin', 'imran', 'liwei', 'rahul', 'ren', 'riya', 'sakura', 'zayd']);
+    let avatarType = 'fullbody';
+
+    function previewUrl(id, avatarStyle, isPhoto) {
+        if (!id) return '';
+        if (isPhoto) return mediaRoot + id + (avatarSuffix.has(id) ? '-avatar' : '') + '.png';
+        if (['rowan', 'celine', 'nia', 'malik'].includes(id)) return mediaRoot + id + '.png';
+        const previewStyle = avatarStyle || (id === 'lisa' ? 'casual-sitting' : id === 'harry' ? 'business' : 'formal');
+        return mediaRoot + id + '-' + previewStyle + '.png';
+    }
+
+    function syncAvatarPreview() {
+        if (!character || !image) return;
+        const option = character.options[character.selectedIndex];
+        if (!option) return;
+        const isPhoto = option.dataset.photo === 'true';
+        const avatarStyle = isPhoto ? '' : (style && style.value) || '';
+        image.src = previewUrl(option.value, avatarStyle, isPhoto);
+        image.hidden = false;
+        fallback.hidden = true;
+        name.textContent = option.textContent.replace(/^[^\p{L}\p{N}]+/u, '').replace(/\s*\(Preview\)\s*$/, '');
+        type.textContent = isPhoto ? 'Talking head' : 'Full body';
+        meta.textContent = isPhoto ? 'Photo avatar · vista de cabeza y hombros' : (avatarStyle ? 'Pose: ' + avatarStyle : 'Avatar 3D en tiempo real');
+        gallery?.querySelectorAll('.vu-avatar-card').forEach(card => {
+            const selected = card.dataset.avatarId === option.value;
+            card.classList.toggle('is-selected', selected);
+            card.setAttribute('aria-selected', selected ? 'true' : 'false');
+        });
+    }
+
+    function optionName(option) {
+        return option.textContent.replace(/^[^\p{L}\p{N}]+/u, '').replace(/\s*\(Preview\)\s*$/, '').trim();
+    }
+
+    function renderAvatarGallery() {
+        if (!character || !gallery) return;
+        const options = Array.from(character.options).filter(option => (option.dataset.photo === 'true' ? 'photo' : 'fullbody') === avatarType);
+        gallery.replaceChildren();
+        if (avatarCount) avatarCount.textContent = `${options.length} personajes`;
+
+        options.forEach(option => {
+            const styles = option.dataset.styles ? JSON.parse(option.dataset.styles) : [];
+            const previewStyle = styles[0] || '';
+            const isPhoto = option.dataset.photo === 'true';
+            const card = document.createElement('button');
+            card.type = 'button';
+            card.className = 'vu-avatar-card';
+            card.dataset.avatarId = option.value;
+            card.setAttribute('role', 'option');
+            card.setAttribute('aria-label', `Seleccionar avatar ${optionName(option)}`);
+            card.innerHTML = `<span class="vu-avatar-card-media"><img alt="" loading="lazy"><span class="vu-avatar-card-fallback"><i class="bi bi-person-bounding-box"></i></span><span class="vu-avatar-check"><i class="bi bi-check-lg"></i></span></span><span class="vu-avatar-card-copy"><strong></strong><small></small></span>`;
+            const cardImage = card.querySelector('img');
+            cardImage.src = previewUrl(option.value, previewStyle, isPhoto);
+            cardImage.addEventListener('load', () => card.classList.add('has-image'));
+            cardImage.addEventListener('error', () => cardImage.hidden = true);
+            card.querySelector('strong').textContent = optionName(option);
+            card.querySelector('small').textContent = isPhoto ? 'Talking head' : (styles.length ? `${styles.length} ${styles.length === 1 ? 'pose' : 'poses'}` : 'Sin pose');
+            card.addEventListener('click', () => {
+                character.value = option.value;
+                character.dispatchEvent(new Event('change', { bubbles: true }));
+            });
+            gallery.appendChild(card);
+        });
+        syncAvatarPreview();
+    }
+
+    function syncPoseState() {
+        if (!character || !style || !styleField || !styleEmpty) return;
+        const option = character.options[character.selectedIndex];
+        const isPhoto = option?.dataset.photo === 'true';
+        const hasStyles = style.options.length > 0;
+        style.hidden = !hasStyles;
+        styleEmpty.hidden = hasStyles;
+        styleField.style.display = isPhoto ? 'none' : '';
+    }
+
+    function syncStylesFromCharacter(preferredStyle) {
+        if (!character || !style) return;
+        const option = character.options[character.selectedIndex];
+        if (!option?.dataset.styles) {
+            syncPoseState();
+            return;
+        }
+        const styles = JSON.parse(option.dataset.styles);
+        const previous = preferredStyle ?? style.value;
+        style.replaceChildren();
+        styles.forEach(value => {
+            const item = document.createElement('option');
+            item.value = value;
+            item.textContent = value;
+            style.appendChild(item);
+        });
+        if (styles.includes(previous)) style.value = previous;
+        syncPoseState();
+    }
+
+    function refreshAvatarPicker() {
+        const selected = character?.options[character.selectedIndex];
+        avatarType = selected?.dataset.photo === 'true' ? 'photo' : 'fullbody';
+        typeTabs?.querySelectorAll('button').forEach(button => {
+            const active = button.dataset.avatarType === avatarType;
+            button.classList.toggle('is-active', active);
+            button.setAttribute('aria-pressed', active ? 'true' : 'false');
+        });
+        renderAvatarGallery();
+        syncPoseState();
+    }
+
+    if (image) image.addEventListener('error', () => {
+        image.hidden = true;
+        fallback.hidden = false;
+    });
+    if (character) character.addEventListener('change', () => {
+        syncStylesFromCharacter();
+        syncAvatarPreview();
+    });
+    if (style) style.addEventListener('change', syncAvatarPreview);
+    typeTabs?.addEventListener('click', event => {
+        const button = event.target.closest('button[data-avatar-type]');
+        if (!button) return;
+        avatarType = button.dataset.avatarType;
+        typeTabs.querySelectorAll('button').forEach(item => {
+            const active = item === button;
+            item.classList.toggle('is-active', active);
+            item.setAttribute('aria-pressed', active ? 'true' : 'false');
+        });
+        renderAvatarGallery();
+    });
+    window.VoiceUiAvatarPreview = { sync: syncAvatarPreview, refresh: refreshAvatarPicker, syncPose: syncPoseState, syncStyles: syncStylesFromCharacter };
+    refreshAvatarPicker();
+
+    const promptDialog = document.getElementById('vu-prompt-dialog');
+    const openPrompt = document.getElementById('vu-prompt-open');
+    const closePrompt = () => promptDialog?.close();
+    openPrompt?.addEventListener('click', () => promptDialog?.showModal());
+    document.getElementById('vu-prompt-close')?.addEventListener('click', closePrompt);
+    document.getElementById('vu-prompt-done')?.addEventListener('click', closePrompt);
+    promptDialog?.addEventListener('click', event => {
+        if (event.target === promptDialog) closePrompt();
+    });
 })();
 </script>

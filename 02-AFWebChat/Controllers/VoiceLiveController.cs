@@ -1,6 +1,7 @@
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Azure;
 using Azure.AI.VoiceLive;
 using Azure.Identity;
@@ -30,17 +31,54 @@ namespace AFWebChat.Controllers;
 [Route("api/[controller]")]
 public class VoiceLiveController : ControllerBase
 {
+    private const string DragonHdOmniCatalogUrl =
+        "https://raw.githubusercontent.com/Azure-Samples/Cognitive-Speech-TTS/master/Blog-Samples/Introducing-Dragon-HD-Omni/dragonhdomni_voice_list.json";
+    private const string DragonHdOmniCacheKey = "voicelive:catalog:dragon-hd-omni";
+
+    // The published sample currently contains one truncated pt-BR object. Parse
+    // complete records independently so one malformed entry does not hide the
+    // other 509 valid voices.
+    private static readonly Regex DragonHdOmniVoiceRegex = new(
+        """\{\s*"Voice Name"\s*:\s*"(?<id>(?:\\.|[^"\\])*)"\s*,\s*"Locale"\s*:\s*"(?<locale>(?:\\.|[^"\\])*)"\s*,\s*"Description"\s*:\s*"(?<description>(?:\\.|[^"\\])*)"\s*,\s*"Gender"\s*:\s*"(?<gender>(?:\\.|[^"\\])*)"\s*,\s*"Age Group"\s*:\s*"(?<age>(?:\\.|[^"\\])*)"\s*\}""",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.Singleline);
+
+    private static readonly Regex Bcp47LocaleRegex = new(
+        "^[a-zA-Z]{2,3}(?:-[a-zA-Z0-9]{2,8}){1,2}$",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+    private static readonly IReadOnlyDictionary<string, string[]> FullBodyAvatarStyles =
+        new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["lisa"] = ["casual-sitting"],
+            ["meg"] = ["formal", "casual", "business"],
+            ["lori"] = ["casual", "formal", "graceful"],
+            ["max"] = ["formal", "casual", "business"],
+            ["harry"] = ["business", "casual", "youthful"],
+            ["jeff"] = ["business", "formal"],
+            ["rowan"] = [],
+            ["celine"] = [],
+            ["nia"] = [],
+            ["malik"] = []
+        };
+
     private readonly IConfiguration _config;
     private readonly ILogger<VoiceLiveController> _logger;
     private readonly AzureSearchPlugin _searchPlugin;
     private readonly IMemoryCache _memoryCache;
+    private readonly IHttpClientFactory _httpClientFactory;
 
-    public VoiceLiveController(IConfiguration config, ILogger<VoiceLiveController> logger, AzureSearchPlugin searchPlugin, IMemoryCache memoryCache)
+    public VoiceLiveController(
+        IConfiguration config,
+        ILogger<VoiceLiveController> logger,
+        AzureSearchPlugin searchPlugin,
+        IMemoryCache memoryCache,
+        IHttpClientFactory httpClientFactory)
     {
         _config = config;
         _logger = logger;
         _searchPlugin = searchPlugin;
         _memoryCache = memoryCache;
+        _httpClientFactory = httpClientFactory;
     }
 
     [HttpGet("config")]
@@ -48,15 +86,35 @@ public class VoiceLiveController : ControllerBase
     {
         model = _config["VoiceLive:Model"] ?? "gpt-4o-mini-realtime-preview",
         voice = _config["VoiceLive:Voice"] ?? _config["AzureSpeech:SynthesisVoiceName"] ?? "es-MX-DaliaNeural",
+        inputLanguage = _config["AzureSpeech:RecognitionLanguage"] ?? "es-MX",
         // Prompt compartido por Voice Live y Live Avatar (Prompts/voice-system-prompt.txt).
         instructions = VoicePrompt.Load(),
         sampleRate = 24000
     });
 
     [HttpGet("voices")]
-    public IActionResult GetVoices() => Ok(new
+    public async Task<IActionResult> GetVoices(CancellationToken ct)
     {
+        var omniCatalog = await GetDragonHdOmniCatalogAsync(ct);
+        var outputLocales = omniCatalog.Voices
+            .Select(voice => voice.lang)
+            .Append("es-ES")
+            .Append("es-MX")
+            .Append("en-US")
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(locale => locale, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        return Ok(new
+        {
         defaultVoice = _config["VoiceLive:Voice"] ?? "en-US-Andrew3:DragonHDLatestNeural",
+        outputLocales,
+        omniCatalog = new
+        {
+            source = omniCatalog.Source,
+            count = omniCatalog.Voices.Count,
+            isFallback = omniCatalog.IsFallback
+        },
         groups = new object[]
         {
             new
@@ -66,31 +124,60 @@ public class VoiceLiveController : ControllerBase
                 type = "openai",
                 voices = new[]
                 {
-                    new { id = "alloy",   label = "Alloy (S2S)",   lang = "multi", gender = "neutral", styles = Array.Empty<string>() },
-                    new { id = "ash",     label = "Ash (S2S)",     lang = "multi", gender = "male",    styles = Array.Empty<string>() },
-                    new { id = "ballad",  label = "Ballad (S2S)",  lang = "multi", gender = "male",    styles = Array.Empty<string>() },
-                    new { id = "coral",   label = "Coral (S2S)",   lang = "multi", gender = "female",  styles = Array.Empty<string>() },
-                    new { id = "echo",    label = "Echo (S2S)",    lang = "multi", gender = "male",    styles = Array.Empty<string>() },
-                    new { id = "sage",    label = "Sage (S2S)",    lang = "multi", gender = "female",  styles = Array.Empty<string>() },
-                    new { id = "shimmer", label = "Shimmer (S2S)", lang = "multi", gender = "female",  styles = Array.Empty<string>() },
-                    new { id = "verse",   label = "Verse (S2S)",   lang = "multi", gender = "male",    styles = Array.Empty<string>() }
+                    new { id = "alloy",   label = "Alloy (S2S)",   lang = "multi", gender = "neutral", quality = "realtime", locales = Array.Empty<string>(), styles = Array.Empty<string>() },
+                    new { id = "ash",     label = "Ash (S2S)",     lang = "multi", gender = "male",    quality = "realtime", locales = Array.Empty<string>(), styles = Array.Empty<string>() },
+                    new { id = "ballad",  label = "Ballad (S2S)",  lang = "multi", gender = "male",    quality = "realtime", locales = Array.Empty<string>(), styles = Array.Empty<string>() },
+                    new { id = "coral",   label = "Coral (S2S)",   lang = "multi", gender = "female",  quality = "realtime", locales = Array.Empty<string>(), styles = Array.Empty<string>() },
+                    new { id = "echo",    label = "Echo (S2S)",    lang = "multi", gender = "male",    quality = "realtime", locales = Array.Empty<string>(), styles = Array.Empty<string>() },
+                    new { id = "sage",    label = "Sage (S2S)",    lang = "multi", gender = "female",  quality = "realtime", locales = Array.Empty<string>(), styles = Array.Empty<string>() },
+                    new { id = "shimmer", label = "Shimmer (S2S)", lang = "multi", gender = "female",  quality = "realtime", locales = Array.Empty<string>(), styles = Array.Empty<string>() },
+                    new { id = "verse",   label = "Verse (S2S)",   lang = "multi", gender = "male",    quality = "realtime", locales = Array.Empty<string>(), styles = Array.Empty<string>() }
                 }
             },
             new
             {
+                name = "Dragon HD Omni · Multilingüe",
+                description = "Voces Neural HD Omni en Preview. Todas detectan el idioma automáticamente; el locale indica la persona y acento originales.",
+                type = "azure",
+                voices = omniCatalog.Voices
+            },
+            new
+            {
                 name = "Azure HD (Dragon HD Latest)",
-                description = "Voces premium de alta definición. Inglés nativo, más expresivas.",
+                description = "Catálogo Dragon HD de alta definición: voces GA y Preview en varios idiomas.",
                 type = "azure",
                 voices = new[]
                 {
-                    new { id = "en-US-Andrew3:DragonHDLatestNeural", label = "Andrew 3 (HD) — más nueva", lang = "en-US", gender = "male",   styles = new[] { "chat", "professional", "friendly" } },
-                    new { id = "en-US-Andrew:DragonHDLatestNeural",  label = "Andrew (HD)",            lang = "en-US", gender = "male",   styles = new[] { "chat", "professional" } },
-                    new { id = "en-US-Ava3:DragonHDLatestNeural",    label = "Ava 3 (HD)",             lang = "en-US", gender = "female", styles = new[] { "chat", "professional", "friendly" } },
-                    new { id = "en-US-Aria:DragonHDLatestNeural",    label = "Aria (HD)",              lang = "en-US", gender = "female", styles = new[] { "chat", "professional" } },
-                    new { id = "en-US-Brian:DragonHDLatestNeural",   label = "Brian (HD)",             lang = "en-US", gender = "male",   styles = new[] { "chat", "professional" } },
-                    new { id = "en-US-Emma:DragonHDLatestNeural",    label = "Emma (HD)",              lang = "en-US", gender = "female", styles = new[] { "chat", "professional" } },
-                    new { id = "en-US-Jenny:DragonHDLatestNeural",   label = "Jenny (HD)",             lang = "en-US", gender = "female", styles = new[] { "chat", "customerservice", "assistant" } },
-                    new { id = "en-US-Steffan:DragonHDLatestNeural", label = "Steffan (HD)",           lang = "en-US", gender = "male",   styles = new[] { "chat", "professional" } }
+                    new { id = "de-DE-Florian:DragonHDLatestNeural", label = "Florian HD", lang = "de-DE", gender = "male", quality = "hd", locales = new[] { "de-DE", "es-MX", "en-US" }, status = "GA", styles = Array.Empty<string>() },
+                    new { id = "de-DE-Seraphina:DragonHDLatestNeural", label = "Seraphina HD", lang = "de-DE", gender = "female", quality = "hd", locales = new[] { "de-DE", "es-MX", "en-US" }, status = "GA", styles = Array.Empty<string>() },
+                    new { id = "en-US-Adam:DragonHDLatestNeural", label = "Adam HD", lang = "en-US", gender = "male", quality = "hd", locales = new[] { "es-MX", "en-US" }, status = "GA", styles = Array.Empty<string>() },
+                    new { id = "en-US-Alloy:DragonHDLatestNeural", label = "Alloy HD", lang = "en-US", gender = "male", quality = "hd", locales = new[] { "es-MX", "en-US" }, status = "GA", styles = Array.Empty<string>() },
+                    new { id = "en-US-Andrew:DragonHDLatestNeural", label = "Andrew HD", lang = "en-US", gender = "male", quality = "hd", locales = new[] { "es-MX", "en-US" }, status = "GA", styles = Array.Empty<string>() },
+                    new { id = "en-US-Andrew2:DragonHDLatestNeural", label = "Andrew 2 HD · Conversacional", lang = "en-US", gender = "male", quality = "hd", locales = new[] { "es-MX", "en-US" }, status = "GA", styles = Array.Empty<string>() },
+                    new { id = "en-US-Andrew3:DragonHDLatestNeural", label = "Andrew 3 HD · Podcast", lang = "en-US", gender = "male", quality = "hd", locales = new[] { "es-MX", "en-US" }, status = "Preview", styles = Array.Empty<string>() },
+                    new { id = "en-US-Aria:DragonHDLatestNeural", label = "Aria HD", lang = "en-US", gender = "female", quality = "hd", locales = new[] { "es-MX", "en-US" }, status = "GA", styles = Array.Empty<string>() },
+                    new { id = "en-US-Ava:DragonHDLatestNeural", label = "Ava HD", lang = "en-US", gender = "female", quality = "hd", locales = new[] { "es-MX", "en-US" }, status = "GA", styles = Array.Empty<string>() },
+                    new { id = "en-US-Ava3:DragonHDLatestNeural", label = "Ava 3 HD · Podcast", lang = "en-US", gender = "female", quality = "hd", locales = new[] { "es-MX", "en-US" }, status = "Preview", styles = Array.Empty<string>() },
+                    new { id = "en-US-Brian:DragonHDLatestNeural", label = "Brian HD", lang = "en-US", gender = "male", quality = "hd", locales = new[] { "es-MX", "en-US" }, status = "GA", styles = Array.Empty<string>() },
+                    new { id = "en-US-Davis:DragonHDLatestNeural", label = "Davis HD", lang = "en-US", gender = "male", quality = "hd", locales = new[] { "es-MX", "en-US" }, status = "GA", styles = Array.Empty<string>() },
+                    new { id = "en-US-Emma:DragonHDLatestNeural", label = "Emma HD", lang = "en-US", gender = "female", quality = "hd", locales = new[] { "es-MX", "en-US" }, status = "GA", styles = Array.Empty<string>() },
+                    new { id = "en-US-Emma2:DragonHDLatestNeural", label = "Emma 2 HD · Conversacional", lang = "en-US", gender = "female", quality = "hd", locales = new[] { "es-MX", "en-US" }, status = "GA", styles = Array.Empty<string>() },
+                    new { id = "en-US-Jenny:DragonHDLatestNeural", label = "Jenny HD", lang = "en-US", gender = "female", quality = "hd", locales = new[] { "es-MX", "en-US" }, status = "GA", styles = Array.Empty<string>() },
+                    new { id = "en-US-MultiTalker-Ava-Andrew:DragonHDLatestNeural", label = "Ava + Andrew · MultiTalker HD", lang = "en-US", gender = "neutral", quality = "hd", locales = new[] { "en-US" }, status = "Preview", styles = Array.Empty<string>() },
+                    new { id = "en-US-Nova:DragonHDLatestNeural", label = "Nova HD", lang = "en-US", gender = "female", quality = "hd", locales = new[] { "es-MX", "en-US" }, status = "GA", styles = Array.Empty<string>() },
+                    new { id = "en-US-Phoebe:DragonHDLatestNeural", label = "Phoebe HD", lang = "en-US", gender = "female", quality = "hd", locales = new[] { "es-MX", "en-US" }, status = "GA", styles = Array.Empty<string>() },
+                    new { id = "en-US-Serena:DragonHDLatestNeural", label = "Serena HD", lang = "en-US", gender = "female", quality = "hd", locales = new[] { "es-MX", "en-US" }, status = "GA", styles = Array.Empty<string>() },
+                    new { id = "en-US-Steffan:DragonHDLatestNeural", label = "Steffan HD", lang = "en-US", gender = "male", quality = "hd", locales = new[] { "es-MX", "en-US" }, status = "GA", styles = Array.Empty<string>() },
+                    new { id = "es-ES-Tristan:DragonHDLatestNeural", label = "Tristan HD · España", lang = "es-ES", gender = "male", quality = "hd", locales = new[] { "es-ES", "es-MX", "en-US" }, status = "GA", styles = Array.Empty<string>() },
+                    new { id = "es-ES-Ximena:DragonHDLatestNeural", label = "Ximena HD · España", lang = "es-ES", gender = "female", quality = "hd", locales = new[] { "es-ES", "es-MX", "en-US" }, status = "GA", styles = Array.Empty<string>() },
+                    new { id = "es-MX-Tristan:DragonHDLatestNeural", label = "Tristan HD · México", lang = "es-MX", gender = "male", quality = "hd", locales = new[] { "es-MX", "en-US" }, status = "GA", styles = Array.Empty<string>() },
+                    new { id = "es-MX-Ximena:DragonHDLatestNeural", label = "Ximena HD · México", lang = "es-MX", gender = "female", quality = "hd", locales = new[] { "es-MX", "en-US" }, status = "GA", styles = Array.Empty<string>() },
+                    new { id = "fr-FR-Remy:DragonHDLatestNeural", label = "Remy HD", lang = "fr-FR", gender = "male", quality = "hd", locales = new[] { "fr-FR", "es-MX", "en-US" }, status = "GA", styles = Array.Empty<string>() },
+                    new { id = "fr-FR-Vivienne:DragonHDLatestNeural", label = "Vivienne HD", lang = "fr-FR", gender = "female", quality = "hd", locales = new[] { "fr-FR", "es-MX", "en-US" }, status = "GA", styles = Array.Empty<string>() },
+                    new { id = "ja-JP-Masaru:DragonHDLatestNeural", label = "Masaru HD", lang = "ja-JP", gender = "male", quality = "hd", locales = new[] { "ja-JP", "es-MX", "en-US" }, status = "GA", styles = Array.Empty<string>() },
+                    new { id = "ja-JP-Nanami:DragonHDLatestNeural", label = "Nanami HD", lang = "ja-JP", gender = "female", quality = "hd", locales = new[] { "ja-JP", "es-MX", "en-US" }, status = "GA", styles = Array.Empty<string>() },
+                    new { id = "zh-CN-Xiaochen:DragonHDLatestNeural", label = "Xiaochen HD", lang = "zh-CN", gender = "female", quality = "hd", locales = new[] { "zh-CN", "es-MX", "en-US" }, status = "GA", styles = Array.Empty<string>() },
+                    new { id = "zh-CN-Yunfan:DragonHDLatestNeural", label = "Yunfan HD", lang = "zh-CN", gender = "male", quality = "hd", locales = new[] { "zh-CN", "es-MX", "en-US" }, status = "GA", styles = Array.Empty<string>() }
                 }
             },
             new
@@ -100,10 +187,10 @@ public class VoiceLiveController : ControllerBase
                 type = "azure",
                 voices = new[]
                 {
-                    new { id = "en-US-AvaMultilingualNeural",     label = "Ava Multilingüe",     lang = "multi", gender = "female", styles = new[] { "chat", "friendly", "cheerful", "empathetic" } },
-                    new { id = "en-US-AndrewMultilingualNeural",  label = "Andrew Multilingüe",  lang = "multi", gender = "male",   styles = new[] { "chat", "friendly", "professional" } },
-                    new { id = "en-US-EmmaMultilingualNeural",    label = "Emma Multilingüe",    lang = "multi", gender = "female", styles = new[] { "chat", "friendly", "cheerful" } },
-                    new { id = "en-US-BrianMultilingualNeural",   label = "Brian Multilingüe",   lang = "multi", gender = "male",   styles = new[] { "chat", "friendly", "professional" } }
+                    new { id = "en-US-AvaMultilingualNeural",     label = "Ava Multilingüe",     lang = "multi", gender = "female", quality = "multilingual", locales = new[] { "es-MX", "en-US" }, styles = new[] { "chat", "friendly", "cheerful", "empathetic" } },
+                    new { id = "en-US-AndrewMultilingualNeural",  label = "Andrew Multilingüe",  lang = "multi", gender = "male",   quality = "multilingual", locales = new[] { "es-MX", "en-US" }, styles = new[] { "chat", "friendly", "professional" } },
+                    new { id = "en-US-EmmaMultilingualNeural",    label = "Emma Multilingüe",    lang = "multi", gender = "female", quality = "multilingual", locales = new[] { "es-MX", "en-US" }, styles = new[] { "chat", "friendly", "cheerful" } },
+                    new { id = "en-US-BrianMultilingualNeural",   label = "Brian Multilingüe",   lang = "multi", gender = "male",   quality = "multilingual", locales = new[] { "es-MX", "en-US" }, styles = new[] { "chat", "friendly", "professional" } }
                 }
             },
             new
@@ -113,28 +200,25 @@ public class VoiceLiveController : ControllerBase
                 type = "azure",
                 voices = new[]
                 {
-                    new { id = "es-MX-DaliaNeural",   label = "Dalia (México)",      lang = "es-MX", gender = "female", styles = new[] { "cheerful", "chat", "friendly", "customerservice" } },
-                    new { id = "es-MX-JorgeNeural",   label = "Jorge (México)",      lang = "es-MX", gender = "male",   styles = new[] { "chat", "cheerful" } },
-                    new { id = "es-ES-ElviraNeural",  label = "Elvira (España)",     lang = "es-ES", gender = "female", styles = new[] { "cheerful", "chat", "friendly" } },
-                    new { id = "es-ES-AlvaroNeural",  label = "Álvaro (España)",     lang = "es-ES", gender = "male",   styles = new[] { "chat" } },
-                    new { id = "es-AR-ElenaNeural",   label = "Elena (Argentina)",   lang = "es-AR", gender = "female", styles = Array.Empty<string>() },
-                    new { id = "es-CO-SalomeNeural",  label = "Salomé (Colombia)",   lang = "es-CO", gender = "female", styles = Array.Empty<string>() }
+                    new { id = "es-MX-DaliaNeural",   label = "Dalia (México)",      lang = "es-MX", gender = "female", quality = "standard", locales = new[] { "es-MX", "en-US" }, styles = new[] { "cheerful", "chat", "friendly", "customerservice" } },
+                    new { id = "es-MX-JorgeNeural",   label = "Jorge (México)",      lang = "es-MX", gender = "male",   quality = "standard", locales = new[] { "es-MX", "en-US" }, styles = new[] { "chat", "cheerful" } },
+                    new { id = "es-ES-ElviraNeural",  label = "Elvira (España)",     lang = "es-ES", gender = "female", quality = "standard", locales = new[] { "es-ES", "en-US" }, styles = new[] { "cheerful", "chat", "friendly" } },
+                    new { id = "es-ES-AlvaroNeural",  label = "Álvaro (España)",     lang = "es-ES", gender = "male",   quality = "standard", locales = new[] { "es-ES", "en-US" }, styles = new[] { "chat" } },
+                    new { id = "es-AR-ElenaNeural",   label = "Elena (Argentina)",   lang = "es-AR", gender = "female", quality = "standard", locales = new[] { "es-AR", "en-US" }, styles = Array.Empty<string>() },
+                    new { id = "es-CO-SalomeNeural",  label = "Salomé (Colombia)",   lang = "es-CO", gender = "female", quality = "standard", locales = new[] { "es-CO", "en-US" }, styles = Array.Empty<string>() }
                 }
             }
         },
-        // Avatar characters (Azure Live Avatar) supported by Voice Live.
-        // Full-body 3D avatars work end-to-end via Azure.AI.VoiceLive SDK.
-        // Talking Heads (photo avatars, vasa-1) are shown for UI parity with the
-        // Live Avatar page, but they are NOT supported by the Voice Live SDK 1.0
-        // (no PhotoAvatarBaseModel property). The client blocks Connect when a
-        // photo avatar is selected and asks the user to switch to Live Avatar.
+        // Avatar characters supported by Voice Live. Full-body avatars use a
+        // character/style pair; Talking Heads use photo-avatar + vasa-1.
         avatar = new
         {
             defaultCharacter = _config["AzureSpeech:AvatarCharacter"] ?? "lisa",
             defaultStyle = _config["AzureSpeech:AvatarStyle"] ?? "casual-sitting",
             characters = new object[]
             {
-                new { id = "lisa",   label = "Lisa",   gender = "female", type = "fullbody", styles = new[] { "casual-sitting", "graceful-sitting", "graceful-standing", "technical-sitting", "technical-standing" } },
+                // The remaining Lisa styles are batch-only according to the standard avatar catalog.
+                new { id = "lisa",   label = "Lisa",   gender = "female", type = "fullbody", styles = new[] { "casual-sitting" } },
                 new { id = "meg",    label = "Meg",    gender = "female", type = "fullbody", styles = new[] { "formal", "casual", "business" } },
                 new { id = "lori",   label = "Lori",   gender = "female", type = "fullbody", styles = new[] { "casual", "formal", "graceful" } },
                 new { id = "max",    label = "Max",    gender = "male",   type = "fullbody", styles = new[] { "formal", "casual", "business" } },
@@ -144,7 +228,7 @@ public class VoiceLiveController : ControllerBase
                 new { id = "celine", label = "Celine", gender = "female", type = "fullbody", styles = Array.Empty<string>() },
                 new { id = "nia",    label = "Nia",    gender = "female", type = "fullbody", styles = Array.Empty<string>() },
                 new { id = "malik",  label = "Malik",  gender = "male",   type = "fullbody", styles = Array.Empty<string>() },
-                // Talking Heads (photo avatars, preview) — shown for parity, not supported by Voice Live SDK 1.0.
+                // Talking Heads (photo avatars, preview) supported through vasa-1.
                 new { id = "adrian",    label = "Adrian (Preview)",    gender = "male",   type = "photo", styles = Array.Empty<string>() },
                 new { id = "amara",     label = "Amara (Preview)",     gender = "female", type = "photo", styles = Array.Empty<string>() },
                 new { id = "amira",     label = "Amira (Preview)",     gender = "female", type = "photo", styles = Array.Empty<string>() },
@@ -177,7 +261,8 @@ public class VoiceLiveController : ControllerBase
                 new { id = "zoe",       label = "Zoe (Preview)",       gender = "female", type = "photo", styles = Array.Empty<string>() }
             }
         }
-    });
+        });
+    }
 
     // Names recognized as OpenAI S2S voices (from the realtime model).
     private static readonly HashSet<string> OpenAIVoiceNames =
@@ -270,6 +355,11 @@ public class VoiceLiveController : ControllerBase
 
             var voiceType = Request.Query["voiceType"].FirstOrDefault();
             var style = Request.Query["style"].FirstOrDefault();
+            var outputLocale = Request.Query["outputLocale"].FirstOrDefault();
+            if (!IsSupportedOutputLocale(outputLocale)) outputLocale = null;
+            var inputLanguage = Request.Query["inputLanguage"].FirstOrDefault();
+            if (inputLanguage is null) inputLanguage = _config["AzureSpeech:RecognitionLanguage"] ?? "es-MX";
+            if (!IsSupportedInputLanguage(inputLanguage)) inputLanguage = "es-MX";
 
             var promptId = Request.Query["promptId"].FirstOrDefault();
             var instructions = ResolveInstructions(promptId, Request.Query["instructions"].FirstOrDefault(), defaultInstructions);
@@ -278,14 +368,20 @@ public class VoiceLiveController : ControllerBase
                 && (a == "1" || string.Equals(a, "true", StringComparison.OrdinalIgnoreCase));
             var avatarCharacter = Request.Query["avatarCharacter"].FirstOrDefault()
                 ?? _config["AzureSpeech:AvatarCharacter"] ?? "lisa";
-            var avatarStyle = Request.Query["avatarStyle"].FirstOrDefault()
-                ?? _config["AzureSpeech:AvatarStyle"] ?? "casual-sitting";
+            var requestedAvatarStyle = Request.Query["avatarStyle"].FirstOrDefault();
+            var defaultAvatarCharacter = _config["AzureSpeech:AvatarCharacter"] ?? "lisa";
+            if (string.IsNullOrWhiteSpace(requestedAvatarStyle)
+                && string.Equals(avatarCharacter, defaultAvatarCharacter, StringComparison.OrdinalIgnoreCase))
+            {
+                requestedAvatarStyle = _config["AzureSpeech:AvatarStyle"];
+            }
             var avatarPhoto = Request.Query["avatarPhoto"].FirstOrDefault() is string ap
                 && (ap == "1" || string.Equals(ap, "true", StringComparison.OrdinalIgnoreCase));
+            var avatarStyle = avatarPhoto ? null : NormalizeAvatarStyle(avatarCharacter, requestedAvatarStyle);
 
             _logger.LogInformation(
-                "VoiceLive: starting session model={Model} voice={Voice} type={Type} style={Style} avatar={Avatar} promptLength={PromptLength} promptPreview={PromptPreview}",
-                model, voiceName, voiceType ?? "auto", style ?? "-", avatarEnabled,
+                "VoiceLive: starting session model={Model} voice={Voice} type={Type} style={Style} outputLocale={OutputLocale} inputLanguage={InputLanguage} avatar={Avatar} promptLength={PromptLength} promptPreview={PromptPreview}",
+                model, voiceName, voiceType ?? "auto", style ?? "-", outputLocale ?? "auto", string.IsNullOrEmpty(inputLanguage) ? "auto" : inputLanguage, avatarEnabled,
                 instructions.Length, instructions[..Math.Min(instructions.Length, 80)].ReplaceLineEndings(" "));
 
             try
@@ -314,6 +410,7 @@ public class VoiceLiveController : ControllerBase
             {
                 var azureVoice = new AzureStandardVoice(voiceName);
                 if (!string.IsNullOrWhiteSpace(style)) azureVoice.Style = style;
+                if (!string.IsNullOrWhiteSpace(outputLocale)) azureVoice.Locale = outputLocale;
                 voiceConfig = azureVoice;
             }
 
@@ -326,7 +423,10 @@ public class VoiceLiveController : ControllerBase
                 OutputAudioFormat = OutputAudioFormat.Pcm16,
                 InputAudioEchoCancellation = new AudioEchoCancellation(),
                 // Activa transcripción del audio del usuario para que la UI muestre lo que dijo.
-                InputAudioTranscription = new AudioInputTranscriptionOptions(AudioInputTranscriptionOptionsModel.Whisper1),
+                InputAudioTranscription = new AudioInputTranscriptionOptions(AudioInputTranscriptionOptionsModel.Whisper1)
+                {
+                    Language = inputLanguage
+                },
                 TurnDetection = new AzureSemanticVadTurnDetection
                 {
                     Threshold = 0.5f,
@@ -390,7 +490,7 @@ public class VoiceLiveController : ControllerBase
                     }
                     else
                     {
-                        avatarCfg.Style = avatarStyle;
+                        if (!string.IsNullOrWhiteSpace(avatarStyle)) avatarCfg.Style = avatarStyle;
                     }
 
                     sessionOptions.Avatar = avatarCfg;
@@ -423,9 +523,11 @@ public class VoiceLiveController : ControllerBase
                 type = "ready",
                 model,
                 voice = voiceName,
+                outputLocale,
+                inputLanguage,
                 style,
                 avatar = avatarEnabled
-                    ? new { enabled = true, character = avatarCharacter, style = avatarStyle }
+                    ? new { enabled = true, character = (string?)avatarCharacter, style = (string?)avatarStyle }
                     : new { enabled = false, character = (string?)null, style = (string?)null }
             }, ct);
 
@@ -796,6 +898,206 @@ public class VoiceLiveController : ControllerBase
     }
 
     private static string GetPromptCacheKey(string promptId) => $"voicelive:prompt:{promptId}";
+
+    private static bool IsSupportedInputLanguage(string? language)
+        => language is "" or "es-MX" or "es-ES" or "en-US";
+
+    private static bool IsSupportedOutputLocale(string? locale)
+        => string.IsNullOrEmpty(locale)
+            || (locale.Length <= 32 && Bcp47LocaleRegex.IsMatch(locale));
+
+    private async Task<OmniCatalogResult> GetDragonHdOmniCatalogAsync(CancellationToken ct)
+    {
+        if (_memoryCache.TryGetValue(DragonHdOmniCacheKey, out OmniCatalogResult? cached) && cached is not null)
+        {
+            return cached;
+        }
+
+        try
+        {
+            var client = _httpClientFactory.CreateClient();
+            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            timeoutCts.CancelAfter(TimeSpan.FromSeconds(8));
+            var rawCatalog = await client.GetStringAsync(DragonHdOmniCatalogUrl, timeoutCts.Token);
+            var voices = ParseDragonHdOmniVoices(rawCatalog);
+
+            if (voices.Count < 100)
+            {
+                throw new InvalidOperationException($"Dragon HD Omni catalog returned only {voices.Count} valid records.");
+            }
+
+            var result = new OmniCatalogResult(voices, DragonHdOmniCatalogUrl, false);
+            _memoryCache.Set(DragonHdOmniCacheKey, result, TimeSpan.FromHours(12));
+            _logger.LogInformation("VoiceLive: loaded {Count} Dragon HD Omni voices from Azure Samples", voices.Count);
+            return result;
+        }
+        catch (Exception ex) when (!ct.IsCancellationRequested
+            && ex is HttpRequestException or InvalidOperationException or TaskCanceledException)
+        {
+            _logger.LogWarning(ex, "VoiceLive: Dragon HD Omni catalog unavailable; using Spanish fallback");
+            var fallback = new OmniCatalogResult(CreateSpanishOmniFallback(), "built-in-es-ES-es-MX", true);
+            _memoryCache.Set(DragonHdOmniCacheKey, fallback, TimeSpan.FromMinutes(15));
+            return fallback;
+        }
+    }
+
+    private static IReadOnlyList<OmniVoiceCatalogItem> ParseDragonHdOmniVoices(string rawCatalog)
+    {
+        var voices = new List<OmniVoiceCatalogItem>(600);
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (Match match in DragonHdOmniVoiceRegex.Matches(rawCatalog))
+        {
+            if (voices.Count >= 1_000) break;
+
+            var id = JsonUnescape(match.Groups["id"].Value);
+            var rawLocale = JsonUnescape(match.Groups["locale"].Value);
+            var description = JsonUnescape(match.Groups["description"].Value);
+            var gender = JsonUnescape(match.Groups["gender"].Value).ToLowerInvariant();
+            var ageGroup = JsonUnescape(match.Groups["age"].Value);
+
+            if (id.Length > 160
+                || !id.EndsWith(":DragonHDOmniLatestNeural", StringComparison.OrdinalIgnoreCase)
+                || !Bcp47LocaleRegex.IsMatch(rawLocale)
+                || !id.StartsWith(rawLocale + "-", StringComparison.OrdinalIgnoreCase)
+                || gender is not ("female" or "male" or "neutral")
+                || !seen.Add(id))
+            {
+                continue;
+            }
+
+            var locale = NormalizeLocale(rawLocale);
+            var persona = id[(rawLocale.Length + 1)..id.IndexOf(':')];
+            voices.Add(new OmniVoiceCatalogItem(
+                id,
+                $"{UppercaseFirst(persona)} Omni HD",
+                locale,
+                gender,
+                "omni-hd",
+                [],
+                [],
+                "Preview",
+                description.Length > 500 ? description[..500] : description,
+                ageGroup,
+                true));
+        }
+
+        return voices
+            .OrderBy(voice => voice.lang, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(voice => voice.label, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+    }
+
+    private static IReadOnlyList<OmniVoiceCatalogItem> CreateSpanishOmniFallback()
+    {
+        const string fallbackData = """
+es-es-abril|female|Adult
+es-es-alvaro|male|Adult
+es-es-arabella|female|Adult
+es-es-argentatitlan|female|Adult
+es-es-arnau|male|Adult
+es-es-dario|male|Young Adult
+es-es-elias|male|Young Adult
+es-es-elvira|female|Adult
+es-es-estrella|female|Young Adult
+es-es-irene|female|Child
+es-es-isidora|female|Senior
+es-es-jadesunflare|female|Young Adult
+es-es-javier|male|Young Adult
+es-es-laia|female|Adult
+es-es-lia|female|Adult
+es-es-nil|male|Adult
+es-es-saul|male|Adult
+es-es-sepiasinfonia|male|Young Adult
+es-es-teo|male|Young Adult
+es-es-triana|female|Young Adult
+es-es-tristan|male|Young Adult
+es-es-vera|female|Young Adult
+es-es-ximena|female|Adult
+es-mx-beatriz|female|Young Adult
+es-mx-candela|female|Young Adult
+es-mx-carlota|female|Young Adult
+es-mx-cecilio|male|Adult
+es-mx-dalia|female|Adult
+es-mx-gerardo|male|Young Adult
+es-mx-jorge|male|Adult
+es-mx-larissa|female|Young Adult
+es-mx-lemonrocio|male|Senior
+es-mx-liberto|male|Young Adult
+es-mx-luciano|male|Adult
+es-mx-marina|female|Child
+es-mx-nuria|female|Young Adult
+es-mx-pelayo|male|Young Adult
+es-mx-renata|female|Young Adult
+es-mx-yago|male|Young Adult
+""";
+
+        return fallbackData.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(line => line.Split('|'))
+            .Select(parts =>
+            {
+                var baseName = parts[0];
+                var rawLocale = baseName[..5];
+                var persona = baseName[6..];
+                return new OmniVoiceCatalogItem(
+                    $"{baseName}:DragonHDOmniLatestNeural",
+                    $"{UppercaseFirst(persona)} Omni HD",
+                    NormalizeLocale(rawLocale),
+                    parts[1],
+                    "omni-hd",
+                    [],
+                    [],
+                    "Preview",
+                    "Dragon HD Omni multilingüe.",
+                    parts[2],
+                    true);
+            })
+            .ToArray();
+    }
+
+    private static string JsonUnescape(string value)
+        => JsonSerializer.Deserialize<string>($"\"{value}\"") ?? string.Empty;
+
+    private static string NormalizeLocale(string locale)
+    {
+        var parts = locale.Split('-');
+        parts[0] = parts[0].ToLowerInvariant();
+        if (parts.Length > 1 && parts[1].Length == 2) parts[1] = parts[1].ToUpperInvariant();
+        for (var index = 2; index < parts.Length; index++) parts[index] = parts[index].ToLowerInvariant();
+        return string.Join('-', parts);
+    }
+
+    private static string UppercaseFirst(string value)
+        => string.IsNullOrEmpty(value) ? value : char.ToUpperInvariant(value[0]) + value[1..];
+
+    private sealed record OmniCatalogResult(
+        IReadOnlyList<OmniVoiceCatalogItem> Voices,
+        string Source,
+        bool IsFallback);
+
+    private sealed record OmniVoiceCatalogItem(
+        string id,
+        string label,
+        string lang,
+        string gender,
+        string quality,
+        string[] locales,
+        string[] styles,
+        string status,
+        string description,
+        string ageGroup,
+        bool multilingual);
+
+    private static string? NormalizeAvatarStyle(string character, string? requestedStyle)
+    {
+        if (!FullBodyAvatarStyles.TryGetValue(character, out var supportedStyles) || supportedStyles.Length == 0)
+        {
+            return null;
+        }
+
+        return supportedStyles.FirstOrDefault(style => string.Equals(style, requestedStyle, StringComparison.OrdinalIgnoreCase))
+            ?? supportedStyles[0];
+    }
 
     private async Task<string> HandleFunctionCallAsync(string functionName, string argumentsJson, CancellationToken ct)
     {
