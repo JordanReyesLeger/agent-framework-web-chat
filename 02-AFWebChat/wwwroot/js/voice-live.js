@@ -204,7 +204,17 @@
         // textarea viven solo en memoria durante la sesión (se envían al conectar) y
         // NO persisten: al recargar la página se vuelve al default.
         els.instructions.value = cfg.instructions || '';
-        els.model.value = cfg.model || '';
+        if (els.model) {
+            els.model.replaceChildren();
+            (cfg.models || []).forEach(model => {
+                const option = document.createElement('option');
+                option.value = model.id;
+                option.textContent = `${model.label} · ${model.tier}`;
+                option.title = model.description || '';
+                els.model.appendChild(option);
+            });
+            els.model.value = cfg.model || 'gpt-realtime-mini';
+        }
         if (els.inputLanguage) els.inputLanguage.value = cfg.inputLanguage ?? 'es-MX';
         await loadVoices(cfg.voice);
     }
@@ -645,6 +655,7 @@
     async function buildWsUrl() {
         const scheme = location.protocol === 'https:' ? 'wss' : 'ws';
         const params = new URLSearchParams();
+        if (els.model?.value) params.set('model', els.model.value);
         if (els.voice.value) {
             params.set('voice', els.voice.value);
             const opt = els.voice.options[els.voice.selectedIndex];

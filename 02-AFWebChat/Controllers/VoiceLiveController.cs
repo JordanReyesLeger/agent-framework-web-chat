@@ -31,6 +31,9 @@ namespace AFWebChat.Controllers;
 [Route("api/[controller]")]
 public class VoiceLiveController : ControllerBase
 {
+    private static readonly string[] SupportedVoiceLiveModels =
+        ["gpt-realtime-mini", "gpt-realtime"];
+
     private const string DragonHdOmniCatalogUrl =
         "https://raw.githubusercontent.com/Azure-Samples/Cognitive-Speech-TTS/master/Blog-Samples/Introducing-Dragon-HD-Omni/dragonhdomni_voice_list.json";
     private const string DragonHdOmniCacheKey = "voicelive:catalog:dragon-hd-omni";
@@ -82,15 +85,25 @@ public class VoiceLiveController : ControllerBase
     }
 
     [HttpGet("config")]
-    public IActionResult GetConfig() => Ok(new
+    public IActionResult GetConfig()
     {
-        model = _config["VoiceLive:Model"] ?? "gpt-4o-mini-realtime-preview",
+        var availableModels = GetAvailableVoiceLiveModels();
+        var defaultModel = NormalizeVoiceLiveModel(_config["VoiceLive:Model"]);
+        return Ok(new
+        {
+        model = defaultModel,
+        models = availableModels.Select(model => model switch
+        {
+            "gpt-realtime" => new { id = model, label = "GPT Realtime", tier = "Pro", description = "Modelo premium para máxima calidad y razonamiento de audio." },
+            _ => new { id = model, label = "GPT Realtime Mini", tier = "Basic", description = "Menor costo y latencia; recomendado para la mayoría de conversaciones." }
+        }),
         voice = _config["VoiceLive:Voice"] ?? _config["AzureSpeech:SynthesisVoiceName"] ?? "es-MX-DaliaNeural",
         inputLanguage = _config["AzureSpeech:RecognitionLanguage"] ?? "es-MX",
         // Prompt compartido por Voice Live y Live Avatar (Prompts/voice-system-prompt.txt).
         instructions = VoicePrompt.Load(),
         sampleRate = 24000
-    });
+        });
+    }
 
     [HttpGet("voices")]
     public async Task<IActionResult> GetVoices(CancellationToken ct)
@@ -342,7 +355,8 @@ public class VoiceLiveController : ControllerBase
                 _logger.LogInformation("VoiceLive: using DefaultAzureCredential (endpoint={Endpoint})", endpoint);
             }
 
-            var model = _config["VoiceLive:Model"] ?? "gpt-4o-mini-realtime-preview";
+            var defaultModel = NormalizeVoiceLiveModel(_config["VoiceLive:Model"]);
+            var model = NormalizeVoiceLiveModel(Request.Query["model"].FirstOrDefault(), defaultModel);
             var defaultVoice = _config["VoiceLive:Voice"] ?? _config["AzureSpeech:SynthesisVoiceName"] ?? "es-MX-DaliaNeural";
             // Lee Prompts/voice-system-prompt.txt en cada conexión — sin reiniciar el server.
             var defaultInstructions = VoicePrompt.Load();
@@ -901,6 +915,26 @@ public class VoiceLiveController : ControllerBase
 
     private static bool IsSupportedInputLanguage(string? language)
         => language is "" or "es-MX" or "es-ES" or "en-US";
+
+    private string[] GetAvailableVoiceLiveModels()
+    {
+        var configuredModels = _config.GetSection("VoiceLive:Models").Get<string[]>() ?? [];
+        var availableModels = configuredModels
+            .Where(model => SupportedVoiceLiveModels.Contains(model, StringComparer.OrdinalIgnoreCase))
+            .Select(model => SupportedVoiceLiveModels.First(candidate => string.Equals(candidate, model, StringComparison.OrdinalIgnoreCase)))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        return availableModels.Length > 0 ? availableModels : SupportedVoiceLiveModels;
+    }
+
+    private string NormalizeVoiceLiveModel(string? model, string fallback = "gpt-realtime-mini")
+    {
+        var availableModels = GetAvailableVoiceLiveModels();
+        return availableModels.FirstOrDefault(candidate => string.Equals(candidate, model, StringComparison.OrdinalIgnoreCase))
+            ?? availableModels.FirstOrDefault(candidate => string.Equals(candidate, fallback, StringComparison.OrdinalIgnoreCase))
+            ?? availableModels[0];
+    }
 
     private static bool IsSupportedOutputLocale(string? locale)
         => string.IsNullOrEmpty(locale)

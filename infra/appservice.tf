@@ -1,5 +1,5 @@
 # ─────────────────────────────────────────────
-# App Service Plan (Linux, B1)
+# App Service Plan (Linux, S2 baseline for 50+ users)
 # Located in westus2 because the MCAPS subscription has 0 "Total Regional VMs"
 # quota for App Service in every other region. westus2 has it grandfathered.
 # ─────────────────────────────────────────────
@@ -29,7 +29,7 @@ resource "azurerm_linux_web_app" "main" {
   }
 
   site_config {
-    always_on           = var.app_service_sku != "F1" && var.app_service_sku != "D1" && var.app_service_sku != "B1"
+    always_on           = var.app_service_sku != "F1" && var.app_service_sku != "D1"
     http2_enabled       = true
     minimum_tls_version = "1.2"
     ftps_state          = "Disabled"
@@ -100,9 +100,11 @@ resource "azurerm_linux_web_app" "main" {
 
     # ── VoiceLive (optional; key injected post-create) ──
     var.enable_voicelive ? {
-      "VoiceLive__Endpoint" = azurerm_cognitive_account.voicelive[0].endpoint
-      "VoiceLive__Model"    = azurerm_cognitive_deployment.voicelive_realtime[0].name
-      "VoiceLive__Voice"    = "en-US-Andrew3:DragonHDLatestNeural"
+      "VoiceLive__Endpoint"  = "https://${azurerm_cognitive_account.voicelive[0].name}.services.ai.azure.com/"
+      "VoiceLive__Model"     = azurerm_cognitive_deployment.voicelive_realtime[0].name
+      "VoiceLive__Models__0" = azurerm_cognitive_deployment.voicelive_realtime[0].name
+      "VoiceLive__Models__1" = azurerm_cognitive_deployment.voicelive_realtime_pro[0].name
+      "VoiceLive__Voice"     = "en-US-Andrew3:DragonHDLatestNeural"
     } : {},
   )
 

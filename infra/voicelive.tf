@@ -42,3 +42,24 @@ resource "azurerm_cognitive_deployment" "voicelive_realtime" {
     capacity = var.voicelive_model_capacity
   }
 }
+
+# ─────────────────────────────────────────────
+# Realtime Pro model deployment (gpt-realtime)
+# Selectable per session from the VoiceLive page.
+# ─────────────────────────────────────────────
+resource "azurerm_cognitive_deployment" "voicelive_realtime_pro" {
+  count                = var.enable_voicelive ? 1 : 0
+  name                 = var.voicelive_pro_model_name
+  cognitive_account_id = azurerm_cognitive_account.voicelive[0].id
+
+  model {
+    format  = "OpenAI"
+    name    = var.voicelive_pro_model_name
+    version = var.voicelive_pro_model_version
+  }
+
+  sku {
+    name     = "GlobalStandard"
+    capacity = var.voicelive_pro_model_capacity
+  }
+}

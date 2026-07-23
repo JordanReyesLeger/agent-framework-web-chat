@@ -16,7 +16,7 @@ subscription_id  = "00000000-0000-0000-0000-000000000000"  # Your Azure Subscrip
 # Web App is hosted in westus2 because the MCAPS subscription has no
 # App Service VM quota elsewhere. After `terraform apply`, deploy your
 # app with: az webapp deploy --src-path publish.zip --type zip ...
-# app_service_sku      = "B1"
+# app_service_sku      = "S2"          # Recommended baseline for 50+ users
 # app_service_location = "westus2"
 
 # ── OpenAI Models ────────────────────────────
@@ -29,9 +29,10 @@ subscription_id  = "00000000-0000-0000-0000-000000000000"  # Your Azure Subscrip
 
 # ── Optional Features (all enabled by default) ─
 # enable_ai_search   = true
-# ai_search_sku      = "basic"
+# ai_search_sku      = "standard"      # Better throughput, indexing, and latency
 # ai_search_location = "eastus"     # eastus2 sometimes capacity-exhausted
 # enable_cosmos_db   = true
+# cosmos_sessions_autoscale_max_throughput = 4000  # Autoscale range: 400–4,000 RU/s
 # enable_speech      = true
 # enable_voicelive   = true         # Optional AI Foundry account for VoiceLive realtime
 # enable_bot_service = true
@@ -42,6 +43,9 @@ subscription_id  = "00000000-0000-0000-0000-000000000000"  # Your Azure Subscrip
 # voicelive_model_name     = "gpt-realtime-mini"
 # voicelive_model_version  = "2025-10-06"
 # voicelive_model_capacity = 1
+# voicelive_pro_model_name     = "gpt-realtime"
+# voicelive_pro_model_version  = "2025-08-28"
+# voicelive_pro_model_capacity = 1
 
 # ── Disabled by default ──────────────────────
 # enable_sql_database = false   # Blocked by MCAPS deny policy in many subs

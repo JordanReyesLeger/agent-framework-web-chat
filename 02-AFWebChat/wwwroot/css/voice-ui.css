@@ -260,7 +260,14 @@
 }
 .vu-field select optgroup { font-weight: 700; color: #58a6ff; }
 .vu-field select option { background: #0d1117; color: #e6edf3; }
-.vu-field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.vu-field-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; align-items: start; }
+.vu-field-grid > .vu-field > label {
+    display: flex; align-items: flex-end; flex-wrap: wrap; column-gap: 4px;
+    min-height: 2.35rem; line-height: 1.3;
+}
+.vu-field-grid > .vu-field > select,
+.vu-field-grid > .vu-field > input { min-height: 40px; }
+.vu-field-grid > .vu-field > .vu-field-help { min-height: 3rem; }
 .vu-field-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .vu-field-count { color: #6e7681; font-size: 0.72rem; }
 .vu-field-help { color: #6e7681; font-size: 0.72rem; line-height: 1.35; }
@@ -493,6 +500,8 @@
 
 @media (max-width: 520px) {
     .vu-field-grid { grid-template-columns: 1fr; }
+    .vu-field-grid > .vu-field > label,
+    .vu-field-grid > .vu-field > .vu-field-help { min-height: 0; }
     .vu-segmented { grid-template-columns: 1fr 1fr; }
     .vu-avatar-preview { grid-template-columns: 78px 1fr; }
     .vu-avatar-image-wrap { width: 78px; }
