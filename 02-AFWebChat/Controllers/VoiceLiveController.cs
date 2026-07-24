@@ -366,6 +366,7 @@ public class VoiceLiveController : ControllerBase
             // &avatar=1&avatarCharacter=lisa&avatarStyle=casual-sitting
             var voiceName = Request.Query["voice"].FirstOrDefault();
             if (string.IsNullOrWhiteSpace(voiceName)) voiceName = defaultVoice;
+            voiceName = voiceName.ReplaceLineEndings(" ");
 
             var voiceType = Request.Query["voiceType"].FirstOrDefault();
             var style = Request.Query["style"].FirstOrDefault();
