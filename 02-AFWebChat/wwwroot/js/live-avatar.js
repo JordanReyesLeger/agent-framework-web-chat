@@ -116,6 +116,8 @@
                 els.systemPrompt.value = cfg.instructions;
             }
             syncAvatarStyleVisibility();
+            window.VoiceUiAvatarPreview?.syncStyles(cfg.avatarStyle);
+            window.VoiceUiAvatarPreview?.refresh();
         } catch (e) {
             console.warn('[INIT] Failed to load defaults', e);
         }
@@ -142,19 +144,18 @@
             const speechConfig = SDK.SpeechConfig.fromAuthorizationToken(state.token, state.region);
             speechConfig.speechSynthesisVoiceName = els.voiceName.value || state.config.synthesisVoiceName;
 
-            // Fallback defaults if the dropdown options haven't loaded yet.
             const character = (els.character && els.character.value) || state.config.avatarCharacter || 'lisa';
-            const avatarStyle = (els.style && els.style.value) || state.config.avatarStyle || 'casual-sitting';
-
-            // Detect Talking Heads (photo avatars, preview) via data-photo attribute on the selected option.
             const selectedOpt = els.character.options[els.character.selectedIndex];
             const isPhotoAvatar = selectedOpt && selectedOpt.dataset.photo === 'true';
+            const supportedStyles = selectedOpt?.dataset.styles ? JSON.parse(selectedOpt.dataset.styles) : [];
+            const selectedStyle = els.style?.value || '';
+            const avatarStyle = supportedStyles.includes(selectedStyle) ? selectedStyle : supportedStyles[0];
 
             const videoFormat = new SDK.AvatarVideoFormat();
-            // Photo avatars don't accept a style; full-body avatars do.
-            const avatarConfig = isPhotoAvatar
-                ? new SDK.AvatarConfig(character, undefined, videoFormat)
-                : new SDK.AvatarConfig(character, avatarStyle, videoFormat);
+            // Photo avatars and full-body characters documented with style N/A must
+            // receive undefined. Sending a fallback such as casual-sitting causes
+            // avatar verification to fail for Rowan, Celine, Nia and Malik.
+            const avatarConfig = new SDK.AvatarConfig(character, avatarStyle, videoFormat);
             avatarConfig.customized = false;
             if (isPhotoAvatar) {
                 // Photo avatar (Talking Heads) base model — required for preview characters.
@@ -370,7 +371,8 @@
         if (!els.character || !els.styleField) return;
         const opt = els.character.options[els.character.selectedIndex];
         const isPhoto = opt && opt.dataset.photo === 'true';
-        els.styleField.style.display = isPhoto ? 'none' : '';
+        window.VoiceUiAvatarPreview?.syncPose();
+        if (!window.VoiceUiAvatarPreview) els.styleField.style.display = isPhoto ? 'none' : '';
     }
     if (els.character) els.character.addEventListener('change', syncAvatarStyleVisibility);
     syncAvatarStyleVisibility();

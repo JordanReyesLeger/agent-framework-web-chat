@@ -47,13 +47,13 @@ variable "tags" {
 # ─────────────────────────────────────────────
 # ─────────────────────────────────────────────
 # App Service
-# Web App SKU: B1 Linux works in westus2 (other regions blocked by 0
-# "Total Regional VMs" quota in this MCAPS subscription).
+# Web App SKU sized for 50+ concurrent users. The workload stays in westus2
+# because that region has App Service VM quota in this subscription.
 # ─────────────────────────────────────────────
 variable "app_service_sku" {
-  description = "App Service Plan SKU name (F1 free, B1 basic, S1 standard, P1v3, etc.)"
+  description = "App Service Plan SKU name. S2 is the recommended baseline for 50+ users."
   type        = string
-  default     = "B1"
+  default     = "S2"
 }
 
 variable "app_service_location" {
@@ -117,9 +117,9 @@ variable "enable_ai_search" {
 }
 
 variable "ai_search_sku" {
-  description = "SKU for Azure AI Search (free, basic, standard)"
+  description = "SKU for Azure AI Search. Standard is recommended for production throughput and indexing."
   type        = string
-  default     = "basic"
+  default     = "standard"
 }
 
 variable "ai_search_location" {
@@ -132,6 +132,21 @@ variable "enable_cosmos_db" {
   description = "Deploy Azure Cosmos DB (for persistent chat sessions)"
   type        = bool
   default     = true
+}
+
+variable "cosmos_sessions_autoscale_max_throughput" {
+  description = "Maximum autoscale throughput for the Cosmos DB sessions container in RU/s. Azure scales down to 10% of this value."
+  type        = number
+  default     = 4000
+
+  validation {
+    condition = (
+      var.cosmos_sessions_autoscale_max_throughput >= 1000 &&
+      var.cosmos_sessions_autoscale_max_throughput <= 1000000 &&
+      var.cosmos_sessions_autoscale_max_throughput % 1000 == 0
+    )
+    error_message = "cosmos_sessions_autoscale_max_throughput must be between 1,000 and 1,000,000 RU/s in increments of 1,000."
+  }
 }
 
 variable "enable_sql_database" {
@@ -241,6 +256,24 @@ variable "voicelive_model_version" {
 
 variable "voicelive_model_capacity" {
   description = "Realtime model TPM capacity (in thousands). GlobalStandard SKU."
+  type        = number
+  default     = 1
+}
+
+variable "voicelive_pro_model_name" {
+  description = "Premium realtime model deployment name selectable from the VoiceLive page"
+  type        = string
+  default     = "gpt-realtime"
+}
+
+variable "voicelive_pro_model_version" {
+  description = "Version of the premium realtime model"
+  type        = string
+  default     = "2025-08-28"
+}
+
+variable "voicelive_pro_model_capacity" {
+  description = "Premium realtime model capacity. GlobalStandard SKU."
   type        = number
   default     = 1
 }

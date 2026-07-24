@@ -330,6 +330,56 @@ body:has(.chat-page-wrapper) .app-footer {
     margin: 4px 0;
 }
 
+/* Reasoning ("thinking") block — estilo GitHub Copilot */
+.af-reasoning-card {
+    background: color-mix(in srgb, var(--af-accent) 7%, var(--af-surface));
+    border: 1px solid var(--af-border);
+    border-left: 3px solid var(--af-highlight);
+    border-radius: 8px;
+    margin: 2px 0 8px;
+    font-size: 0.85rem;
+    overflow: hidden;
+}
+.af-reasoning-card .af-reasoning-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    color: var(--af-highlight);
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+}
+.af-reasoning-card .af-reasoning-icon { opacity: .9; }
+.af-reasoning-card .af-reasoning-chevron { transition: transform .2s ease; opacity: .7; }
+.af-reasoning-card.expanded .af-reasoning-chevron { transform: rotate(180deg); }
+.af-reasoning-card .af-reasoning-body {
+    display: none;
+    padding: 0 12px 10px 12px;
+    max-height: 220px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    color: color-mix(in srgb, var(--af-text) 72%, transparent);
+    font-size: 0.82rem;
+    line-height: 1.5;
+    font-style: italic;
+}
+.af-reasoning-card.expanded .af-reasoning-body { display: block; }
+
+/* Spinner mientras piensa; se oculta al terminar */
+.af-reasoning-spinner {
+    width: 12px; height: 12px; flex-shrink: 0;
+    border: 2px solid color-mix(in srgb, var(--af-highlight) 40%, transparent);
+    border-top-color: var(--af-highlight);
+    border-radius: 50%;
+    animation: af-reasoning-spin .7s linear infinite;
+}
+.af-reasoning-card.af-reasoning-done .af-reasoning-spinner { display: none; }
+@keyframes af-reasoning-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+    .af-reasoning-spinner { animation: none; }
+}
+
 /* Input Area */
 .af-input-area {
     padding: 12px 24px 16px;
@@ -2435,6 +2485,13 @@ body:has(.chat-page-wrapper) .app-footer {
     border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
+/* ── Reasoning block ── */
+[data-bs-theme="light"] .af-reasoning-card {
+    background: rgba(0, 0, 0, 0.025);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-left: 3px solid var(--af-highlight);
+}
+
 /* ── Input area ── */
 [data-bs-theme="light"] .af-input-area {
     border-top: 1px solid rgba(0, 0, 0, 0.1);
@@ -2880,4 +2937,88 @@ body:has(.chat-page-wrapper) .app-footer {
 
 .af-flow-timeline-step.completed .af-flow-timeline-status {
     color: var(--af-success);
+}
+
+/* ── Control segmentado de nivel de razonamiento (barra del chat) ── */
+.af-reason-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.55rem;
+    padding-left: 0.15rem;
+    flex-wrap: wrap;
+}
+.af-reason-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--af-text-muted, rgba(255, 255, 255, 0.55));
+}
+.af-reason-label .bi {
+    color: var(--af-accent);
+    font-size: 0.8rem;
+}
+.af-reason-seg {
+    display: inline-flex;
+    padding: 3px;
+    gap: 2px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--af-accent) 8%, transparent);
+    border: 1px solid var(--af-border);
+}
+.af-reason-pill {
+    appearance: none;
+    border: none;
+    background: transparent;
+    color: var(--af-text-muted, rgba(255, 255, 255, 0.6));
+    font-size: 0.76rem;
+    font-weight: 600;
+    line-height: 1;
+    padding: 0.35rem 0.8rem;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease;
+}
+.af-reason-pill:hover {
+    color: var(--af-text, #fff);
+    background: color-mix(in srgb, var(--af-accent) 14%, transparent);
+}
+.af-reason-pill.active {
+    color: #fff;
+    background: var(--af-accent);
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--af-accent) 45%, transparent);
+}
+.af-reason-pill:active {
+    transform: scale(0.95);
+}
+.af-reason-pill.af-reason-flash {
+    animation: af-reason-flash 0.5s ease;
+}
+@keyframes af-reason-flash {
+    0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--af-accent) 55%, transparent); }
+    100% { box-shadow: 0 0 0 10px transparent; }
+}
+.af-reason-seg.af-reason-busy {
+    opacity: 0.6;
+    pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+    .af-reason-pill,
+    .af-reason-pill.af-reason-flash { transition: none; animation: none; }
+}
+[data-bs-theme="light"] .af-reason-label {
+    color: rgba(0, 0, 0, 0.55);
+}
+[data-bs-theme="light"] .af-reason-pill {
+    color: rgba(0, 0, 0, 0.55);
+}
+[data-bs-theme="light"] .af-reason-pill:hover {
+    color: rgba(0, 0, 0, 0.85);
+}
+[data-bs-theme="light"] .af-reason-pill.active {
+    color: #fff;
 }

@@ -265,6 +265,9 @@ public class WorkflowFactory
             yield return StreamEventService.WorkflowStep(name, "running");
 
         var buffers = new Dictionary<string, System.Text.StringBuilder>(System.StringComparer.OrdinalIgnoreCase);
+        // Buffer del razonamiento por worker (separado del texto). Los workers corren en paralelo
+        // e interleaved, así que acumulamos su "pensamiento" y lo emitimos como bloque limpio.
+        var reasoningBuffers = new Dictionary<string, System.Text.StringBuilder>(System.StringComparer.OrdinalIgnoreCase);
         var outputFallback = new List<string>();
 
         await using var run = await InProcessExecution.RunStreamingAsync(concurrentWorkflow, messages);
@@ -275,10 +278,27 @@ public class WorkflowFactory
             switch (wfEvent)
             {
                 case AgentResponseUpdateEvent responseUpdate:
+                    var name = MapWorkerName(responseUpdate.ExecutorId);
+                    // Captura el razonamiento del worker (si el modelo lo emite) en su buffer.
+                    if (responseUpdate.Update is not null)
+                    {
+                        foreach (var content in responseUpdate.Update.Contents)
+                        {
+                            if (content is Microsoft.Extensions.AI.TextReasoningContent reasoning
+                                && !string.IsNullOrEmpty(reasoning.Text))
+                            {
+                                if (!reasoningBuffers.TryGetValue(name, out var rb))
+                                {
+                                    rb = new System.Text.StringBuilder();
+                                    reasoningBuffers[name] = rb;
+                                }
+                                rb.Append(reasoning.Text);
+                            }
+                        }
+                    }
                     var text = responseUpdate.Update?.Text;
                     if (!string.IsNullOrEmpty(text))
                     {
-                        var name = MapWorkerName(responseUpdate.ExecutorId);
                         if (!buffers.TryGetValue(name, out var sb))
                         {
                             sb = new System.Text.StringBuilder();
@@ -310,6 +330,12 @@ public class WorkflowFactory
             workerResults.Add(full);
 
             yield return StreamEventService.AgentStart(name);
+            // Muestra el razonamiento del worker (si lo hubo) antes de su respuesta.
+            if (reasoningBuffers.TryGetValue(name, out var wrb) && wrb.Length > 0)
+            {
+                yield return StreamEventService.AgentThinking(name);
+                yield return StreamEventService.AgentReasoning(name, wrb.ToString().Trim());
+            }
             if (!string.IsNullOrEmpty(full))
                 yield return StreamEventService.AgentToken(name, full);
             yield return StreamEventService.WorkflowStep(name, "completed");
@@ -318,6 +344,8 @@ public class WorkflowFactory
         // ── Synthesizer step ──
         yield return StreamEventService.AgentStart(synthesizerName);
         yield return StreamEventService.WorkflowStep(synthesizerName, "running");
+        // Feedback inmediato mientras el sintetizador razona.
+        yield return StreamEventService.AgentThinking(synthesizerName);
 
         var analysisBlocks = string.Join("\n\n---\n\n",
             workerResults.Select((r, i) => $"{(i < workerNames.Length ? workerNames[i] : $"Agente {i + 1}")}:\n{r}"));
@@ -332,9 +360,26 @@ public class WorkflowFactory
             $"Texto original del usuario:\n\"{request.Message}\"\n\n" +
             $"Análisis de los agentes:\n{analysisBlocks}";
 
-        var synthResponse = await synthesizerAgent.RunAsync(synthesisPrompt);
-        var synthText = synthResponse.ToString() ?? "";
-        yield return StreamEventService.AgentToken(synthesizerName, synthText);
+        // Streaming del sintetizador para transmitir su razonamiento y respuesta en vivo.
+        var synthBuilder = new System.Text.StringBuilder();
+        await foreach (var update in synthesizerAgent.RunStreamingAsync(synthesisPrompt))
+        {
+            foreach (var content in update.Contents)
+            {
+                if (content is Microsoft.Extensions.AI.TextReasoningContent reasoning
+                    && !string.IsNullOrEmpty(reasoning.Text))
+                {
+                    yield return StreamEventService.AgentReasoning(synthesizerName, reasoning.Text);
+                }
+            }
+            var chunk = update.Text;
+            if (!string.IsNullOrEmpty(chunk))
+            {
+                synthBuilder.Append(chunk);
+                yield return StreamEventService.AgentToken(synthesizerName, chunk);
+            }
+        }
+        var synthText = synthBuilder.ToString();
         yield return StreamEventService.WorkflowStep(synthesizerName, "completed");
 
         yield return StreamEventService.WorkflowOutput(synthText);

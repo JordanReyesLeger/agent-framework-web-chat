@@ -41,11 +41,63 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadWorkflows();
     injectNavbarChatActions();
     setupEventListeners();
+    initReasoningControl();
     updateSessionBadge();
     updateAgentContext();
     renderExamplePrompts();
     loadSessionHistory();
 });
+
+// ---- Reasoning effort (global) ----
+// Control segmentado en la barra del chat para cambiar el nivel de razonamiento de TODOS
+// los agentes en caliente (sin reiniciar). Lee el valor actual del backend y persiste cada cambio.
+async function initReasoningControl() {
+    const seg = document.getElementById('reasoningSeg');
+    if (!seg) return;
+    const pills = Array.from(seg.querySelectorAll('.af-reason-pill'));
+
+    const setActive = (effort) => {
+        pills.forEach(p => p.classList.toggle('active', p.dataset.effort === effort));
+    };
+
+    // Estado inicial desde el backend
+    let current = 'low';
+    try {
+        const res = await fetch('/api/chat/reasoning');
+        if (res.ok) {
+            const data = await res.json();
+            if (data.effort) current = data.effort;
+        }
+    } catch (e) {
+        console.warn('No se pudo leer el nivel de razonamiento', e);
+    }
+    setActive(current);
+
+    pills.forEach(pill => {
+        pill.addEventListener('click', async () => {
+            const effort = pill.dataset.effort;
+            if (pill.classList.contains('active')) return; // sin cambios
+            const prev = seg.querySelector('.af-reason-pill.active')?.dataset.effort;
+            setActive(effort); // feedback optimista
+            seg.classList.add('af-reason-busy');
+            try {
+                const res = await fetch('/api/chat/reasoning', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ effort })
+                });
+                if (!res.ok) throw new Error('bad status');
+                pill.classList.add('af-reason-flash');
+                setTimeout(() => pill.classList.remove('af-reason-flash'), 500);
+            } catch (e) {
+                if (prev) setActive(prev); // revierte si falló
+                console.warn('No se pudo cambiar el razonamiento', e);
+            } finally {
+                seg.classList.remove('af-reason-busy');
+            }
+        });
+    });
+}
 
 function injectNavbarChatActions() {
     const container = document.getElementById('navbarChatActions');
@@ -1054,6 +1106,7 @@ async function sendMessage(message) {
 }
 
 function finalizeStreamBubble(stream) {
+    finalizeReasoning(stream);
     if (stream.contentEl) {
         stream.contentEl.classList.remove('af-streaming');
         if (stream.fullText) {
@@ -1061,6 +1114,67 @@ function finalizeStreamBubble(stream) {
             stream.responses.push({ agentName: stream.agentName, text: stream.fullText });
         }
     }
+}
+
+// ---- Reasoning ("thinking") block — estilo GitHub Copilot ----
+// Crea (una sola vez por burbuja) el bloque colapsable donde se acumula el razonamiento.
+function ensureReasoningBlock(stream) {
+    if (stream.reasoningBody) return stream.reasoningBody;
+    if (!stream.agentMsgEl) return null;
+    const bubble = stream.agentMsgEl.querySelector('.af-msg-bubble');
+    if (!bubble) return null;
+
+    const card = document.createElement('div');
+    card.className = 'af-reasoning-card expanded';
+    card.innerHTML = `
+        <div class="af-reasoning-header" onclick="this.parentElement.classList.toggle('expanded')">
+            <span class="af-reasoning-spinner"></span>
+            <i class="bi bi-lightbulb af-reasoning-icon"></i>
+            <span class="af-reasoning-title">Pensando…</span>
+            <i class="bi bi-chevron-down ms-auto af-reasoning-chevron"></i>
+        </div>
+        <div class="af-reasoning-body"></div>
+    `;
+    // El pensamiento va ANTES de la respuesta, dentro de la misma burbuja.
+    const content = bubble.querySelector('.af-msg-content');
+    bubble.insertBefore(card, content);
+
+    stream.reasoningCard = card;
+    stream.reasoningBody = card.querySelector('.af-reasoning-body');
+    stream.reasoningText = '';
+    stream.reasoningStart = performance.now();
+    return stream.reasoningBody;
+}
+
+function appendReasoning(stream, text) {
+    const body = ensureReasoningBlock(stream);
+    if (!body) return;
+    stream.reasoningText += text;
+    body.textContent = stream.reasoningText; // texto plano: es el "pensamiento", no la respuesta final
+    body.scrollTop = body.scrollHeight;      // auto-scroll mientras piensa
+}
+
+// Colapsa el bloque cuando el razonamiento terminó (idempotente).
+function finalizeReasoning(stream) {
+    if (!stream || !stream.reasoningCard) return;
+    // Si nunca llegó texto de razonamiento (p. ej. modelo sin razonamiento como Summarizer,
+    // o la tarjeta se creó solo por el indicador inmediato "Pensando…"), elimina la tarjeta
+    // para no mostrar un "Razonó durante Ns" engañoso.
+    if (!stream.reasoningText) {
+        stream.reasoningCard.remove();
+        stream.reasoningCard = null;
+        stream.reasoningBody = null;
+        return;
+    }
+    const secs = stream.reasoningStart
+        ? Math.max(1, Math.round((performance.now() - stream.reasoningStart) / 1000))
+        : null;
+    const title = stream.reasoningCard.querySelector('.af-reasoning-title');
+    if (title) title.textContent = secs ? `Razonó durante ${secs}s` : 'Razonamiento';
+    stream.reasoningCard.classList.remove('expanded'); // colapsa como Copilot (clic para expandir)
+    stream.reasoningCard.classList.add('af-reasoning-done');
+    stream.reasoningCard = null;
+    stream.reasoningBody = null;
 }
 
 function switchStreamAgent(stream, newAgentName) {
@@ -1083,7 +1197,21 @@ function handleStreamEvent(evt, stream) {
             updateInlineFlowProgress(evt.data?.agentName || 'Agent', 'running');
             break;
 
+        case 'agent-thinking':
+            // Muestra el indicador "Pensando…" al instante, sin esperar al modelo.
+            ensureReasoningBlock(stream);
+            scrollToBottom();
+            break;
+
+        case 'agent-reasoning':
+            if (evt.data?.text) {
+                appendReasoning(stream, evt.data.text);
+            }
+            scrollToBottom();
+            break;
+
         case 'agent-token':
+            finalizeReasoning(stream); // el razonamiento terminó al empezar la respuesta → colapsa el bloque
             if (evt.data?.text) {
                 stream.fullText += evt.data.text;
                 if (stream.contentEl) {
@@ -1111,6 +1239,7 @@ function handleStreamEvent(evt, stream) {
             break;
 
         case 'agent-complete':
+            finalizeReasoning(stream);
             addExecutionStep(evt.data?.agentName || state.currentAgent, 'completed');
             updateInlineFlowProgress(evt.data?.agentName || state.currentAgent, 'completed');
             break;
@@ -1130,6 +1259,7 @@ function handleStreamEvent(evt, stream) {
             break;
 
         case 'done':
+            finalizeReasoning(stream);
             break;
     }
 }

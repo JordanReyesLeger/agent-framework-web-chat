@@ -11,7 +11,7 @@ public static class SummarizerAgent
     public static AgentDefinition CreateDefinition() => new()
     {
         Name = Name,
-        Description = "Genera resúmenes concisos de textos largos, artículos o documentos.",
+        Description = "Genera resúmenes concisos de textos largos, artículos o documentos. (Único agente que usa la Chat Completions API clásica — sin razonamiento.)",
         Category = "Básico",
         Icon = "📝",
         Color = "#238636",
@@ -20,7 +20,9 @@ public static class SummarizerAgent
         Factory = sp =>
         {
             var factory = sp.GetRequiredService<ChatClientFactory>();
-            var chatClient = factory.CreateChatClient();
+            // Agente de demostración: se mantiene deliberadamente en Chat Completions
+            // (sin razonamiento) mientras el resto de agentes usan la Responses API.
+            var chatClient = factory.CreateChatCompletionsClient();
 
             return chatClient.AsAIAgent(
                 name: Name,

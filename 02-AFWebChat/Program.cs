@@ -31,6 +31,7 @@ builder.Services.AddMemoryCache();
 builder.Services.Configure<AppBrandingSettings>(builder.Configuration.GetSection("AppBranding"));
 
 // Register services
+builder.Services.AddSingleton<ReasoningSettings>();
 builder.Services.AddSingleton<ChatClientFactory>();
 builder.Services.AddSingleton<SessionService>();
 builder.Services.AddSingleton<AgentRegistry>();
@@ -109,6 +110,9 @@ var registry = app.Services.GetRequiredService<AgentRegistry>();
 
 // ── Core agents ──
 registry.Register(GeneralAssistantAgent.CreateDefinition());
+// Summarizer = único agente que permanece en Chat Completions (demo). Translator usa Responses.
+registry.Register(SummarizerAgent.CreateDefinition());
+registry.Register(TranslatorAgent.CreateDefinition());
 
 // ── Tool agents ──
 registry.Register(DatabaseQueryAgent.CreateDefinition());

@@ -22,6 +22,7 @@ resource "null_resource" "inject_cognitive_keys" {
     ai_services_id        = var.enable_voicelive ? azurerm_cognitive_account.voicelive[0].id : ""
     ai_services_search_id = var.enable_ai_search ? azurerm_cognitive_account.aiservices_search[0].id : ""
     voicelive_dep_id      = var.enable_voicelive ? azurerm_cognitive_deployment.voicelive_realtime[0].id : ""
+    voicelive_pro_dep_id  = var.enable_voicelive ? azurerm_cognitive_deployment.voicelive_realtime_pro[0].id : ""
     enable_speech         = tostring(var.enable_speech)
     enable_voicelive      = tostring(var.enable_voicelive)
     enable_ai_search      = tostring(var.enable_ai_search)
@@ -87,5 +88,6 @@ resource "null_resource" "inject_cognitive_keys" {
     azurerm_cognitive_account.voicelive,
     azurerm_cognitive_account.aiservices_search,
     azurerm_cognitive_deployment.voicelive_realtime,
+    azurerm_cognitive_deployment.voicelive_realtime_pro,
   ]
 }

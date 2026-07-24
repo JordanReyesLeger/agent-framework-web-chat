@@ -320,6 +320,15 @@
 
         <!-- Input Area -->
         <div class="af-input-area">
+            <div class="af-reason-bar" title="Nivel de razonamiento (global, aplica a todos los agentes)">
+                <span class="af-reason-label"><i class="bi bi-lightbulb-fill"></i> Razonamiento</span>
+                <div class="af-reason-seg" id="reasoningSeg" role="group" aria-label="Nivel de razonamiento">
+                    <button type="button" class="af-reason-pill" data-effort="none">Ninguno</button>
+                    <button type="button" class="af-reason-pill" data-effort="low">Bajo</button>
+                    <button type="button" class="af-reason-pill" data-effort="medium">Medio</button>
+                    <button type="button" class="af-reason-pill" data-effort="high">Alto</button>
+                </div>
+            </div>
             <form id="chatForm" class="d-flex gap-2">
                 <input type="file" class="d-none" id="documentInput" accept=".pdf,.txt,.docx" />
                 <button type="button" class="btn btn-sm btn-outline-secondary" id="btnAttach" title="Adjuntar archivo">

@@ -116,12 +116,41 @@ public class AgentOrchestrationService
 
         bool hasContent = false;
 
+        // Feedback inmediato: avisa a la UI que el agente empezó a pensar ANTES de llamar al
+        // modelo. Los modelos de razonamiento (gpt-5.1) pueden tardar decenas de segundos en
+        // emitir el primer token de resumen; sin esto el usuario no ve nada durante ese tiempo.
+        yield return StreamEventService.AgentThinking(request.AgentName);
+
         await foreach (var update in agent.RunStreamingAsync(request.Message, session))
         {
-            if (!string.IsNullOrEmpty(update.ToString()))
+            // Razonamiento ("thinking"): solo lo emiten modelos de razonamiento (p. ej. gpt-5.1).
+            // Si el modelo no razona, Contents no trae TextReasoningContent y no se emite nada (no truena).
+            foreach (var content in update.Contents)
+            {
+                if (content is Microsoft.Extensions.AI.TextReasoningContent reasoning
+                    && !string.IsNullOrEmpty(reasoning.Text))
+                {
+                    yield return StreamEventService.AgentReasoning(request.AgentName, reasoning.Text);
+                }
+            }
+
+            // Ruta Chat Completions: algunos modelos de razonamiento (DeepSeek-R1, Grok, Qwen3, vLLM)
+            // exponen el razonamiento en el campo no estándar `reasoning_content` del delta. El SDK de
+            // OpenAI no lo tipa, así que lo extraemos del RawRepresentation. Si el modelo no lo emite,
+            // devuelve null y no se emite nada (inofensivo para gpt-4o u otros).
+            var chatReasoning = TryGetChatCompletionsReasoning(update.RawRepresentation);
+            if (!string.IsNullOrEmpty(chatReasoning))
+            {
+                yield return StreamEventService.AgentReasoning(request.AgentName, chatReasoning!);
+            }
+
+            // Texto final de la respuesta. ToString() concatena solo el TextContent (excluye el reasoning),
+            // así que el comportamiento para modelos sin razonamiento queda idéntico al original.
+            var text = update.ToString();
+            if (!string.IsNullOrEmpty(text))
             {
                 hasContent = true;
-                yield return StreamEventService.AgentToken(request.AgentName, update.ToString()!);
+                yield return StreamEventService.AgentToken(request.AgentName, text!);
             }
         }
 
@@ -159,5 +188,66 @@ public class AgentOrchestrationService
             request.AgentName,
             response.ToString() ?? "",
             DateTime.UtcNow);
+    }
+
+    /// <summary>
+    /// Extrae el razonamiento del campo no estándar <c>reasoning_content</c> que algunos modelos
+    /// de razonamiento (DeepSeek-R1, xAI Grok, Qwen3, backends vLLM) devuelven en el delta de la
+    /// Chat Completions API. El SDK de OpenAI .NET no expone este campo como propiedad tipada
+    /// (ver dotnet/extensions#6208), por lo que serializamos el <c>StreamingChatCompletionUpdate</c>
+    /// crudo y leemos <c>choices[0].delta.reasoning_content</c>. Devuelve null si no está presente.
+    /// </summary>
+    private static string? TryGetChatCompletionsReasoning(object? rawRepresentation)
+    {
+        var raw = rawRepresentation;
+        // El RawRepresentation puede venir envuelto (AgentRunResponseUpdate -> ChatResponseUpdate -> OpenAI update).
+        for (int depth = 0; depth < 4 && raw is not null; depth++)
+        {
+            if (raw is OpenAI.Chat.StreamingChatCompletionUpdate streamingUpdate)
+            {
+                return ExtractReasoningContent(streamingUpdate);
+            }
+
+            if (raw is Microsoft.Extensions.AI.ChatResponseUpdate chatResponseUpdate)
+            {
+                raw = chatResponseUpdate.RawRepresentation;
+                continue;
+            }
+
+            break;
+        }
+
+        return null;
+    }
+
+    private static string? ExtractReasoningContent(OpenAI.Chat.StreamingChatCompletionUpdate streamingUpdate)
+    {
+        try
+        {
+            // Serializa el update crudo; los campos desconocidos (como reasoning_content) se conservan
+            // en los datos adicionales del delta y se re-emiten al serializar.
+            BinaryData json = System.ClientModel.Primitives.ModelReaderWriter.Write(streamingUpdate);
+            using var document = System.Text.Json.JsonDocument.Parse(json.ToMemory());
+
+            if (document.RootElement.TryGetProperty("choices", out var choices)
+                && choices.ValueKind == System.Text.Json.JsonValueKind.Array
+                && choices.GetArrayLength() > 0)
+            {
+                var firstChoice = choices[0];
+                if (firstChoice.TryGetProperty("delta", out var delta)
+                    && delta.TryGetProperty("reasoning_content", out var reasoning)
+                    && reasoning.ValueKind == System.Text.Json.JsonValueKind.String)
+                {
+                    var text = reasoning.GetString();
+                    return string.IsNullOrEmpty(text) ? null : text;
+                }
+            }
+        }
+        catch
+        {
+            // Si el modelo/SDK no soporta la serialización o el campo, lo ignoramos silenciosamente.
+        }
+
+        return null;
     }
 }

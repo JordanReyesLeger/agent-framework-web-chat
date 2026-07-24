@@ -70,8 +70,21 @@ output "speech_service_region" {
 }
 
 output "voicelive_endpoint" {
-  description = "VoiceLive Azure AI Foundry endpoint (if deployed)"
+  description = "Voice Live API endpoint for the dedicated Azure AI Foundry account"
+  value       = var.enable_voicelive ? "https://${azurerm_cognitive_account.voicelive[0].name}.services.ai.azure.com/" : null
+}
+
+output "voicelive_cognitive_endpoint" {
+  description = "Generic Cognitive Services endpoint for the VoiceLive account"
   value       = var.enable_voicelive ? azurerm_cognitive_account.voicelive[0].endpoint : null
+}
+
+output "voicelive_model_deployments" {
+  description = "VoiceLive realtime model deployments selectable by the application"
+  value = var.enable_voicelive ? [
+    azurerm_cognitive_deployment.voicelive_realtime[0].name,
+    azurerm_cognitive_deployment.voicelive_realtime_pro[0].name
+  ] : []
 }
 
 output "bot_service_name" {

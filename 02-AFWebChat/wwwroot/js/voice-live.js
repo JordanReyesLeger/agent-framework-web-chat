@@ -26,6 +26,22 @@
         // Config
         instructions: document.getElementById('vu-system-prompt'),
         voice: document.getElementById('vu-voice'),
+        voiceGender: document.getElementById('vu-voice-gender'),
+        voiceCount: document.getElementById('vu-voice-count'),
+        voiceIcon: document.getElementById('vu-voice-icon'),
+        voiceName: document.getElementById('vu-voice-name'),
+        voiceMeta: document.getElementById('vu-voice-meta'),
+        voicePickerOpen: document.getElementById('vu-voice-picker-open'),
+        voiceDialog: document.getElementById('vu-voice-dialog'),
+        voiceDialogClose: document.getElementById('vu-voice-dialog-close'),
+        voiceSearch: document.getElementById('vu-voice-search'),
+        voiceFilterBar: document.getElementById('vu-voice-filter-bar'),
+        voiceGallery: document.getElementById('vu-voice-gallery'),
+        voiceResultsCount: document.getElementById('vu-voice-results-count'),
+        outputLocaleRow: document.getElementById('vu-output-locale-row'),
+        outputLocale: document.getElementById('vu-output-locale'),
+        outputLocaleHelp: document.getElementById('vu-output-locale-help'),
+        inputLanguage: document.getElementById('vu-input-language'),
         model: document.getElementById('vu-model'),
         styleRow: document.getElementById('vu-style-row'),
         style: document.getElementById('vu-style'),
@@ -49,9 +65,23 @@
     // Holds the full /voices response so we can repopulate styles/avatar on demand.
     const catalog = {
         avatar: null,
+        outputLocales: [],
+        omniCatalog: null,
         // Map<voiceId, {styles, gender, lang, label, type}>
         voicesById: new Map(),
+        groups: [],
+        gender: 'all',
+        language: 'all',
+        pickerFilter: 'all',
+        pickerSearch: '',
     };
+
+    let languageDisplayNames = null;
+    try {
+        languageDisplayNames = new Intl.DisplayNames(['es'], { type: 'language' });
+    } catch {
+        // Older browsers fall back to the BCP-47 code.
+    }
 
     function genderIcon(g) {
         switch ((g || '').toLowerCase()) {
@@ -174,7 +204,18 @@
         // textarea viven solo en memoria durante la sesión (se envían al conectar) y
         // NO persisten: al recargar la página se vuelve al default.
         els.instructions.value = cfg.instructions || '';
-        els.model.value = cfg.model || '';
+        if (els.model) {
+            els.model.replaceChildren();
+            (cfg.models || []).forEach(model => {
+                const option = document.createElement('option');
+                option.value = model.id;
+                option.textContent = `${model.label} · ${model.tier}`;
+                option.title = model.description || '';
+                els.model.appendChild(option);
+            });
+            els.model.value = cfg.model || 'gpt-realtime-mini';
+        }
+        if (els.inputLanguage) els.inputLanguage.value = cfg.inputLanguage ?? 'es-MX';
         await loadVoices(cfg.voice);
     }
 
@@ -182,37 +223,316 @@
         try {
             const r = await fetch('/api/VoiceLive/voices');
             const data = await r.json();
-            const select = els.voice;
-            select.innerHTML = '';
             catalog.voicesById.clear();
             catalog.avatar = data.avatar || null;
+            catalog.groups = data.groups || [];
+            catalog.outputLocales = data.outputLocales || [];
+            catalog.omniCatalog = data.omniCatalog || null;
 
             const preferred = currentVoice || data.defaultVoice;
-            (data.groups || []).forEach(group => {
-                const og = document.createElement('optgroup');
-                og.label = group.name + (group.description ? ' — ' + group.description : '');
+            catalog.groups.forEach(group => {
                 (group.voices || []).forEach(v => {
-                    const opt = document.createElement('option');
-                    opt.value = v.id;
-                    opt.dataset.voiceType = group.type || 'azure';
-                    const icon = genderIcon(v.gender);
-                    opt.textContent = `${icon} ${v.label}  (${v.lang})`;
-                    if (v.id === preferred) opt.selected = true;
-                    og.appendChild(opt);
                     catalog.voicesById.set(v.id, {
                         ...v,
                         type: group.type || 'azure',
+                        groupName: group.name,
                     });
                 });
-                select.appendChild(og);
             });
-            if (!select.value && select.options.length > 0) select.selectedIndex = 0;
+            catalog.language = 'all';
+            catalog.gender = 'all';
+            renderVoiceOptions(preferred);
 
             populateStylesForSelectedVoice();
+            updateVoiceSummary();
+            renderVoiceGallery();
             populateAvatarChoices();
+            if (catalog.omniCatalog?.isFallback) {
+                logEvent('Catálogo Omni remoto no disponible; se cargó el respaldo es-ES/es-MX.', 'info');
+            }
         } catch (e) {
             logEvent('No se pudo cargar el catálogo de voces: ' + e.message, 'error');
         }
+    }
+
+    function renderVoiceOptions(preferredVoice) {
+        const select = els.voice;
+        const previous = preferredVoice || select.value;
+        const previousLanguage = catalog.voicesById.get(previous)?.lang;
+        select.innerHTML = '';
+        let visibleCount = 0;
+        let matchedPrevious = false;
+
+        const availableForLanguage = Array.from(catalog.voicesById.values()).filter(matchesVoiceLanguage);
+        if (catalog.gender !== 'all' && !availableForLanguage.some(v => v.gender === catalog.gender)) {
+            catalog.gender = 'all';
+            syncGenderButtons();
+        }
+
+        catalog.groups.forEach(group => {
+            const voices = (group.voices || []).filter(v => matchesVoiceLanguage(v) && (catalog.gender === 'all' || v.gender === catalog.gender));
+            if (!voices.length) return;
+
+            const og = document.createElement('optgroup');
+            og.label = friendlyGroupName(group.name);
+            voices.forEach(v => {
+                const opt = document.createElement('option');
+                opt.value = v.id;
+                opt.dataset.voiceType = group.type || 'azure';
+                opt.textContent = `${genderIcon(v.gender)} ${v.label}  (${v.lang})`;
+                if (v.id === previous) {
+                    opt.selected = true;
+                    matchedPrevious = true;
+                }
+                og.appendChild(opt);
+                visibleCount++;
+            });
+            select.appendChild(og);
+        });
+
+        if (!matchedPrevious && previousLanguage) {
+            const sameLanguage = Array.from(select.options).find(option => catalog.voicesById.get(option.value)?.lang === previousLanguage);
+            if (sameLanguage) sameLanguage.selected = true;
+        }
+        if (!select.value && select.options.length > 0) select.selectedIndex = 0;
+        if (els.voiceCount) els.voiceCount.textContent = `${visibleCount} ${visibleCount === 1 ? 'voz' : 'voces'}`;
+        syncGenderAvailability(availableForLanguage);
+    }
+
+    function voiceLanguageBucket(language) {
+        if (language === 'es-MX') return 'es-MX';
+        if (language?.startsWith('es-')) return 'es';
+        if (language === 'multi') return 'auto';
+        if (language === 'en-US') return 'en-US';
+        return 'all';
+    }
+
+    function matchesVoiceLanguage(voice) {
+        switch (catalog.language) {
+            case 'auto': return voice.lang === 'multi';
+            case 'es': return voice.lang?.startsWith('es-');
+            case 'es-MX': return voice.lang === 'es-MX';
+            case 'multi': return voice.lang === 'multi';
+            case 'en-US': return voice.lang === 'en-US';
+            default: return true;
+        }
+    }
+
+    function friendlyGroupName(name) {
+        if (name.includes('Speech-to-Speech')) return 'Tiempo real · voces nativas';
+        if (name.includes('Dragon HD Omni')) return 'Omni HD · Multilingüe';
+        if (name.includes('Azure HD')) return 'HD · English (US)';
+        if (name === 'Multilingüe') return 'Voces multilingües';
+        return name;
+    }
+
+    function syncGenderButtons() {
+        els.voiceGender?.querySelectorAll('button[data-gender]').forEach(button => {
+            const active = button.dataset.gender === catalog.gender;
+            button.classList.toggle('is-active', active);
+            button.setAttribute('aria-pressed', active ? 'true' : 'false');
+        });
+    }
+
+    function syncGenderAvailability(voices) {
+        els.voiceGender?.querySelectorAll('button[data-gender]').forEach(button => {
+            const gender = button.dataset.gender;
+            button.disabled = gender !== 'all' && !voices.some(voice => voice.gender === gender);
+        });
+    }
+
+    function updateVoiceLanguageHelp() {
+        if (!els.voiceLanguageHelp) return;
+        const messages = {
+            auto: 'Voces nativas S2S y multilingües: el modelo conserva el idioma de la conversación y del prompt.',
+            es: 'Muestra todas las voces españolas disponibles, incluyendo México, España, Argentina y Colombia.',
+            'es-MX': 'Restringe la salida a voces nativas de español de México.',
+            multi: 'Muestra voces marcadas como multilingües para elegir manualmente el timbre.',
+            'en-US': 'Muestra las voces Azure HD disponibles en inglés de Estados Unidos.',
+            all: 'Muestra todo el catálogo, sin filtrar por idioma de salida.',
+        };
+        els.voiceLanguageHelp.textContent = messages[catalog.language] || messages.all;
+    }
+
+    function friendlyLanguage(code) {
+        const names = {
+            'de-DE': 'Deutsch (Deutschland)',
+            'es-MX': 'Español (México)',
+            'es-ES': 'Español (España)',
+            'es-AR': 'Español (Argentina)',
+            'es-CO': 'Español (Colombia)',
+            'en-US': 'English (US)',
+            'fr-FR': 'Français (France)',
+            'ja-JP': '日本語 (日本)',
+            'zh-CN': '中文 (中国)',
+            multi: 'Multilingüe',
+        };
+        if (names[code]) return names[code];
+        if (!code) return 'Idioma flexible';
+        return languageDisplayNames?.of(code) || code;
+    }
+
+    function friendlyGender(gender) {
+        return ({ female: 'Mujer', male: 'Hombre', neutral: 'Neutral' })[gender] || 'Sin especificar';
+    }
+
+    function updateVoiceSummary() {
+        const voice = catalog.voicesById.get(els.voice.value);
+        if (!voice) return;
+        if (els.voiceIcon) els.voiceIcon.textContent = genderIcon(voice.gender);
+        if (els.voiceName) els.voiceName.textContent = voice.label;
+        if (els.voiceMeta) {
+            const provider = voice.type === 'openai' ? 'Speech-to-Speech' : 'Azure Speech';
+            const quality = friendlyQuality(voice);
+            const age = friendlyAgeGroup(voice.ageGroup);
+            els.voiceMeta.textContent = `${friendlyGender(voice.gender)}${age ? ` · ${age}` : ''} · ${friendlyLanguage(voice.lang)} · ${quality || provider}`;
+        }
+        populateOutputLocales(voice);
+        els.voiceGallery?.querySelectorAll('.vu-voice-card').forEach(card => {
+            const selected = card.dataset.voiceId === voice.id;
+            card.classList.toggle('is-selected', selected);
+            card.setAttribute('aria-selected', selected ? 'true' : 'false');
+        });
+    }
+
+    function friendlyQuality(voice) {
+        if (voice.quality === 'omni-hd') return 'Dragon HD Omni';
+        if (voice.quality === 'hd') return 'Neural HD';
+        if (voice.quality === 'multilingual') return 'Multilingüe';
+        if (voice.quality === 'realtime') return 'Tiempo real S2S';
+        return 'Neural estándar';
+    }
+
+    function friendlyAgeGroup(ageGroup) {
+        return ({
+            Child: 'Infantil',
+            'Young Adult': 'Adulto joven',
+            Adult: 'Adulto',
+            Senior: 'Senior',
+        })[ageGroup] || ageGroup || '';
+    }
+
+    function localeLabel(locale) {
+        return ({
+            'de-DE': 'Deutsch · Deutschland',
+            'es-MX': 'Español · México',
+            'es-ES': 'Español · España',
+            'es-AR': 'Español · Argentina',
+            'es-CO': 'Español · Colombia',
+            'en-US': 'English · United States',
+            'fr-FR': 'Français · France',
+            'ja-JP': '日本語 · 日本',
+            'zh-CN': '中文 · 中国',
+        })[locale] || friendlyLanguage(locale);
+    }
+
+    function outputLocalesForVoice(voice) {
+        return voice.quality === 'omni-hd'
+            ? catalog.outputLocales
+            : (voice.locales || []);
+    }
+
+    function populateOutputLocales(voice) {
+        if (!els.outputLocale) return;
+        const previous = els.outputLocale.value;
+        els.outputLocale.replaceChildren();
+        const automatic = document.createElement('option');
+        automatic.value = '';
+        automatic.textContent = voice.type === 'openai'
+            ? 'Automático · según la conversación'
+            : 'Automático · detecta el idioma del texto';
+        els.outputLocale.appendChild(automatic);
+
+        const locales = outputLocalesForVoice(voice);
+        locales.forEach(locale => {
+            const option = document.createElement('option');
+            option.value = locale;
+            option.textContent = localeLabel(locale);
+            els.outputLocale.appendChild(option);
+        });
+        if (Array.from(els.outputLocale.options).some(option => option.value === previous)) {
+            els.outputLocale.value = previous;
+        }
+        if (els.outputLocaleHelp) {
+            els.outputLocaleHelp.textContent = voice.type === 'openai'
+                ? 'Las voces S2S cambian de idioma automáticamente con la conversación.'
+                : locales.length
+                    ? 'Puedes dejar detección automática o forzar uno de los locales compatibles.'
+                    : 'Esta voz usa automáticamente su locale principal.';
+        }
+    }
+
+    function voiceMatchesPickerFilter(voice) {
+        switch (catalog.pickerFilter) {
+            // Geographic filters represent the persona's primary locale, not
+            // every output language that a multilingual voice can synthesize.
+            case 'es': return voice.lang?.startsWith('es-');
+            case 'es-ES': return voice.lang === 'es-ES';
+            case 'es-MX': return voice.lang === 'es-MX';
+            case 'en-US': return voice.lang === 'en-US';
+            case 'hd': return voice.quality === 'hd' || voice.quality === 'omni-hd';
+            case 'omni': return voice.quality === 'omni-hd';
+            case 'multi': return voice.multilingual || voice.quality === 'multilingual' || voice.lang === 'multi';
+            case 'realtime': return voice.type === 'openai';
+            default: return true;
+        }
+    }
+
+    function voiceMatchesSearch(voice) {
+        if (!catalog.pickerSearch) return true;
+        const text = [
+            voice.label, voice.id, voice.lang, voice.gender, voice.quality,
+            voice.groupName, voice.description, voice.ageGroup, voice.status,
+            friendlyLanguage(voice.lang), friendlyGender(voice.gender), friendlyAgeGroup(voice.ageGroup),
+            ...(voice.locales || []).map(localeLabel),
+        ].join(' ').toLocaleLowerCase('es-MX');
+        return text.includes(catalog.pickerSearch);
+    }
+
+    function renderVoiceGallery() {
+        if (!els.voiceGallery) return;
+        const voices = Array.from(catalog.voicesById.values())
+            .filter(voiceMatchesPickerFilter)
+            .filter(voiceMatchesSearch);
+        els.voiceGallery.replaceChildren();
+        if (els.voiceResultsCount) els.voiceResultsCount.textContent = `${voices.length} ${voices.length === 1 ? 'voz' : 'voces'}`;
+
+        if (!voices.length) {
+            const empty = document.createElement('div');
+            empty.className = 'vu-voice-empty';
+            empty.innerHTML = '<i class="bi bi-search"></i><strong>Sin resultados</strong><span>Prueba otro nombre o filtro.</span>';
+            els.voiceGallery.appendChild(empty);
+            return;
+        }
+
+        const fragment = document.createDocumentFragment();
+        voices.forEach(voice => {
+            const card = document.createElement('button');
+            card.type = 'button';
+            card.className = 'vu-voice-card';
+            card.dataset.voiceId = voice.id;
+            card.setAttribute('role', 'option');
+            card.setAttribute('aria-label', `Seleccionar voz ${voice.label}`);
+            card.innerHTML = '<span class="vu-voice-card-icon"></span><span class="vu-voice-card-copy"><span class="vu-voice-card-title"><strong></strong><span class="vu-voice-quality"></span></span><small></small><code></code></span><span class="vu-avatar-check"><i class="bi bi-check-lg"></i></span>';
+            card.querySelector('.vu-voice-card-icon').textContent = genderIcon(voice.gender);
+            card.querySelector('strong').textContent = voice.label;
+            card.querySelector('.vu-voice-quality').textContent = friendlyQuality(voice);
+            const age = friendlyAgeGroup(voice.ageGroup);
+            card.querySelector('small').textContent = `${friendlyLanguage(voice.lang)} · ${friendlyGender(voice.gender)}${age ? ` · ${age}` : ''}`;
+            if (voice.description) card.title = voice.description;
+            card.querySelector('code').textContent = voice.id;
+            card.addEventListener('click', () => selectVoiceFromPicker(voice.id));
+            fragment.appendChild(card);
+        });
+        els.voiceGallery.appendChild(fragment);
+        updateVoiceSummary();
+    }
+
+    function selectVoiceFromPicker(voiceId) {
+        els.voice.value = voiceId;
+        els.voice.dispatchEvent(new Event('change', { bubbles: true }));
+        els.voiceDialog?.close();
+        els.voicePickerOpen?.focus();
     }
 
     function populateStylesForSelectedVoice() {
@@ -261,7 +581,7 @@
         }
         if (photos.length) {
             const og = document.createElement('optgroup');
-            og.label = '🎭 Talking Heads (Preview · solo Live Avatar)';
+            og.label = '🎭 Talking Heads (Photo Avatar · Preview)';
             photos.forEach(c => {
                 const opt = document.createElement('option');
                 opt.value = c.id;
@@ -279,6 +599,7 @@
         }
         populateAvatarStyles();
         syncPhotoAvatarWarning();
+        window.VoiceUiAvatarPreview?.refresh();
     }
 
     function isSelectedAvatarPhoto() {
@@ -292,10 +613,6 @@
         const styleField = document.getElementById('vu-avatar-style-field');
         const isPhoto = isSelectedAvatarPhoto();
         if (styleField) styleField.style.display = isPhoto ? 'none' : '';
-        // Surface a one-time hint in the event log when the user picks a Talking Head here.
-        if (isPhoto && els.avatarEnabled && els.avatarEnabled.checked) {
-            logEvent('Talking Heads (foto avatar) aún no soportado por Voice Live SDK 1.0 — usa la página "Live Avatar" para previsualizarlos.', 'warn');
-        }
     }
 
     function populateAvatarStyles() {
@@ -313,6 +630,8 @@
             const m = Array.from(els.avatarStyle.options).find(o => o.value === catalog.avatar.defaultStyle);
             if (m) m.selected = true;
         }
+        window.VoiceUiAvatarPreview?.syncPose();
+        window.VoiceUiAvatarPreview?.sync();
     }
 
     async function createPromptSession() {
@@ -336,6 +655,7 @@
     async function buildWsUrl() {
         const scheme = location.protocol === 'https:' ? 'wss' : 'ws';
         const params = new URLSearchParams();
+        if (els.model?.value) params.set('model', els.model.value);
         if (els.voice.value) {
             params.set('voice', els.voice.value);
             const opt = els.voice.options[els.voice.selectedIndex];
@@ -343,6 +663,8 @@
             if (vt) params.set('voiceType', vt);
         }
         if (els.style && els.style.value) params.set('style', els.style.value);
+        if (els.outputLocale && els.outputLocale.value) params.set('outputLocale', els.outputLocale.value);
+        if (els.inputLanguage) params.set('inputLanguage', els.inputLanguage.value);
         // Keep the WebSocket URL small: register the editable prompt with the
         // backend first, then pass only a short promptId in the WS query string.
         const promptId = await createPromptSession();
@@ -359,12 +681,6 @@
     }
 
     async function connect() {
-        // Note: Talking Heads (photo avatars) aren't officially supported by
-        // Azure.AI.VoiceLive 1.0, but we let the user try anyway — the server
-        // will surface whatever response Voice Live gives us.
-        if (els.avatarEnabled && els.avatarEnabled.checked && isSelectedAvatarPhoto()) {
-            logEvent('Probando Talking Head en Voice Live (preview, no oficial). Si falla, el servicio devolverá un error.', 'warn');
-        }
         try {
             state.ws = new WebSocket(await buildWsUrl());
             state.ws.binaryType = 'arraybuffer';
@@ -414,7 +730,7 @@
             switch (msg.type) {
                 case 'ready':
                     setStatus('Conectado', 'connected');
-                    logEvent(`Listo · modelo=${msg.model} voz=${msg.voice}` + (msg.style ? ` estilo=${msg.style}` : ''), 'info');
+                    logEvent(`Listo · modelo=${msg.model} voz=${msg.voice} salida=${msg.outputLocale || 'automática'} entrada=${msg.inputLanguage || 'automática'}` + (msg.style ? ` estilo=${msg.style}` : ''), 'info');
                     if (msg.avatar && msg.avatar.enabled) {
                         state.avatarEnabledForSession = true;
                         if (els.stage) els.stage.classList.add('is-connected');
@@ -762,12 +1078,73 @@ registerProcessor('vl-pcm16-encoder', VlPcm16Encoder);
     els.sendText.addEventListener('click', sendText);
     els.textInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendText(); });
 
-    // Repopulate styles when the voice changes.
-    els.voice.addEventListener('change', populateStylesForSelectedVoice);
+    // Repopulate styles and metadata when the voice changes.
+    els.voice.addEventListener('change', () => {
+        populateStylesForSelectedVoice();
+        updateVoiceSummary();
+    });
+
+    els.voicePickerOpen?.addEventListener('click', () => {
+        catalog.pickerSearch = '';
+        if (els.voiceSearch) els.voiceSearch.value = '';
+        renderVoiceGallery();
+        els.voiceDialog?.showModal();
+        setTimeout(() => els.voiceSearch?.focus(), 0);
+    });
+    els.voiceDialogClose?.addEventListener('click', () => els.voiceDialog?.close());
+    els.voiceDialog?.addEventListener('click', event => {
+        if (event.target === els.voiceDialog) els.voiceDialog.close();
+    });
+    let voiceSearchTimer = null;
+    els.voiceSearch?.addEventListener('input', () => {
+        clearTimeout(voiceSearchTimer);
+        voiceSearchTimer = setTimeout(() => {
+            catalog.pickerSearch = els.voiceSearch.value.trim().toLocaleLowerCase('es-MX');
+            renderVoiceGallery();
+        }, 120);
+    });
+    els.voiceFilterBar?.addEventListener('click', event => {
+        const button = event.target.closest('button[data-filter]');
+        if (!button) return;
+        catalog.pickerFilter = button.dataset.filter;
+        els.voiceFilterBar.querySelectorAll('button[data-filter]').forEach(item => {
+            const active = item === button;
+            item.classList.toggle('is-active', active);
+            item.setAttribute('aria-pressed', active ? 'true' : 'false');
+        });
+        renderVoiceGallery();
+    });
+
+    if (els.voiceGender) {
+        els.voiceGender.addEventListener('click', e => {
+            const button = e.target.closest('button[data-gender]');
+            if (!button) return;
+            catalog.gender = button.dataset.gender;
+            els.voiceGender.querySelectorAll('button').forEach(item => {
+                const active = item === button;
+                item.classList.toggle('is-active', active);
+                item.setAttribute('aria-pressed', active ? 'true' : 'false');
+            });
+            renderVoiceOptions();
+            populateStylesForSelectedVoice();
+            updateVoiceSummary();
+        });
+    }
+
+    if (els.voiceLanguage) {
+        els.voiceLanguage.addEventListener('change', () => {
+            catalog.language = els.voiceLanguage.value;
+            renderVoiceOptions();
+            populateStylesForSelectedVoice();
+            updateVoiceSummary();
+            updateVoiceLanguageHelp();
+        });
+    }
 
     // Avatar toggle: reveal character/style fields.
     els.avatarEnabled.addEventListener('change', () => {
-        els.avatarFields.style.display = els.avatarEnabled.checked ? 'grid' : 'none';
+        els.avatarFields.style.display = els.avatarEnabled.checked ? '' : 'none';
+        if (els.avatarEnabled.checked) window.VoiceUiAvatarPreview?.sync();
     });
 
     // Update avatar style choices when character changes.

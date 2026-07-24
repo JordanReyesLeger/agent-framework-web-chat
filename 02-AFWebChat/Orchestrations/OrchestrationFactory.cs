@@ -211,6 +211,23 @@ public class OrchestrationFactory
                         lastExecutorId = responseUpdate.ExecutorId;
                         yield return StreamEventService.AgentStart(responseUpdate.ExecutorId);
                         yield return StreamEventService.WorkflowStep(responseUpdate.ExecutorId, "running");
+                        // Feedback inmediato: cada agente muestra "Pensando…" en cuanto toma el turno,
+                        // sin esperar al primer token de razonamiento del modelo.
+                        yield return StreamEventService.AgentThinking(responseUpdate.ExecutorId);
+                    }
+
+                    // Razonamiento ("thinking"): solo lo emiten modelos de razonamiento (p. ej. gpt-5.1).
+                    // Si el modelo no razona, Contents no trae TextReasoningContent y no se emite nada.
+                    if (responseUpdate.Update is not null)
+                    {
+                        foreach (var content in responseUpdate.Update.Contents)
+                        {
+                            if (content is Microsoft.Extensions.AI.TextReasoningContent reasoning
+                                && !string.IsNullOrEmpty(reasoning.Text))
+                            {
+                                yield return StreamEventService.AgentReasoning(responseUpdate.ExecutorId, reasoning.Text);
+                            }
+                        }
                     }
 
                     // Stream the agent token

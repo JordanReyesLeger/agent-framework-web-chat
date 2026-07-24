@@ -39,6 +39,10 @@ resource "azurerm_cosmosdb_sql_container" "sessions" {
   database_name       = azurerm_cosmosdb_sql_database.main[0].name
   partition_key_paths = ["/sessionId"]
 
+  autoscale_settings {
+    max_throughput = var.cosmos_sessions_autoscale_max_throughput
+  }
+
   indexing_policy {
     indexing_mode = "consistent"
 
