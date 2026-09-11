@@ -145,7 +145,9 @@ public class ChatController : ControllerBase
             _reasoning.Summary = wanted;
         }
 
-        _logger.LogInformation("Nivel de razonamiento global actualizado: effort={Effort}, summary={Summary}", _reasoning.Effort, _reasoning.Summary);
+        var safeEffortForLog = _reasoning.Effort.Replace("\r", "").Replace("\n", "");
+        var safeSummaryForLog = _reasoning.Summary.Replace("\r", "").Replace("\n", "");
+        _logger.LogInformation("Nivel de razonamiento global actualizado: effort={Effort}, summary={Summary}", safeEffortForLog, safeSummaryForLog);
         return Ok(new { effort = _reasoning.Effort, summary = _reasoning.Summary });
     }
 
