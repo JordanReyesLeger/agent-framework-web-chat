@@ -79,16 +79,26 @@ public class BlobStorageService : IBlobStorageService
 
             await blobClient.UploadAsync(fileStream, blobUploadOptions, cancellationToken);
 
+            var safeFileNameForLog = SanitizeForLog(fileName);
+            var safeMetadataForLog = string.Join(", ", metadata.Select(m => $"{SanitizeForLog(m.Key)}={SanitizeForLog(m.Value)}"));
+
             _logger.LogInformation("Document {FileName} uploaded successfully with metadata: {Metadata}",
-                fileName, string.Join(", ", metadata.Select(m => $"{m.Key}={m.Value}")));
+                safeFileNameForLog, safeMetadataForLog);
 
             return blobClient.Uri.ToString();
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error uploading document {FileName}", fileName);
+            _logger.LogError(ex, "Error uploading document {FileName}", SanitizeForLog(fileName));
             throw;
         }
+    }
+
+    private static string SanitizeForLog(string? value)
+    {
+        return string.IsNullOrEmpty(value)
+            ? string.Empty
+            : value.Replace("\r", "").Replace("\n", "");
     }
 
     public string GetClientId() => _clientId;
