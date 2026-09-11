@@ -106,7 +106,11 @@ public class ChatController : ControllerBase
     [HttpPost("approve")]
     public ActionResult ApproveToolCall([FromBody] ApprovalResponse response)
     {
-        _logger.LogInformation("Tool approval: {RequestId} = {Approved}", response.RequestId, response.Approved);
+        var requestIdForLog = (response.RequestId ?? string.Empty)
+            .Replace("\r", string.Empty)
+            .Replace("\n", string.Empty);
+
+        _logger.LogInformation("Tool approval: {RequestId} = {Approved}", requestIdForLog, response.Approved);
         // In a full implementation, this would signal the pending approval
         return Ok();
     }
