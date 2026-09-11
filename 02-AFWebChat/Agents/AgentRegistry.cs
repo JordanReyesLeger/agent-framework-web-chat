@@ -54,7 +54,11 @@ public class AgentRegistry
     {
         _agents.Remove(name);
         var removed = _definitions.Remove(name);
-        if (removed) _logger.LogInformation("Unregistered agent: {AgentName}", name);
+        if (removed)
+        {
+            var safeNameForLog = name.Replace("\r", string.Empty).Replace("\n", string.Empty);
+            _logger.LogInformation("Unregistered agent: {AgentName}", safeNameForLog);
+        }
         return removed;
     }
 }
