@@ -394,9 +394,13 @@ public class VoiceLiveController : ControllerBase
                 && (ap == "1" || string.Equals(ap, "true", StringComparison.OrdinalIgnoreCase));
             var avatarStyle = avatarPhoto ? null : NormalizeAvatarStyle(avatarCharacter, requestedAvatarStyle);
 
+            var inputLanguageForLog = string.IsNullOrEmpty(inputLanguage)
+                ? "auto"
+                : inputLanguage.ReplaceLineEndings(" ");
+
             _logger.LogInformation(
                 "VoiceLive: starting session model={Model} voice={Voice} type={Type} style={Style} outputLocale={OutputLocale} inputLanguage={InputLanguage} avatar={Avatar} promptLength={PromptLength} promptPreview={PromptPreview}",
-                model, voiceName, voiceType ?? "auto", style ?? "-", outputLocale ?? "auto", string.IsNullOrEmpty(inputLanguage) ? "auto" : inputLanguage, avatarEnabled,
+                model, voiceName, voiceType ?? "auto", style ?? "-", outputLocale ?? "auto", inputLanguageForLog, avatarEnabled,
                 instructions.Length, instructions[..Math.Min(instructions.Length, 80)].ReplaceLineEndings(" "));
 
             try
