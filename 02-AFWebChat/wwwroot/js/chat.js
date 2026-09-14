@@ -1088,6 +1088,7 @@ async function sendMessage(message) {
     }
 
     // Finalize last bubble
+    await esperarRevelado(stream);
     finalizeStreamBubble(stream);
 
     // Save all agent responses to history
@@ -1106,6 +1107,7 @@ async function sendMessage(message) {
 }
 
 function finalizeStreamBubble(stream) {
+    detenerRevelado(stream);
     finalizeReasoning(stream);
     if (stream.contentEl) {
         stream.contentEl.classList.remove('af-streaming');
@@ -1114,6 +1116,53 @@ function finalizeStreamBubble(stream) {
             stream.responses.push({ agentName: stream.agentName, text: stream.fullText });
         }
     }
+}
+
+// ---- Revelado progresivo para agentes A2A ----
+// El protocolo A2A entrega la respuesta completa en un solo evento (un AgentMessage es
+// atómico), así que el texto llegaría de golpe tras varios segundos en blanco. Aquí se
+// revela por palabras para igualar la experiencia de los agentes locales. El dato ya
+// está completo en el cliente: esto es presentación, no streaming real.
+function esAgenteA2A(nombreAgente) {
+    if (!nombreAgente) return false;
+    return state.agents.find(a => a.name === nombreAgente)?.category === 'A2A';
+}
+
+function detenerRevelado(stream) {
+    if (!stream?.revelado) return;
+    const r = stream.revelado;
+    clearInterval(r.timer);
+    stream.fullText = r.textoCompleto;
+    stream.revelado = null;
+    r.resolver();
+}
+
+// El cierre del stream SSE ocurre justo tras el único token, así que hay que esperar
+// a que el revelado termine antes de finalizar la burbuja o se cortaría de inmediato.
+function esperarRevelado(stream) {
+    return stream?.revelado ? stream.revelado.promesa : Promise.resolve();
+}
+
+function revelarProgresivamente(stream, texto) {
+    detenerRevelado(stream);
+    const base = stream.fullText || '';
+    const trozos = texto.match(/\S+\s*/g) || [texto];
+    // ~1.2 s en total sin importar el largo, con un mínimo legible por fotograma.
+    const porTick = Math.max(1, Math.ceil(trozos.length / 40));
+    let i = 0;
+
+    let resolver;
+    const promesa = new Promise(res => { resolver = res; });
+    stream.revelado = { textoCompleto: base + texto, timer: null, promesa, resolver };
+    stream.revelado.timer = setInterval(() => {
+        i += porTick;
+        stream.fullText = base + trozos.slice(0, i).join('');
+        if (stream.contentEl) {
+            throttledRenderStreaming(stream.contentEl, stream.fullText);
+        }
+        scrollToBottom();
+        if (i >= trozos.length) detenerRevelado(stream);
+    }, 30);
 }
 
 // ---- Reasoning ("thinking") block — estilo GitHub Copilot ----
@@ -1213,9 +1262,13 @@ function handleStreamEvent(evt, stream) {
         case 'agent-token':
             finalizeReasoning(stream); // el razonamiento terminó al empezar la respuesta → colapsa el bloque
             if (evt.data?.text) {
-                stream.fullText += evt.data.text;
-                if (stream.contentEl) {
-                    throttledRenderStreaming(stream.contentEl, stream.fullText);
+                if (esAgenteA2A(stream.agentName) && evt.data.text.length > 200) {
+                    revelarProgresivamente(stream, evt.data.text);
+                } else {
+                    stream.fullText += evt.data.text;
+                    if (stream.contentEl) {
+                        throttledRenderStreaming(stream.contentEl, stream.fullText);
+                    }
                 }
             }
             scrollToBottom();

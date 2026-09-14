@@ -170,11 +170,14 @@ public class OrchestrationFactory
         var triageAgent = agents[0];
         var specialists = agents.Skip(1).ToArray();
 
+        // CreateHandoffBuilderWith está marcado como experimental (MAAIW001) desde Workflows 1.1.0.
+#pragma warning disable MAAIW001
         var workflow = AgentWorkflowBuilder
             .CreateHandoffBuilderWith(triageAgent)
             .WithHandoffs(triageAgent, specialists)
             .EmitAgentResponseUpdateEvents(true)
             .Build();
+#pragma warning restore MAAIW001
 
         var messages = new List<ChatMessage> { new(ChatRole.User, request.Message) };
 

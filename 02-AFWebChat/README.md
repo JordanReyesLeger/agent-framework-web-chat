@@ -297,6 +297,14 @@ ASP.NET Core carga ambos automáticamente y `Development.json` sobreescribe los 
 |---|---|---|---|
 | **McpTools** | 🔌 | Descubre y usa herramientas de servidores MCP externos dinámicamente | Configurable (GitHub, etc.) |
 
+### A2A — Agentes remotos (Agent2Agent)
+
+Agentes que **no corren en este proceso**: viven en otro servicio, framework o lenguaje y se consumen vía el protocolo A2A. Se declaran en `A2A:RemoteAgents` y se registran solos al arrancar.
+
+| Agente | Icono | Descripción | Conexión |
+|---|---|---|---|
+| **A2A-Demo** | 🛰️ | Demo del protocolo: AF-WebChat como cliente A2A contra su propio endpoint publicado | `A2A:RemoteAgents` |
+
 ### Approval — Con aprobación humana
 
 | Agente | Icono | Descripción | Patrón |
@@ -482,6 +490,54 @@ Agentes versionados publicados como servicio en Azure AI Foundry con herramienta
 - **FoundrySimpleBot** — Bot básico declarativo en Foundry
 - **FoundryOrchestrator** — Agente versionado con herramienta OpenAPI que llama de vuelta al API de AF-WebChat para delegar trabajo a agentes especializados
 
+### Canal 4: Protocolo A2A (Agent2Agent)
+
+[A2A](https://a2a-protocol.org/latest/) es el protocolo abierto para que agentes de distintos frameworks, lenguajes y nubes se comuniquen entre sí. AF-WebChat lo implementa en **las dos direcciones**.
+
+> 📖 Guía completa: [docs/PROTOCOLO_A2A.md](docs/PROTOCOLO_A2A.md) — arquitectura, diagramas de flujo, configuración, sesiones, demo y troubleshooting.
+
+**Servidor — publica tus agentes.** Cada agente listado en `A2A:ExposedAgents` queda expuesto en `{BasePath}/{Agente}` y cualquier cliente A2A (Python, Go, LangGraph, CrewAI, otro Agent Framework) puede invocarlo.
+
+**Cliente — consume agentes remotos.** Cada entrada de `A2A:RemoteAgents` se registra en el catálogo bajo la categoría `A2A` y se comporta como un agente local: aparece en el chat, soporta streaming, sesiones, workflows y orquestaciones.
+
+**Configuración:**
+```json
+{
+  "A2A": {
+    "Enabled": true,
+    "BasePath": "/a2a",
+    "PublicBaseUrl": "http://localhost:5000",
+    "RemoteTimeoutSeconds": 300,
+    "ExposedAgents": [ "GeneralAssistant", "Summarizer", "Translator" ],
+    "RemoteAgents": [
+      {
+        "Name": "A2A-Demo",
+        "Url": "http://localhost:5000/a2a/GeneralAssistant",
+        "Description": "Agente remoto vía A2A",
+        "Icon": "🛰️",
+        "Color": "#7b61ff"
+      }
+    ]
+  }
+}
+```
+
+> El `A2A-Demo` que trae `appsettings.Development.json` apunta al **propio** endpoint A2A de la app: sirve para demostrar el protocolo completo (servidor + cliente) sin depender de un agente externo. Para una demo real, apunta `Url` al endpoint del agente del cliente o del partner.
+
+**Probarlo:**
+```bash
+# Agent card
+curl http://localhost:5000/a2a/GeneralAssistant/v1/card
+
+# Enviar un mensaje (binding HTTP+JSON). Reusar contextId mantiene la conversación.
+curl -X POST http://localhost:5000/a2a/GeneralAssistant/v1/message:send \
+  -H "Content-Type: application/json" \
+  -d '{"message":{"kind":"message","role":"user","messageId":null,"contextId":"demo-1",
+       "parts":[{"kind":"text","text":"Hola, ¿qué puedes hacer?"}]}}'
+```
+
+Las conversaciones multi-turno se conservan por `contextId` gracias a `InMemoryAgentSessionStore`. Para producción multi-instancia sustitúyelo por un store distribuido (Redis/Cosmos).
+
 ---
 
 ## API REST
@@ -518,6 +574,7 @@ Agentes versionados publicados como servicio en Azure AI Foundry con herramienta
 | `/api/agent` | POST | Crear agente custom en runtime |
 | `/api/agent/{name}` | DELETE | Eliminar un agente custom |
 | `/api/agent/tools` | GET | Listar tool sets disponibles |
+| `/api/a2a` | GET | Directorio A2A: agentes publicados y agentes remotos conectados |
 
 ### Endpoints de Orquestación
 

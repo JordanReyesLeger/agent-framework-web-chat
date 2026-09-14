@@ -1,4 +1,5 @@
 using AFWebChat.Agents;
+using AFWebChat.Agents.A2A;
 using AFWebChat.Agents.Basic;
 using AFWebChat.Agents.Composite;
 using AFWebChat.Agents.ContextAware;
@@ -95,8 +96,22 @@ builder.Services.AddSingleton<AzureSearchPlugin>(sp =>
 // Register context providers
 builder.Services.AddSingleton<AzureSearchRAGProvider>();
 
+// ---- A2A (Agent2Agent) protocol ----
+var a2aSettings = A2AIntegration.ReadSettings(builder.Configuration);
+builder.Services.AddSingleton(a2aSettings);
+builder.Services.AddSingleton<A2ADirectory>();
+
+// El hosting A2A resuelve el store de sesiones por clave = nombre del agente. Con AnyKey cada
+// agente publicado obtiene su propio store y las conversaciones A2A conservan el historial.
+builder.Services.AddKeyedSingleton<Microsoft.Agents.AI.Hosting.AgentSessionStore, InMemoryAgentSessionStore>(
+    KeyedService.AnyKey);
+
 // ---- Bot Framework (Teams / WebChat channel) ----
 builder.Services.AddHttpClient();
+
+// Los agentes A2A remotos pueden razonar durante minutos; el timeout por defecto (100s) no alcanza.
+builder.Services.AddHttpClient(A2ARemoteAgent.HttpClientName,
+    client => client.Timeout = TimeSpan.FromSeconds(a2aSettings.RemoteTimeoutSeconds));
 builder.AddAgentApplicationOptions();
 builder.AddAgent<TeamsBotAgent>();
 builder.Services.AddSingleton<IStorage, MemoryStorage>();
@@ -166,6 +181,12 @@ registry.Register(EvaluadorDeUrgenciaAgent.CreateDefinition());
 registry.Register(BuscadorDeCorreosAgent.CreateDefinition());
 registry.Register(RedactorDeRespuestaAgent.CreateDefinition());
 
+// ── A2A remote agents (otro framework/lenguaje hablando el protocolo A2A) ──
+var a2aDirectory = app.Services.GetRequiredService<A2ADirectory>();
+var a2aLogger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("AFWebChat.A2A");
+a2aDirectory.Settings = a2aSettings;
+a2aDirectory.RemoteAgents = A2AIntegration.RegisterRemoteAgents(registry, a2aSettings, a2aLogger);
+
 // Warm up Azure credential and OpenAI client at startup
 var chatFactory = app.Services.GetRequiredService<ChatClientFactory>();
 _ = Task.Run(async () => await chatFactory.WarmUpAsync());
@@ -186,6 +207,9 @@ app.UseAuthorization();
 
 // Bot Framework endpoint: /api/messages
 app.MapAgentApplicationEndpoints(requireAuth: !app.Environment.IsDevelopment());
+
+// A2A endpoints: publica los agentes locales configurados en /a2a/{Agente}
+a2aDirectory.ExposedAgents = A2AIntegration.MapExposedAgents(app, a2aSettings);
 
 app.MapControllerRoute(
     name: "default",
