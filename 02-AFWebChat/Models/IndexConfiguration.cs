@@ -5,7 +5,7 @@ public class IndexConfiguration
     public required string IndexName { get; set; }
     public required string SemanticConfigName { get; set; }
     public required string VectorProfileName { get; set; }
-    public int VectorDimensions { get; set; } = 1024;
+    public int VectorDimensions { get; set; } = 3072;
     public List<IndexFieldDefinition> Fields { get; set; } = new();
 }
 

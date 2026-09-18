@@ -137,7 +137,7 @@ public class DocumentController : ControllerBase
                 IndexName = _indexName,
                 SemanticConfigName = $"{_indexName}-semantic-config",
                 VectorProfileName = $"{_indexName}-vector-profile",
-                VectorDimensions = 1024,
+                VectorDimensions = 3072,
                 Fields = new List<IndexFieldDefinition>
                 {
                     new() { Name = "Id", Type = "string", IsKey = true, IsFilterable = true },

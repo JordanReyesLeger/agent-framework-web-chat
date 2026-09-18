@@ -1,8 +1,8 @@
 # AF-WebChat
 
-Aplicación web multi-agente construida con **[Microsoft Agent Framework SDK](https://github.com/microsoft/agents)** y **Azure OpenAI**. Permite crear, orquestar y publicar agentes de IA a través de una interfaz web interactiva con streaming en tiempo real, Microsoft Teams con Adaptive Cards, y Azure AI Foundry como servicio versionado.
+Aplicación web multi-agente construida con **[Microsoft Agent Framework SDK](https://github.com/microsoft/agents)** y **Microsoft Foundry**. Permite crear, orquestar y publicar agentes de IA mediante una interfaz web con streaming, Microsoft Teams y un proyecto Foundry con autenticación administrada.
 
-![.NET 9](https://img.shields.io/badge/.NET-9.0-512BD4) ![Azure OpenAI](https://img.shields.io/badge/Azure%20OpenAI-GPT--4o-0078D4) ![Bot Framework](https://img.shields.io/badge/Bot%20Framework-Teams-6264A7) ![License](https://img.shields.io/badge/License-MIT-green)
+![.NET 9](https://img.shields.io/badge/.NET-9.0-512BD4) ![Microsoft Foundry](https://img.shields.io/badge/Microsoft%20Foundry-GPT--5.4-0078D4) ![Bot Framework](https://img.shields.io/badge/Bot%20Framework-Teams-6264A7) ![License](https://img.shields.io/badge/License-MIT-green)
 
 ---
 
@@ -93,8 +93,8 @@ La aplicación sigue una arquitectura por capas donde múltiples canales de entr
 | Componente | Versión | Notas |
 |---|---|---|
 | **.NET SDK** | 9.0+ | [Descargar](https://dotnet.microsoft.com/download/dotnet/9.0) |
-| **Azure OpenAI** | — | Recurso con deployment `gpt-4o` |
-| **Autenticación** | — | API Key o `DefaultAzureCredential` (`az login`) |
+| **Microsoft Foundry** | — | Cuenta `AIServices`, proyecto y deployment `gpt-5.4` |
+| **Autenticación** | — | `DefaultAzureCredential` (`az login` local, UAMI en App Service) |
 
 ### Opcionales (para funcionalidades avanzadas)
 
@@ -122,22 +122,22 @@ cd SE-AgentFramework/02-AFWebChat
 dotnet restore
 ```
 
-### 2. Configurar secretos
+### 2. Configurar endpoints locales
 
 Crea `appsettings.Development.json` (ya está en `.gitignore` — nunca se sube al repo):
 
 ```json
 {
   "AzureOpenAI": {
-    "Endpoint": "https://{tu-recurso}.openai.azure.com/",
-    "ApiKey": "tu-api-key-aqui",
-    "ChatDeployment": "gpt-4o",
+    "Endpoint": "https://{tu-recurso}.cognitiveservices.azure.com/",
+    "EndpointProject": "https://{tu-recurso}.services.ai.azure.com/api/projects/{tu-proyecto}",
+    "ChatDeployment": "gpt-5.4",
     "EmbeddingDeployment": "text-embedding-3-large"
   }
 }
 ```
 
-> **Sin API Key:** Si omites `ApiKey`, se usará `DefaultAzureCredential`. Ejecuta `az login` primero y asegúrate de tener el rol **Cognitive Services OpenAI User** en el recurso.
+Ejecuta `az login` y asigna a tu identidad **Cognitive Services OpenAI User** en la cuenta y **Foundry User** en el proyecto.
 
 ### 3. Ejecutar
 
@@ -158,7 +158,7 @@ El proyecto usa el patrón estándar de ASP.NET Core para separar configuración
 | Archivo | Se sube al repo | Contenido |
 |---|---|---|
 | `appsettings.json` | ✅ Sí | Estructura completa con valores vacíos/por defecto |
-| `appsettings.Development.json` | ❌ No | Tus valores reales (API keys, connection strings, secretos) |
+| `appsettings.Development.json` | ❌ No | Endpoints locales; no guardes claves de Foundry, Search o Storage |
 
 ASP.NET Core carga ambos automáticamente y `Development.json` sobreescribe los valores de `appsettings.json`. No necesitas código adicional.
 
@@ -169,8 +169,7 @@ ASP.NET Core carga ambos automáticamente y `Development.json` sobreescribe los 
   "AzureOpenAI": {
     "Endpoint": "https://{recurso}.openai.azure.com/",
     "EndpointProject": "https://{recurso}.services.ai.azure.com/api/projects/{proyecto}",
-    "ApiKey": "",
-    "ChatDeployment": "gpt-4o",
+    "ChatDeployment": "gpt-5.4",
     "EmbeddingDeployment": "text-embedding-3-large"
   },
   "DevTunnel": {
@@ -178,7 +177,6 @@ ASP.NET Core carga ambos automáticamente y `Development.json` sobreescribe los 
   },
   "AzureSearch": {
     "Endpoint": "https://{recurso}.search.windows.net",
-    "ApiKey": "",
     "IndexName": "skill",
     "LegalIndexName": "legal-documents",
     "SkillIndexName": "skill",
@@ -190,15 +188,13 @@ ASP.NET Core carga ambos automáticamente y `Development.json` sobreescribe los 
     "INEGICenso": "..."
   },
   "BlobStorage": {
-    "ConnectionString": "DefaultEndpointsProtocol=https;AccountName=...;AccountKey=...;EndpointSuffix=core.windows.net",
     "ContainerName": "documents"
   },
   "AzureStorage": {
     "AccountName": "",
     "ResourceGroup": "",
     "ContainerName": "skill-documents",
-    "UseDefaultCredential": true,
-    "ConnectionString": ""
+    "UseDefaultCredential": true
   },
   "Azure": {
     "SubscriptionId": "",
@@ -283,7 +279,7 @@ ASP.NET Core carga ambos automáticamente y `Development.json` sobreescribe los 
 
 | Agente | Icono | Descripción | Capacidades |
 |---|---|---|---|
-| **Vision** | 👁️ | Analiza y describe imágenes usando GPT-4o vision | Imágenes vía URL o base64 |
+| **Vision** | 👁️ | Analiza y describe imágenes usando GPT-5.4 | Imágenes vía URL o base64 |
 
 ### Composite — Multi-paso
 
@@ -830,12 +826,12 @@ La apariencia de la app se controla completamente desde `appsettings.json` sin m
 # Desde la raíz del repositorio
 docker build -t af-webchat -f 02-AFWebChat/Dockerfile .
 docker run -p 8080:8080 \
-  -e AzureOpenAI__Endpoint="https://tu-recurso.openai.azure.com/" \
-  -e AzureOpenAI__ApiKey="tu-api-key" \
+  -e AzureOpenAI__Endpoint="https://tu-recurso.cognitiveservices.azure.com/" \
+  -e AzureOpenAI__EndpointProject="https://tu-recurso.services.ai.azure.com/api/projects/tu-proyecto" \
   af-webchat
 ```
 
-> En Docker, pasa los secretos como variables de entorno usando `__` como separador de secciones (convención de ASP.NET Core).
+> En Azure, App Service usa la UAMI configurada en `AZURE_CLIENT_ID`. Para contenedores locales, proporciona una credencial de desarrollo de Azure Identity sin guardar secretos en la imagen.
 
 ---
 
@@ -914,13 +910,13 @@ Factory = sp =>
 | **Microsoft 365 Agents SDK** | 1.4.83 | Bot Framework hosting y autenticación |
 | **Microsoft.Agents.AI** | 1.0.0-rc5 | Runtime de agentes IA (`AIAgent`, `AgentSession`) |
 | **Microsoft.Agents.AI.Workflows** | 1.0.0-rc5 | `GroupChatManager`, `WorkflowBuilder`, `AgentWorkflowBuilder` |
-| **Microsoft.Agents.AI.Foundry** | 1.1.0 | Integración Azure AI Foundry (`AsAIAgent(agentRecord)`) |
+| **Microsoft.Agents.AI.Foundry** | 1.5.0 | Integración Microsoft Foundry (`AsAIAgent(agentRecord)`) |
 | **Azure.AI.OpenAI** | 2.9.0 | SDK de Azure OpenAI |
-| **Azure.AI.Projects** | 2.0.0 | Foundry Agent Service (`AgentAdministrationClient`) |
-| **Azure.Search.Documents** | 11.8.0 | Azure AI Search para RAG |
+| **Azure.AI.Projects** | 2.0.1 | Foundry Agent Service (`AgentAdministrationClient`) |
+| **Azure.Search.Documents** | 12.0.0 | Azure AI Search para RAG keyless |
 | **Azure.AI.DocumentIntelligence** | 1.0.0 | OCR y extracción de documentos |
 | **Azure.Storage.Blobs** | 12.26.0 | Almacenamiento de documentos |
-| **Azure.Identity** | 1.20.0 | `DefaultAzureCredential` |
+| **Azure.Identity** | 1.21.0 | `DefaultAzureCredential` |
 | **ModelContextProtocol** | 1.0.0 | MCP client para tools externos |
 | **AdaptiveCards** | 3.1.0 | UI rica en Teams |
 | **Microsoft.Data.SqlClient** | 6.0.1 | Consultas a Azure SQL |

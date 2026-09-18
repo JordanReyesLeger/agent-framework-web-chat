@@ -32,6 +32,21 @@ output "foundry_account_name" {
   value       = azurerm_cognitive_account.foundry.name
 }
 
+output "foundry_project_name" {
+  description = "Microsoft Foundry project name"
+  value       = azurerm_cognitive_account_project.foundry.name
+}
+
+output "foundry_project_id" {
+  description = "Microsoft Foundry project resource ID"
+  value       = azurerm_cognitive_account_project.foundry.id
+}
+
+output "foundry_project_endpoint" {
+  description = "Microsoft Foundry project endpoint"
+  value       = local.foundry_project_endpoint
+}
+
 output "storage_account_name" {
   description = "Storage account name"
   value       = azurerm_storage_account.main.name
@@ -70,13 +85,13 @@ output "speech_service_region" {
 }
 
 output "voicelive_endpoint" {
-  description = "Voice Live API endpoint for the dedicated Azure AI Foundry account"
-  value       = var.enable_voicelive ? "https://${azurerm_cognitive_account.voicelive[0].name}.services.ai.azure.com/" : null
+  description = "Voice Live API endpoint (served from the single Foundry account)"
+  value       = var.enable_voicelive ? "https://${azurerm_cognitive_account.foundry.name}.services.ai.azure.com/" : null
 }
 
 output "voicelive_cognitive_endpoint" {
-  description = "Generic Cognitive Services endpoint for the VoiceLive account"
-  value       = var.enable_voicelive ? azurerm_cognitive_account.voicelive[0].endpoint : null
+  description = "Generic Cognitive Services endpoint used for VoiceLive"
+  value       = var.enable_voicelive ? azurerm_cognitive_account.foundry.endpoint : null
 }
 
 output "voicelive_model_deployments" {
@@ -112,6 +127,31 @@ output "AZURE_LOCATION" {
 output "AZURE_TENANT_ID" {
   description = "Tenant ID for azd"
   value       = data.azurerm_client_config.current.tenant_id
+}
+
+output "AZURE_SUBSCRIPTION_ID" {
+  description = "Azure subscription ID for azd"
+  value       = var.subscription_id
+}
+
+output "AZURE_RESOURCE_GROUP" {
+  description = "Azure resource group for azd"
+  value       = azurerm_resource_group.main.name
+}
+
+output "AZURE_AI_ACCOUNT_NAME" {
+  description = "Microsoft Foundry account name for azd"
+  value       = azurerm_cognitive_account.foundry.name
+}
+
+output "AZURE_AI_PROJECT_NAME" {
+  description = "Microsoft Foundry project name for azd"
+  value       = azurerm_cognitive_account_project.foundry.name
+}
+
+output "AZURE_AI_PROJECT_ENDPOINT" {
+  description = "Microsoft Foundry project endpoint for azd"
+  value       = local.foundry_project_endpoint
 }
 
 output "SERVICE_WEB_NAME" {

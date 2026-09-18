@@ -50,7 +50,7 @@ Responde en español a menos que el usuario escriba en otro idioma.";
                 var config = sp.GetRequiredService<IConfiguration>();
                 var logger = sp.GetRequiredService<ILogger<AIAgent>>();
                 var endpointProject = config["AzureOpenAI:EndpointProject"];
-                var chatDeployment = config["AzureOpenAI:ChatDeployment"] ?? "gpt-4o";
+                var chatDeployment = config["AzureOpenAI:ChatDeployment"] ?? "gpt-5.4";
                 var tunnelUrl = config["DevTunnel:Url"] ?? "https://localhost:5001";
 
                 if (string.IsNullOrEmpty(endpointProject) || !endpointProject.Contains("api/projects"))

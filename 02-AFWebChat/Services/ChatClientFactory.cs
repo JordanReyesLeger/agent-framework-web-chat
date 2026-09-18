@@ -89,7 +89,7 @@ public class ChatClientFactory
         IChatClient client = UseResponsesApi
             ? new ReasoningChatClient(
                 _azureClient.Value.GetResponsesClient().AsIChatClient(
-                    _config["AzureOpenAI:ChatDeployment"] ?? "gpt-4o"),
+                    _config["AzureOpenAI:ChatDeployment"] ?? "gpt-5.4"),
                 ResponseReasoningEffortLevel.Low,
                 ResponseReasoningSummaryVerbosity.Auto)
             : CreateChatCompletionsClient();
@@ -108,7 +108,7 @@ public class ChatClientFactory
 
     public ChatClient CreateAzureOpenAIChatClient(string? deployment = null)
     {
-        deployment ??= _config["AzureOpenAI:ChatDeployment"] ?? "gpt-4o";
+        deployment ??= _config["AzureOpenAI:ChatDeployment"] ?? "gpt-5.4";
         _logger.LogInformation("Created Azure OpenAI ChatClient for deployment: {Deployment}", deployment);
         return _azureClient.Value.GetChatClient(deployment);
     }
@@ -153,7 +153,7 @@ public class ChatClientFactory
     /// </summary>
     public IChatClient CreateReasoningChatClient(string? deployment = null)
     {
-        deployment ??= _config["AzureOpenAI:ChatDeployment"] ?? "gpt-4o";
+        deployment ??= _config["AzureOpenAI:ChatDeployment"] ?? "gpt-5.4";
 
         _logger.LogInformation(
             "Created Azure OpenAI ResponsesClient (reasoning) for deployment: {Deployment} (effort={Effort}, summary={Summary}, global)",

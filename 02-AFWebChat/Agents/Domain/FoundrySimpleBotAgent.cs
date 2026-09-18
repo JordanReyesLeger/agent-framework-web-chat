@@ -51,7 +51,7 @@ Comportamientos clave:
             var config = sp.GetRequiredService<IConfiguration>();
             var logger = sp.GetRequiredService<ILogger<AIAgent>>();
             var endpointProject = config["AzureOpenAI:EndpointProject"];
-            var chatDeployment = config["AzureOpenAI:ChatDeployment"] ?? "gpt-4o";
+            var chatDeployment = config["AzureOpenAI:ChatDeployment"] ?? "gpt-5.4";
 
             if (string.IsNullOrEmpty(endpointProject) || !endpointProject.Contains("api/projects"))
                 throw new InvalidOperationException(

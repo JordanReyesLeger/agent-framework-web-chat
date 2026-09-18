@@ -1,6 +1,6 @@
 # SE-AgentFramework
 
-**Plataforma de referencia para construir sistemas multi-agente con [Microsoft Agent Framework SDK](https://github.com/microsoft/agents) y Azure OpenAI.** Demuestra patrones de orquestación, workflows, integración con Microsoft Teams, Model Context Protocol (MCP), Azure AI Foundry, y más — todo en una solución .NET 9.
+**Plataforma de referencia para construir sistemas multi-agente con [Microsoft Agent Framework SDK](https://github.com/microsoft/agents) y Microsoft Foundry.** Demuestra patrones de orquestación, workflows, integración con Microsoft Teams, Model Context Protocol (MCP), Foundry Projects y RAG — todo en una solución .NET 9.
 
 ---
 
@@ -188,7 +188,7 @@ AgentOrchestrationService
 | Servicio | SKU / Modelo | Propósito en la solución | Componentes que lo usan |
 |---|---|---|---|
 | **Azure App Service** | B1+ / P1v3 (producción) | Hospeda la aplicación web ASP.NET Core. Es el recurso principal de cómputo donde vive la solución | Toda la aplicación (AF-WebChat) |
-| **Azure OpenAI** | `gpt-4o`, `text-embedding-3-large` | Motor de inferencia central para todos los agentes. Genera respuestas, ejecuta function calling, genera embeddings para RAG | `ChatClientFactory`, todos los agentes |
+| **Microsoft Foundry** | Proyecto + `gpt-5.4` + `text-embedding-3-large` | Motor de inferencia, Responses API, agentes versionados y embeddings para RAG | `ChatClientFactory`, agentes Foundry y RAG |
 | **Microsoft Entra ID** | — | Autenticación y autorización. Soporta `DefaultAzureCredential` para acceso sin API keys | `Azure.Identity`, Bot Framework, todos los servicios Azure |
 
 ### Servicios opcionales (habilitan funcionalidades avanzadas)
@@ -197,14 +197,14 @@ AgentOrchestrationService
 |---|---|---|---|
 | **Azure AI Search** | Retrieval Augmented Generation (RAG) con búsqueda semántica, vectorial e híbrida sobre documentos indexados | `AzureSearchPlugin`, `AzureSearchRAGProvider`, `DocumentIndexingService`, `LegalIndexPlugin`, `SkillIndexPlugin` | `AzureSearch:Endpoint`, `AzureSearch:IndexName` |
 | **Azure SQL Database** ⚙️ | Consultas a bases de datos empresariales. Los agentes pueden explorar esquemas y ejecutar queries SELECT de solo lectura. **No se requiere si no se usan los agentes de SQL** | `SqlPlugin`, `GetSchemaPlugin`, `QuerySqlPlugin`, `EmailDataPlugin` | `ConnectionStrings:SqlServer` |
-| **Azure Blob Storage** | Almacenamiento de documentos subidos por usuarios. Sirve como data source para el indexador de Azure AI Search | `BlobStorageService`, `DocumentService` | `AzureStorage:AccountName`, `BlobStorage:ConnectionString` |
+| **Azure Blob Storage** | Almacenamiento de documentos subidos por usuarios. Sirve como data source para el indexador de Azure AI Search | `BlobStorageService`, `DocumentService` | `AzureStorage:AccountName` + Managed Identity |
 | **Azure Document Intelligence** | OCR y extracción inteligente de texto de PDFs, imágenes y documentos escaneados | `DocumentService` | `AzureDocumentIntelligence:Endpoint` |
-| **Azure AI Foundry** | Publicación de agentes como servicios versionados con RBAC, trazabilidad y gestión del ciclo de vida | `FoundrySimpleBotAgent`, `FoundryOrchestratorAgent` | `AzureOpenAI:EndpointProject` |
+| **Microsoft Foundry Project** | Publicación de agentes versionados con RBAC, trazabilidad y gestión del ciclo de vida | `FoundrySimpleBotAgent`, `FoundryOrchestratorAgent` | `AzureOpenAI:EndpointProject` |
 | **Azure Cosmos DB** | Persistencia duradera de sesiones de conversación (alternativa al almacenamiento en memoria) | `SessionService` (configuración opcional) | `CosmosDB:ConnectionString`, `CosmosDB:DatabaseName` |
 | **Azure Bot Service** | Canal de comunicación con Microsoft Teams. Gestiona el registro del bot, autenticación y enrutamiento de mensajes | `TeamsBotAgent`, `ConversationReferenceStore` | `Connections:ServiceConnection`, `TokenValidation` |
 | **Bing Search API** ⚙️ | Grounding con búsqueda web en tiempo real. Permite a los agentes acceder a información actualizada de internet. **No se requiere si no se usa el agente BingGrounding** | `BingGroundingPlugin` | `BingSearch:ApiKey` |
 | **Azure Speech Service** 🎙️ | Síntesis de voz neural y reconocimiento de voz. Usado por la página LiveAvatar para generar audio+animación del avatar en tiempo real (AvatarSynthesizer) y transcribir al usuario (SpeechRecognizer). **No se requiere si no se usa la página LiveAvatar** | `LiveAvatarController`, `live-avatar.js` | `AzureSpeech:SubscriptionKey`, `AzureSpeech:Region` |
-| **Azure VoiceLive** 🎙️ | Conversaciones de voz en tiempo real con modelos GPT-4o Realtime. Soporta tres modos: Full Native S2S (voces OpenAI), Cascade (voces neurales Azure) e Hybrid (voces HD Azure). Opcionalmente renderiza un avatar animado vía WebRTC. **No se requiere si no se usa la página VoiceLive** | `VoiceLiveController`, `voice-live.js` | `VoiceLive:Endpoint`, `VoiceLive:ApiKey`, `VoiceLive:Model` |
+| **Azure VoiceLive** 🎙️ | Conversaciones de voz en tiempo real. Soporta modos Full Native S2S, Cascade e Hybrid. **No se requiere si no se usa la página VoiceLive** | `VoiceLiveController`, `voice-live.js` | `VoiceLive:Endpoint`, `VoiceLive:Model` + Managed Identity |
 
 > ⚙️ = Completamente opcional. La aplicación funciona sin este servicio; solo se necesita si se habilitan los agentes que lo consumen.
 >
@@ -274,12 +274,12 @@ AgentOrchestrationService
 
 ### Autenticación y seguridad
 
-La solución soporta dos modos de autenticación hacia los servicios de Azure:
+Foundry, Azure AI Search, Blob Storage y VoiceLive usan Microsoft Entra ID:
 
 | Modo | Configuración | Recomendación |
 |---|---|---|
-| **DefaultAzureCredential** | No se configura `ApiKey` — se usa `az login` o Managed Identity | ✅ Recomendado para producción |
-| **API Key** | Se configura `ApiKey` en `appsettings.Development.json` | Solo para desarrollo local rápido |
+| **DefaultAzureCredential** | Desarrollo con `az login`; Azure con la UAMI indicada por `AZURE_CLIENT_ID` | ✅ Predeterminado |
+| **API Key** | Solo Azure Speech para emitir tokens de navegador/ICE de Live Avatar | Excepción temporal y acotada |
 
 La autenticación con Bot Framework (Teams) usa **Microsoft Entra ID** con `ClientId`, `ClientSecret` y `TenantId` configurados en la sección `Connections`.
 
@@ -407,7 +407,7 @@ La aplicación incluye **dos páginas de conversación de voz** que son **comple
 | Componente | Mínimo | Notas |
 |---|---|---|
 | **.NET SDK** | 9.0+ | |
-| **Azure OpenAI** | Deployment `gpt-4o` | Endpoint + API Key o `DefaultAzureCredential` |
+| **Microsoft Foundry** | Proyecto con deployment `gpt-5.4` | Endpoint de cuenta + endpoint de proyecto + `DefaultAzureCredential` |
 | **Node.js** | 18+ | Solo si usas MCP Server |
 | **Azure Bot** | | Solo si publicas en Teams |
 
@@ -447,22 +447,22 @@ git clone https://github.com/JordanReyesLeger/agent-framework-web-chat.git
 cd agent-framework-web-chat
 ```
 
-#### 2. Configurar secretos
+#### 2. Configurar endpoints locales
 
 Crea `02-AFWebChat/appsettings.Development.json` (ya está en `.gitignore`):
 
 ```json
 {
   "AzureOpenAI": {
-    "Endpoint": "https://tu-recurso.openai.azure.com/",
-    "ApiKey": "tu-api-key",
-    "ChatDeployment": "gpt-4o",
+    "Endpoint": "https://tu-recurso.cognitiveservices.azure.com/",
+    "EndpointProject": "https://tu-recurso.services.ai.azure.com/api/projects/tu-proyecto",
+    "ChatDeployment": "gpt-5.4",
     "EmbeddingDeployment": "text-embedding-3-large"
   }
 }
 ```
 
-> Si no proporcionas `ApiKey`, se usará `DefaultAzureCredential` (requiere `az login`).
+La aplicación usa `DefaultAzureCredential`; la identidad local necesita **Cognitive Services OpenAI User** y **Foundry User** en el proyecto.
 
 #### 3. Ejecutar
 
@@ -477,7 +477,7 @@ Abre `https://localhost:5001/Home/Chat` en tu navegador.
 
 ### ☁️ Modo Azure (deploy completo con Terraform)
 
-El folder [infra/](infra) contiene un stack de Terraform que aprovisiona **toda la infraestructura** lista para usar (Web App + Azure OpenAI + AI Search + Cosmos + Speech + AI Services para VoiceLive + Bot Service) en una sola corrida, sin pasos manuales después de `apply`.
+El folder [infra/](infra) contiene un stack Terraform administrable con `azd`: Web App, cuenta `AIServices`, proyecto Foundry, modelos, AI Search, Storage, Cosmos, Speech, VoiceLive, Bot Service y observabilidad.
 
 #### Pre-requisitos
 
@@ -485,7 +485,7 @@ El folder [infra/](infra) contiene un stack de Terraform que aprovisiona **toda 
 |---|---|
 | **Azure CLI** | `az login` con la suscripción destino |
 | **Terraform** | `>= 1.5` |
-| **PowerShell 7** | Usado por el `null_resource` que inyecta secretos post-deploy |
+| **PowerShell 7** | Solo para inyectar la excepción de clave de Azure Speech usada por Live Avatar |
 | **.NET SDK 9** | Para `dotnet publish` |
 
 #### 1. Configurar `terraform.tfvars`
@@ -504,9 +504,10 @@ subscription_id = "<tu-subscription-id>"
 Todas las demás variables tienen defaults sensatos. Las features opcionales (AI Search, Speech, AI Services, Cosmos, Bot Service) están todas habilitadas por defecto.
 
 > **Notas de quota / policy:**
-> - El SKU del App Service por defecto es **B1 Linux en westus2** (la única región donde nuestra suscripción MCAPS tiene quota de App Service). Si tu suscripción tiene otras regiones disponibles, ajústalo en `terraform.tfvars`.
+> - La región predeterminada es `eastus2`; valida cuota antes de provisionar.
 > - SQL Database está deshabilitado por defecto porque varias suscripciones MCAPS lo bloquean por policy. Si tu suscripción lo permite, habilita `enable_sql_database = true` y define `sql_admin_password`.
-> - Si tu suscripción/management group tiene la policy modify de Cognitive Services que auto-deshabilita local auth, ya está manejada — un `null_resource` la revierte y re-inyecta las keys en el Web App.
+> - Foundry, Search, Storage y VoiceLive tienen autenticación local deshabilitada y usan RBAC. Azure Speech mantiene una excepción acotada para Live Avatar.
+> - Si conservas estados de otra suscripción, crea y selecciona un workspace nuevo antes de ejecutar `plan`.
 
 #### 2. Provisionar infraestructura
 
@@ -515,7 +516,7 @@ terraform init
 terraform apply -auto-approve
 ```
 
-Provisiona **~33 recursos** (Resource Group, App Service Plan, Web App, UAMI, OpenAI + 2 deployments, AI Services para VoiceLive + realtime deployment, AI Services en región de Search, Speech, Cosmos DB + DB + container, Storage + 2 containers, AI Search + 4 role assignments, Bot Service, Log Analytics, App Insights). Salidas relevantes al final:
+El plan actual crea **37 recursos** desde un estado vacío, incluyendo la cuenta/proyecto Foundry, dos deployments, UAMI y roles keyless para Search/Storage. Salidas relevantes:
 
 ```
 web_app_url     = "https://app-afweb-dev-<suffix>.azurewebsites.net"
@@ -540,11 +541,6 @@ $app = (terraform -chdir=..\infra output -raw web_app_name)
 az resource update -g $rg -n scm `
   --namespace Microsoft.Web --resource-type basicPublishingCredentialsPolicies `
   --parent "sites/$app" --set properties.allow=true --api-version 2023-12-01
-
-# Quitar la app setting de la API key (forzar Managed Identity para OpenAI)
-# El null_resource ya inyectó la key, pero la policy MCAPS la re-deshabilita.
-# El código del Web App cae a DefaultAzureCredential cuando ApiKey está vacío.
-az webapp config appsettings delete -n $app -g $rg --setting-names AzureOpenAI__ApiKey
 
 # Stop / deploy / start (workaround para zip deploys en Linux Web Apps)
 az webapp stop  -n $app -g $rg
@@ -596,11 +592,11 @@ Elimina los ~33 recursos. Las cuentas Cognitive Services se purgan duro (no qued
 | **Microsoft 365 Agents SDK** | 1.4.83 | Hosting de Bot Framework |
 | **Microsoft.Agents.AI** | 1.0.0-rc5 | Runtime de agentes IA |
 | **Microsoft.Agents.AI.Workflows** | 1.0.0-rc5 | GroupChat, WorkflowBuilder |
-| **Microsoft.Agents.AI.Foundry** | 1.1.0 | Integración Azure AI Foundry |
+| **Microsoft.Agents.AI.Foundry** | 1.5.0 | Integración Microsoft Foundry |
 | **Azure.AI.OpenAI** | 2.9.0 | SDK de Azure OpenAI |
-| **Azure.AI.Projects** | 2.0.0 | Foundry Agent Service |
-| **Azure.Search.Documents** | 11.8.0 | Azure AI Search (RAG) |
-| **Azure.Identity** | 1.20.0 | DefaultAzureCredential |
+| **Azure.AI.Projects** | 2.0.1 | Foundry Agent Service |
+| **Azure.Search.Documents** | 12.0.0 | Azure AI Search (RAG y skillset keyless) |
+| **Azure.Identity** | 1.21.0 | DefaultAzureCredential |
 | **ModelContextProtocol** | 1.0.0 | MCP client para tools externos |
 | **Azure.AI.VoiceLive** 🎙️ | 1.1.0-beta.3 | Conversaciones de voz en tiempo real con GPT-4o Realtime (opcional) |
 | **Microsoft.CognitiveServices.Speech** 🎙️ | — | Azure Speech SDK para LiveAvatar: SpeechRecognizer + AvatarSynthesizer (opcional) |
@@ -617,7 +613,7 @@ El proyecto usa el patrón estándar de ASP.NET Core para separar configuración
 | Archivo | Se sube al repo | Propósito |
 |---|---|---|
 | `appsettings.json` | ✅ Sí | Estructura base, valores por defecto (sin secretos) |
-| `appsettings.Development.json` | ❌ No | Tus valores reales (API keys, connection strings) |
+| `appsettings.Development.json` | ❌ No | Endpoints locales y la excepción de Speech; no guardes secretos de Foundry/Search/Storage |
 
 ASP.NET Core carga `appsettings.json` primero y luego sobreescribe con `appsettings.Development.json` cuando `ASPNETCORE_ENVIRONMENT=Development`. No necesitas cambiar nada en código.
 

@@ -57,7 +57,7 @@ variable "app_service_sku" {
 }
 
 variable "app_service_location" {
-  description = "Region for App Service Plan + Web App (must have App Service VM quota; only westus2 works in this MCAPS subscription)."
+  description = "Region for App Service Plan + Web App. eastus2 has 0 quota for every App Service SKU in this subscription; westus2 has real quota (verified) and is used instead."
   type        = string
   default     = "westus2"
 }
@@ -74,13 +74,19 @@ variable "foundry_sku" {
 variable "openai_chat_model_name" {
   description = "OpenAI chat model name to deploy"
   type        = string
-  default     = "gpt-4o"
+  default     = "gpt-5.4"
 }
 
 variable "openai_chat_model_version" {
   description = "Version of the chat model"
   type        = string
-  default     = "2024-11-20"
+  default     = "2026-03-05"
+}
+
+variable "openai_chat_sku_name" {
+  description = "Deployment SKU for the chat model"
+  type        = string
+  default     = "GlobalStandard"
 }
 
 variable "openai_chat_capacity" {
@@ -99,6 +105,12 @@ variable "openai_embedding_model_version" {
   description = "Version of the embedding model"
   type        = string
   default     = "1"
+}
+
+variable "openai_embedding_sku_name" {
+  description = "Deployment SKU for the embedding model"
+  type        = string
+  default     = "GlobalStandard"
 }
 
 variable "openai_embedding_capacity" {
@@ -123,9 +135,9 @@ variable "ai_search_sku" {
 }
 
 variable "ai_search_location" {
-  description = "Region for Azure AI Search (use a region with capacity; eastus2 is often exhausted)"
+  description = "Region for Azure AI Search"
   type        = string
-  default     = "eastus"
+  default     = "eastus2"
 }
 
 variable "enable_cosmos_db" {
@@ -221,25 +233,13 @@ variable "speech_location" {
 }
 
 # ─────────────────────────────────────────────
-# VoiceLive (optional) — dedicated Azure AI Foundry account hosting a
-# realtime (speech-to-speech) model for the VoiceLive page.
+# VoiceLive (optional) — realtime (speech-to-speech) models deployed on the
+# same main Foundry account so only one Foundry resource exists.
 # ─────────────────────────────────────────────
 variable "enable_voicelive" {
-  description = "Deploy an optional Azure AI Foundry account with a realtime model deployment for the VoiceLive page"
+  description = "Deploy the optional realtime model used by the VoiceLive page, on the same Foundry account"
   type        = bool
   default     = true
-}
-
-variable "voicelive_sku" {
-  description = "SKU for the VoiceLive AI Foundry account"
-  type        = string
-  default     = "S0"
-}
-
-variable "voicelive_location" {
-  description = "Region for the VoiceLive account (must support gpt realtime models, e.g. eastus2)"
-  type        = string
-  default     = "eastus2"
 }
 
 variable "voicelive_model_name" {
@@ -276,4 +276,16 @@ variable "voicelive_pro_model_capacity" {
   description = "Premium realtime model capacity. GlobalStandard SKU."
   type        = number
   default     = 1
+}
+
+# ─────────────────────────────────────────────
+# Foundry portal access (optional)
+# Human users who need "Foundry User" on the project to create/manage
+# agents from the Foundry portal (ai.azure.com), distinct from the app's
+# own managed identity RBAC.
+# ─────────────────────────────────────────────
+variable "foundry_portal_admin_object_ids" {
+  description = "Entra ID object IDs of users/groups to grant the 'Foundry User' role on the project, so they can create/manage agents from the Foundry portal."
+  type        = list(string)
+  default     = []
 }

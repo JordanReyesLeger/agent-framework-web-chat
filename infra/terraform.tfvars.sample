@@ -13,36 +13,42 @@ subscription_id  = "00000000-0000-0000-0000-000000000000"  # Your Azure Subscrip
 # project_name     = "afweb"
 
 # ── App Service (Linux Web App, .NET 9) ──────
-# Web App is hosted in westus2 because the MCAPS subscription has no
-# App Service VM quota elsewhere. After `terraform apply`, deploy your
-# app with: az webapp deploy --src-path publish.zip --type zip ...
+# eastus2 may report 0 App Service quota for every SKU; if deploys fail
+# with "Current Limit (SKU VMs): 0", try a different region such as
+# westus2 before requesting a quota increase (https://aka.ms/antquotahelp).
 # app_service_sku      = "S2"          # Recommended baseline for 50+ users
-# app_service_location = "westus2"
+# app_service_location = "eastus2"
 
-# ── OpenAI Models ────────────────────────────
-# openai_chat_model_name     = "gpt-4o"
-# openai_chat_model_version  = "2024-11-20"
+# ── Microsoft Foundry models ────────────────
+# openai_chat_model_name     = "gpt-5.4"
+# openai_chat_model_version  = "2026-03-05"
+# openai_chat_sku_name       = "GlobalStandard"
 # openai_chat_capacity       = 30
 # openai_embedding_model_name    = "text-embedding-3-large"
 # openai_embedding_model_version = "1"
+# openai_embedding_sku_name      = "GlobalStandard"
 # openai_embedding_capacity      = 30
 
 # ── Optional Features (all enabled by default) ─
 # enable_ai_search   = true
 # ai_search_sku      = "standard"      # Better throughput, indexing, and latency
-# ai_search_location = "eastus"     # eastus2 sometimes capacity-exhausted
+# ai_search_location = "eastus2"
 # enable_cosmos_db   = true
 # cosmos_sessions_autoscale_max_throughput = 4000  # Autoscale range: 400–4,000 RU/s
 # enable_speech      = true
 # enable_voicelive   = true         # Optional AI Foundry account for VoiceLive realtime
 # enable_bot_service = true
 
-# ── VoiceLive realtime (optional) ────────────
-# voicelive_sku            = "S0"
-# voicelive_location       = "eastus2"
+# ── VoiceLive realtime (optional; deployed on the main Foundry account) ──
 # voicelive_model_name     = "gpt-realtime-mini"
 # voicelive_model_version  = "2025-10-06"
 # voicelive_model_capacity = 1
+
+# ── Foundry portal access (optional) ─────────
+# Object IDs of users/groups who need "Foundry User" to create/manage
+# agents from the Foundry portal (ai.azure.com). Get yours with:
+#   az ad signed-in-user show --query id -o tsv
+# foundry_portal_admin_object_ids = ["00000000-0000-0000-0000-000000000000"]
 # voicelive_pro_model_name     = "gpt-realtime"
 # voicelive_pro_model_version  = "2025-08-28"
 # voicelive_pro_model_capacity = 1

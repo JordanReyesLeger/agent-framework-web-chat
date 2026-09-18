@@ -1,4 +1,5 @@
 using Azure;
+using Azure.Identity;
 using Azure.Search.Documents;
 using Azure.Search.Documents.Models;
 using System.ComponentModel;
@@ -20,9 +21,11 @@ public class LegalIndexPlugin
         var indexName = configuration["AzureSearch:SkillIndex:IndexName"] ?? "skill";
         var apiKey = configuration["AzureSearch:ApiKey"];
 
-        if (!string.IsNullOrEmpty(endpoint) && !string.IsNullOrEmpty(apiKey))
+        if (!string.IsNullOrEmpty(endpoint))
         {
-            _searchClient = new SearchClient(new Uri(endpoint), indexName, new AzureKeyCredential(apiKey));
+            _searchClient = !string.IsNullOrEmpty(apiKey)
+                ? new SearchClient(new Uri(endpoint), indexName, new AzureKeyCredential(apiKey))
+                : new SearchClient(new Uri(endpoint), indexName, new DefaultAzureCredential());
         }
         else
         {

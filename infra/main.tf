@@ -23,7 +23,7 @@ locals {
 
   common_tags = merge(var.tags, {
     environment     = var.environment_name
-    securityControl = "Ignore"
+    SecurityControl = "Ignore"
   })
 }
 

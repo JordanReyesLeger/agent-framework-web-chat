@@ -895,7 +895,7 @@ function updateAgentInfo(name) {
     if (!agent) return;
 
     document.getElementById('infoAgentName').textContent = agent.name;
-    document.getElementById('infoAgentModel').textContent = 'gpt-4o';
+    document.getElementById('infoAgentModel').textContent = 'gpt-5.4';
     document.getElementById('infoAgentTools').textContent = agent.tools?.length || '0';
     document.getElementById('infoAgentProvider').textContent =
         agent.contextProviders?.length ? agent.contextProviders.join(', ') : '—';

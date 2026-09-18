@@ -105,19 +105,12 @@ public class DocumentIndexingService : IDocumentIndexingService
             var embeddingsDeployment = _configuration["AzureOpenAI:EmbeddingsDeploymentName"]
                 ?? _configuration["AzureOpenAI:EmbeddingDeployment"]
                 ?? "text-embedding-3-large";
-            var openAiApiKey = _configuration["AzureOpenAI:ApiKey"];
-
             var vectorizerParams = new AzureOpenAIVectorizerParameters
             {
                 ResourceUri = new Uri(openAiEndpoint!),
                 DeploymentName = embeddingsDeployment,
                 ModelName = AzureOpenAIModelName.TextEmbedding3Large
             };
-
-            if (!string.IsNullOrEmpty(openAiApiKey))
-            {
-                vectorizerParams.ApiKey = openAiApiKey;
-            }
 
             var vectorSearch = new VectorSearch
             {
@@ -220,7 +213,10 @@ public class DocumentIndexingService : IDocumentIndexingService
             var embeddingsDeployment = _configuration["AzureOpenAI:EmbeddingsDeploymentName"]
                 ?? _configuration["AzureOpenAI:EmbeddingDeployment"]
                 ?? "text-embedding-3-large";
-            var aiServicesKey = _configuration["AzureAI:ServicesKey"];
+            if (string.IsNullOrWhiteSpace(openAiEndpoint))
+            {
+                throw new InvalidOperationException("AzureOpenAI:Endpoint is not configured");
+            }
 
             // OCR Skill
             var ocrSkill = new OcrSkill(
@@ -273,7 +269,7 @@ public class DocumentIndexingService : IDocumentIndexingService
                 ResourceUri = new Uri(openAiEndpoint!),
                 DeploymentName = embeddingsDeployment,
                 ModelName = embeddingsDeployment,
-                Dimensions = 1024
+                Dimensions = 3072
             };
 
             // Index projections
@@ -308,9 +304,7 @@ public class DocumentIndexingService : IDocumentIndexingService
                 Parameters = projectionParameters
             };
 
-            var cognitiveServicesAccount = !string.IsNullOrEmpty(aiServicesKey)
-                ? new CognitiveServicesAccountKey(aiServicesKey)
-                : null;
+            var cognitiveServicesAccount = new AIServicesAccountIdentity(new Uri(openAiEndpoint));
 
             var skills = new List<SearchIndexerSkill> { ocrSkill, mergeSkill, splitSkill, embeddingSkill };
             var skillset = new SearchIndexerSkillset(

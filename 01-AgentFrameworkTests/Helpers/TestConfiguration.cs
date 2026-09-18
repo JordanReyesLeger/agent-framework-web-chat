@@ -1,9 +1,9 @@
 using Azure.AI.OpenAI;
+using Azure.Identity;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using OpenAI.Chat;
-using System.ClientModel;
 
 namespace AgentFrameworkTests.Helpers;
 
@@ -33,12 +33,10 @@ public static class TestConfiguration
     {
         var endpoint = Configuration["AzureOpenAI:Endpoint"]
             ?? throw new InvalidOperationException("Falta la configuración AzureOpenAI:Endpoint");
-        var apiKey = Configuration["AzureOpenAI:ApiKey"]
-            ?? throw new InvalidOperationException("Falta la configuración AzureOpenAI:ApiKey");
         var deploymentName = Configuration["AzureOpenAI:DeploymentName"]
             ?? throw new InvalidOperationException("Falta la configuración AzureOpenAI:DeploymentName");
 
-        return new AzureOpenAIClient(new Uri(endpoint), new ApiKeyCredential(apiKey))
+        return new AzureOpenAIClient(new Uri(endpoint), new DefaultAzureCredential())
             .GetChatClient(deploymentName);
     }
 

@@ -32,27 +32,24 @@ public class DocumentService
         _indexName = config["AzureSearch:IndexName"] ?? "skill";
 
         // Azure Blob Storage - Use DefaultAzureCredential (key-based auth may be disabled)
+        var storageAccountName = config["AzureStorage:AccountName"];
         var blobConnectionString = config["BlobStorage:ConnectionString"];
         var containerName = config["BlobStorage:ContainerName"] ?? "documents";
-        if (!string.IsNullOrEmpty(blobConnectionString))
+        if (string.IsNullOrEmpty(storageAccountName) && !string.IsNullOrEmpty(blobConnectionString))
         {
-            // Extract account name from connection string to build URI for managed identity auth
-            var accountName = ExtractAccountName(blobConnectionString);
-            if (!string.IsNullOrEmpty(accountName))
-            {
-                var blobUri = new Uri($"https://{accountName}.blob.core.windows.net");
-                var blobServiceClient = new BlobServiceClient(blobUri, new DefaultAzureCredential());
-                _blobContainerClient = blobServiceClient.GetBlobContainerClient(containerName);
-                _logger.LogInformation("DocumentService: Blob Storage configurado con DefaultAzureCredential (account={Account}, container={Container})", accountName, containerName);
-            }
-            else
-            {
-                _logger.LogWarning("DocumentService: No se pudo extraer el AccountName del connection string.");
-            }
+            storageAccountName = ExtractAccountName(blobConnectionString);
+        }
+
+        if (!string.IsNullOrEmpty(storageAccountName))
+        {
+            var blobUri = new Uri($"https://{storageAccountName}.blob.core.windows.net");
+            var blobServiceClient = new BlobServiceClient(blobUri, new DefaultAzureCredential());
+            _blobContainerClient = blobServiceClient.GetBlobContainerClient(containerName);
+            _logger.LogInformation("DocumentService: Blob Storage configurado con DefaultAzureCredential (account={Account}, container={Container})", storageAccountName, containerName);
         }
         else
         {
-            _logger.LogWarning("DocumentService: BlobStorage:ConnectionString no configurado.");
+            _logger.LogWarning("DocumentService: AzureStorage:AccountName no configurado.");
         }
 
         // Azure AI Search
@@ -284,7 +281,7 @@ public class DocumentService
                     new SearchField("Vector", SearchFieldDataType.Collection(SearchFieldDataType.Single))
                     {
                         IsSearchable = true,
-                        VectorSearchDimensions = 3072, // text-embedding-3-large
+                        VectorSearchDimensions = 3072,
                         VectorSearchProfileName = "vector-profile"
                     }
                 },

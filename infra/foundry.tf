@@ -1,10 +1,6 @@
 # ─────────────────────────────────────────────
-# Azure AI Foundry account (kind = AIServices)
-# Hosts the chat (gpt-4o) and embedding (text-embedding-3-large) models.
-# This replaces the legacy classic Azure OpenAI (kind = "OpenAI") account:
-# the app talks to it through the same /openai data-plane API, so the
-# AzureOpenAIClient keeps working against the *.cognitiveservices.azure.com
-# (Foundry) endpoint.
+# Microsoft Foundry account (kind = AIServices)
+# Hosts the project plus chat and embedding model deployments.
 # ─────────────────────────────────────────────
 resource "azurerm_cognitive_account" "foundry" {
   name                          = "aif-${local.unique_name}"
@@ -13,19 +9,40 @@ resource "azurerm_cognitive_account" "foundry" {
   kind                          = "AIServices"
   sku_name                      = var.foundry_sku
   custom_subdomain_name         = "aif-${local.unique_name}"
+  project_management_enabled    = true
   public_network_access_enabled = true
-  local_auth_enabled            = true # API key fallback; RBAC is primary
+  local_auth_enabled            = false
 
-  # An MCAPS policy auto-disables local auth on create; null_resource.inject_cognitive_keys re-enables it.
-  lifecycle {
-    ignore_changes = [local_auth_enabled]
+  identity {
+    type = "SystemAssigned"
   }
 
   tags = local.common_tags
 }
 
 # ─────────────────────────────────────────────
-# Chat Model Deployment (gpt-4o)
+# Microsoft Foundry project (new experience, not a classic hub project)
+# ─────────────────────────────────────────────
+resource "azurerm_cognitive_account_project" "foundry" {
+  name                 = "project-${local.unique_name}"
+  cognitive_account_id = azurerm_cognitive_account.foundry.id
+  location             = azurerm_cognitive_account.foundry.location
+  display_name         = "AF-WebChat ${var.environment_name}"
+  description          = "Microsoft Foundry project for AF-WebChat agents, models, and evaluations."
+
+  identity {
+    type = "SystemAssigned"
+  }
+
+  tags = local.common_tags
+}
+
+locals {
+  foundry_project_endpoint = "https://${azurerm_cognitive_account.foundry.name}.services.ai.azure.com/api/projects/${azurerm_cognitive_account_project.foundry.name}"
+}
+
+# ─────────────────────────────────────────────
+# Chat Model Deployment
 # ─────────────────────────────────────────────
 resource "azurerm_cognitive_deployment" "chat" {
   name                 = var.openai_chat_model_name
@@ -38,7 +55,7 @@ resource "azurerm_cognitive_deployment" "chat" {
   }
 
   sku {
-    name     = "Standard"
+    name     = var.openai_chat_sku_name
     capacity = var.openai_chat_capacity
   }
 }
@@ -57,7 +74,7 @@ resource "azurerm_cognitive_deployment" "embedding" {
   }
 
   sku {
-    name     = "Standard"
+    name     = var.openai_embedding_sku_name
     capacity = var.openai_embedding_capacity
   }
 }

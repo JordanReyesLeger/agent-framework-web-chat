@@ -371,6 +371,7 @@ AZURE_POLICY_FIX.md
 # Terraform
 **/.terraform/
 *.tfstate
+*.tfstate.*
 *.tfstate.backup
 *.tfvars
 !*.tfvars.sample
@@ -385,3 +386,14 @@ override.tf.json
 *_override.tf.json
 .terraform.lock.hcl
 infra/.terraform.tfstate.lock.info
+# Terraform workspace states (contains timestamped *.tfstate.<epoch>.backup
+# files with real resource keys/connection strings in plaintext — the bare
+# *.tfstate.backup pattern above does NOT match these numbered variants)
+infra/terraform.tfstate.d/
+
+# Azure Developer CLI (azd) local environment metadata
+.azure/
+
+# Playwright MCP debug artifacts (browser snapshots/console logs captured
+# during manual testing — may embed live subscription/resource identifiers)
+.playwright-mcp/

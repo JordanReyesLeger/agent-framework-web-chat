@@ -6,10 +6,9 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["AF-WebChat/AF-WebChat.csproj", "AF-WebChat/"]
-RUN dotnet restore "AF-WebChat/AF-WebChat.csproj"
+COPY ["AF-WebChat.csproj", "."]
+RUN dotnet restore "AF-WebChat.csproj"
 COPY . .
-WORKDIR "/src/AF-WebChat"
 RUN dotnet build "AF-WebChat.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
