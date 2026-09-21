@@ -330,6 +330,24 @@ body:has(.chat-page-wrapper) .app-footer {
     margin: 4px 0;
 }
 
+/* Gráficos generados por agentes (Chart.js) */
+.af-chart-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 560px;
+    height: 320px;
+    margin: 10px 0;
+    padding: 12px;
+    background: var(--af-surface);
+    border: 1px solid var(--af-border);
+    border-radius: 8px;
+}
+
+.af-chart-wrapper canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
 /* Reasoning ("thinking") block — estilo GitHub Copilot */
 .af-reasoning-card {
     background: color-mix(in srgb, var(--af-accent) 7%, var(--af-surface));

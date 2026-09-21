@@ -17,7 +17,7 @@ public static class BuscadorDeCorreosAgent
         Category = "Workflow",
         Icon = "🔍",
         Color = "#3498db",
-        Tools = ["GetFullSchema", "GetSchema", "ListTables", "ExecuteQuery"],
+        Tools = ["GetFullSchema", "GetSchema", "ListTables", "ExecuteQuery", "GenerateChart"],
         ExamplePrompts = [
             "Busca correos sobre facturación",
             "¿Hay correos abiertos en el área de soporte?",
@@ -63,7 +63,7 @@ public static class BuscadorDeCorreosAgent
                     El Redactor de Respuestas necesita este contexto para elaborar la respuesta.
                     Emojis: 🔍 búsqueda, 📧 correo, 📊 estadísticas, ⚠️ patrón detectado.
                     """,
-                tools: AIFunctionFactoryExtensions.CreateFromInstance(mailSqlPlugin));
+                tools: [.. AIFunctionFactoryExtensions.CreateFromInstance(mailSqlPlugin), .. AIFunctionFactoryExtensions.CreateFromStatic<ChartPlugin>()]);
         }
     };
 }

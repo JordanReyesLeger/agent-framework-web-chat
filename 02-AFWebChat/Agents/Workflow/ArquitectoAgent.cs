@@ -1,4 +1,6 @@
 using AFWebChat.Services;
+using AFWebChat.Tools;
+using AFWebChat.Tools.Plugins;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 
@@ -15,6 +17,7 @@ public static class ArquitectoAgent
         Category = "Workflow",
         Icon = "🏗️",
         Color = "#2c3e50",
+        Tools = ["GenerateChart"],
         ExamplePrompts = [
             "¿Qué arquitectura propones para este sistema?",
             "¿Microservicios o monolito para este caso?",
@@ -50,7 +53,9 @@ public static class ArquitectoAgent
                     
                     Si el dev propone algo que no escala, dilo. Si el PM pide algo imposible, negócialo.
                     Emojis: 🏗️ arquitectura, ⚡ rendimiento, 🔐 seguridad, 📐 patrón, ⚖️ trade-off.
-                    """);
+                    Si necesitas comparar trade-offs numéricamente (costo, latencia, etc.), usa GenerateChart.
+                    """,
+                tools: AIFunctionFactoryExtensions.CreateFromStatic<ChartPlugin>());
         }
     };
 }

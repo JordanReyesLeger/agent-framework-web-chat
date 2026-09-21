@@ -17,7 +17,7 @@ public static class LightsAgent
         Category = "Herramientas",
         Icon = "💡",
         Color = "#f1c40f",
-        Tools = ["GetLights", "ChangeState"],
+        Tools = ["GetLights", "ChangeState", "GenerateChart"],
         ExamplePrompts = [
             "Muéstrame el estado de las luces",
             "Enciende la luz de la sala",
@@ -30,6 +30,7 @@ public static class LightsAgent
             var lightsPlugin = new LightsPlugin();
             var tools = new List<AITool>();
             tools.AddRange(AIFunctionFactoryExtensions.CreateFromInstance(lightsPlugin));
+            tools.AddRange(AIFunctionFactoryExtensions.CreateFromStatic<ChartPlugin>());
 
             return chatClient.AsAIAgent(
                 name: Name,

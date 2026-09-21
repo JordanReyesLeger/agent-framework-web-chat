@@ -1,4 +1,6 @@
 using AFWebChat.Services;
+using AFWebChat.Tools;
+using AFWebChat.Tools.Plugins;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 
@@ -15,6 +17,7 @@ public static class ProjectManagerAgent
         Category = "Workflow",
         Icon = "📋",
         Color = "#e67e22",
+        Tools = ["GenerateChart"],
         ExamplePrompts = [
             "¿Cuánto tiempo tomaría entregar este feature?",
             "Prioriza estas historias de usuario para el sprint",
@@ -52,7 +55,9 @@ public static class ProjectManagerAgent
                     
                     Si el equipo técnico se pierde en detalles, regresa la conversación al objetivo de negocio.
                     Si algo afecta el timeline, advierte inmediatamente.
-                    """);
+                    Si necesitas mostrar prioridades o carga del equipo, usa GenerateChart.
+                    """,
+                tools: AIFunctionFactoryExtensions.CreateFromStatic<ChartPlugin>());
         }
     };
 }

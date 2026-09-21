@@ -1,4 +1,6 @@
 using AFWebChat.Services;
+using AFWebChat.Tools;
+using AFWebChat.Tools.Plugins;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 
@@ -15,6 +17,7 @@ public static class DBAAgent
         Category = "Workflow",
         Icon = "🗄️",
         Color = "#c0392b",
+        Tools = ["GenerateChart"],
         ExamplePrompts = [
             "¿Qué modelo de datos propones para este sistema?",
             "¿SQL o NoSQL para este caso de uso?",
@@ -53,7 +56,9 @@ public static class DBAAgent
                     Emojis: 🗄️ estructura, ⚡ performance, 🔐 seguridad de datos, 📊 volumen, ⚠️ riesgo.
                     
                     Si alguien propone algo que mate el rendimiento de la BD, dilo sin rodeos.
-                    """);
+                    Si necesitas ilustrar volumen de datos o crecimiento esperado, usa GenerateChart.
+                    """,
+                tools: AIFunctionFactoryExtensions.CreateFromStatic<ChartPlugin>());
         }
     };
 }

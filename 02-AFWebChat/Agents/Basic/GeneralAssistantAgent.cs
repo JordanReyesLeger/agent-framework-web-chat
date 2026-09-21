@@ -1,4 +1,6 @@
 using AFWebChat.Services;
+using AFWebChat.Tools;
+using AFWebChat.Tools.Plugins;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 
@@ -15,6 +17,7 @@ public static class GeneralAssistantAgent
         Category = "Básico",
         Icon = "🤖",
         Color = "#0078d4",
+        Tools = ["GenerateChart"],
         ExamplePrompts = ["¿Qué es Semantic Kernel y cómo funciona?", "Explica la diferencia entre agentes y plugins", "Ayúdame a redactar un correo profesional"],
         SupportsStreaming = true,
         Factory = sp =>
@@ -31,7 +34,10 @@ public static class GeneralAssistantAgent
                     Responde de forma clara, concisa y útil en el idioma del usuario.
                     Usa formato markdown cuando sea apropiado.
                     Si no sabes algo, dilo con honestidad.
-                    """);
+                    Si el usuario pide graficar datos o una visualización ayuda a explicar una respuesta
+                    numérica, usa GenerateChart para mostrar un gráfico real en el chat.
+                    """,
+                tools: AIFunctionFactoryExtensions.CreateFromStatic<ChartPlugin>());
         }
     };
 }

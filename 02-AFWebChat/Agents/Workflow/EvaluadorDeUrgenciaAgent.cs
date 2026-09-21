@@ -1,4 +1,6 @@
 using AFWebChat.Services;
+using AFWebChat.Tools;
+using AFWebChat.Tools.Plugins;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 
@@ -15,6 +17,7 @@ public static class EvaluadorDeUrgenciaAgent
         Category = "Workflow",
         Icon = "🚨",
         Color = "#e74c3c",
+        Tools = ["GenerateChart"],
         ExamplePrompts = [
             "El sistema de facturación no funciona y los clientes están furiosos",
             "Nos gustaría mejorar el diseño del logo cuando tengan tiempo",
@@ -58,7 +61,8 @@ public static class EvaluadorDeUrgenciaAgent
 
                     Sé directo y estructurado. El Buscador de Correos necesita tus palabras clave para buscar histórico.
                     Emojis: 🚨 urgente, ⚠️ advertencia, ✅ ok, 🔍 investigar.
-                    """);
+                    """,
+                tools: AIFunctionFactoryExtensions.CreateFromStatic<ChartPlugin>());
         }
     };
 }

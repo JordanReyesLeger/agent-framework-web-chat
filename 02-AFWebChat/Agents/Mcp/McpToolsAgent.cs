@@ -17,6 +17,7 @@ public static class McpToolsAgent
         Category = "MCP",
         Icon = "🔌",
         Color = "#2c3e50",
+        Tools = ["ListMcpTools", "CallMcpTool", "GenerateChart"],
         ExamplePrompts = ["¿Qué herramientas MCP están disponibles?", "Usa una herramienta externa para ayudarme", "Conéctate a un servidor MCP"],
         SupportsStreaming = true,
         Factory = sp =>
@@ -28,6 +29,7 @@ public static class McpToolsAgent
             // Load MCP tools dynamically from configured MCP server
             var tools = new List<AITool>();
             tools.AddRange(AIFunctionFactoryExtensions.CreateFromInstance(mcpPlugin));
+            tools.AddRange(AIFunctionFactoryExtensions.CreateFromStatic<ChartPlugin>());
 
             // Also add actual MCP tools if they were initialized
             var mcpTools = mcpPlugin.GetMcpTools();

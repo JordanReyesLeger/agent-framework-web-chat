@@ -1,4 +1,6 @@
 using AFWebChat.Services;
+using AFWebChat.Tools;
+using AFWebChat.Tools.Plugins;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 
@@ -15,6 +17,7 @@ public static class TranslatorAgent
         Category = "Básico",
         Icon = "🌐",
         Color = "#00bcf2",
+        Tools = ["GenerateChart"],
         ExamplePrompts = ["Traduce 'Hello, how are you?' al francés", "¿En qué idioma está esto: 'Hola mundo'?", "Traduce este párrafo al japonés"],
         SupportsStreaming = true,
         Factory = sp =>
@@ -32,7 +35,8 @@ public static class TranslatorAgent
                     3. Proporciona la traducción con una nota breve sobre el idioma detectado.
                     4. Preserva el formato, tono y matices.
                     5. Si el usuario especifica "traduce a [idioma]", usa ese idioma destino.
-                    """);
+                    """,
+                tools: AIFunctionFactoryExtensions.CreateFromStatic<ChartPlugin>());
         }
     };
 }

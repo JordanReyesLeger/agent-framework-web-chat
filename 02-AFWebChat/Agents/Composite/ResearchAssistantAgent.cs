@@ -1,4 +1,6 @@
 using AFWebChat.Services;
+using AFWebChat.Tools;
+using AFWebChat.Tools.Plugins;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 
@@ -15,7 +17,7 @@ public static class ResearchAssistantAgent
         Category = "Compuesto",
         Icon = "🔬",
         Color = "#2980b9",
-        Tools = ["WebSearch (agente)", "Summarizer (agente)", "Translator (agente)"],
+        Tools = ["WebSearch (agente)", "Summarizer (agente)", "Translator (agente)", "GenerateChart"],
         ExamplePrompts = ["Investiga las últimas tendencias en agentes de IA", "Busca y resume artículos sobre Semantic Kernel", "Busca información sobre Azure AI y tradúcela al español"],
         SupportsStreaming = true,
         Factory = sp =>
@@ -41,6 +43,7 @@ public static class ResearchAssistantAgent
                     - Usa WebSearch para recopilar información
                     - Usa Summarizer para crear resúmenes concisos
                     - Usa Translator cuando el contenido necesite estar en otro idioma
+                    - Usa GenerateChart si tus hallazgos incluyen cifras que se entienden mejor con un gráfico
                     
                     Siempre sintetiza los hallazgos en una respuesta coherente.
                     """,
@@ -48,7 +51,8 @@ public static class ResearchAssistantAgent
                 [
                     searchAgent.AsAIFunction(),
                     summarizerAgent.AsAIFunction(),
-                    translatorAgent.AsAIFunction()
+                    translatorAgent.AsAIFunction(),
+                    .. AIFunctionFactoryExtensions.CreateFromStatic<ChartPlugin>()
                 ]);
         }
     };

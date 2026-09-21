@@ -53,13 +53,15 @@ Puntos clave:
 
 ```csharp
 var client = new AIProjectClient(new Uri(endpointProject), new DefaultAzureCredential());
-var record = client.AgentAdministrationClient.GetAgent(FoundryAgentName);  // o CreateAgentVersion si no existe
-FoundryAgent agent = client.AsAIAgent(record);   // ← implementa AIAgent normal
+// Publica/recupera la versión del agente y crea una nueva si la definición del código cambió
+var record = FoundryAgentProvisioning.EnsureAgentVersion(client, name, buildDefinition, revision, logger);
+FoundryAgent agent = client.AsAIAgent(record, tools);   // ← implementa AIAgent normal
 ```
 
-- Requieren `AzureOpenAI:EndpointProject` (la URL `.../api/projects/{nombre}`) y **auth por token** — Foundry no acepta API key.
-- Instrucciones y tools quedan **fijas en Foundry**, no en el código.
-- `FoundryAgent` (orquestador) usa una tool **OpenAPI** que llama de vuelta a `/api/chat/send` de esta misma app; la URL base sale de `DevTunnel:Url` (en Azure la inyecta Terraform con la URL real del sitio).
+- Requieren `AzureOpenAI:EndpointProject` (la URL `.../api/projects/{nombre}`) y **auth por token** — Foundry no acepta API key. El scope es `https://ai.azure.com/.default`, distinto al de inferencia; si `DefaultAzureCredential` falla ahí, haz `az login --scope https://ai.azure.com/.default --tenant <tenant>`.
+- Las instrucciones y la definición viven **en Foundry**, pero se publican desde el código: `FoundryAgentProvisioning.EnsureAgentVersion` firma la definición (modelo + instrucciones + herramientas) y publica una versión nueva **solo si la firma cambió** (la firma se guarda en los metadatos de la versión). Sin esto, editar las instrucciones en el código no tenía ningún efecto sobre un agente ya creado.
+- **Las funciones locales sí funcionan, pero deben declararse en Foundry.** Pasar `AIFunction`s a `AsAIAgent(record, tools)` solo aporta la *implementación* que corre en este proceso; el modelo únicamente ve lo declarado en la versión publicada. Por eso `FoundryAgentProvisioning.ToResponseTools` traduce cada `AIFunction` a una declaración que se publica junto a la definición. Así es como ambos agentes de Foundry usan `GenerateChart`.
+- `FoundryAgent` (orquestador) combina los dos modos: una tool **OpenAPI** que ejecuta Foundry y llama de vuelta a `/api/chat/send` de esta misma app (la URL base sale de `DevTunnel:Url`; en Azure la inyecta Terraform con la URL real del sitio), más `GenerateChart` que se ejecuta localmente.
 
 ## Los 4 canales de ejecución
 

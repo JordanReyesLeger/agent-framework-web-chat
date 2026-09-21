@@ -1,4 +1,6 @@
 using AFWebChat.Services;
+using AFWebChat.Tools;
+using AFWebChat.Tools.Plugins;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 
@@ -15,6 +17,7 @@ public static class RedactorDeRespuestaAgent
         Category = "Workflow",
         Icon = "✍️",
         Color = "#27ae60",
+        Tools = ["GenerateChart"],
         ExamplePrompts = [
             "Redacta una respuesta para un cliente molesto por facturación incorrecta",
             "Genera un plan de acción para un incidente de seguridad",
@@ -61,7 +64,8 @@ public static class RedactorDeRespuestaAgent
 
                     Tono: profesional, empático, orientado a soluciones.
                     Emojis: ✍️ respuesta, 📋 plan, 📊 resumen, ⏰ deadline, ✅ acción completada.
-                    """);
+                    """,
+                tools: AIFunctionFactoryExtensions.CreateFromStatic<ChartPlugin>());
         }
     };
 }

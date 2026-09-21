@@ -1,4 +1,6 @@
 using AFWebChat.Services;
+using AFWebChat.Tools;
+using AFWebChat.Tools.Plugins;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 
@@ -15,6 +17,7 @@ public static class DesarrolladorAgent
         Category = "Workflow",
         Icon = "👨‍💻",
         Color = "#3498db",
+        Tools = ["GenerateChart"],
         ExamplePrompts = [
             "¿Cómo implementarías este feature?",
             "¿Qué framework usarías para esta funcionalidad?",
@@ -46,7 +49,9 @@ public static class DesarrolladorAgent
                     Usa emojis para señalar: ✅ viable, ⚠️ riesgo, 🔴 blocker, 💡 idea, 🤔 duda.
                     
                     Si no estás de acuerdo con algo que dijo otro agente, dilo directo pero respetuoso.
-                    """);
+                    Si necesitas ilustrar un desglose de esfuerzo o dependencias, usa GenerateChart.
+                    """,
+                tools: AIFunctionFactoryExtensions.CreateFromStatic<ChartPlugin>());
         }
     };
 }

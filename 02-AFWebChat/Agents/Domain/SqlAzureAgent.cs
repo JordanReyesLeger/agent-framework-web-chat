@@ -17,7 +17,7 @@ public static class SqlAzureAgent
         Category = "Dominio",
         Icon = "🗄️",
         Color = "#0078D4",
-        Tools = ["GetSchema", "GetTableSchema", "QuerySql", "QuerySqlTabular"],
+        Tools = ["GetSchema", "GetTableSchema", "QuerySql", "QuerySqlTabular", "GenerateChart"],
         ExamplePrompts = [
             "Muéstrame la estructura de la base de datos",
             "¿Cuántos registros tiene la tabla de clientes?",
@@ -34,6 +34,7 @@ public static class SqlAzureAgent
             var tools = new List<AITool>();
             tools.AddRange(AIFunctionFactoryExtensions.CreateFromInstance(getSchemaPlugin));
             tools.AddRange(AIFunctionFactoryExtensions.CreateFromInstance(querySqlPlugin));
+            tools.AddRange(AIFunctionFactoryExtensions.CreateFromStatic<ChartPlugin>());
 
             return chatClient.AsAIAgent(
                 name: Name,
@@ -62,6 +63,8 @@ public static class SqlAzureAgent
                     - GetTableSchema: Obtiene el esquema de una tabla específica
                     - QuerySql: Ejecuta una consulta SELECT y devuelve resultados en formato JSON
                     - QuerySqlTabular: Ejecuta una consulta SELECT y devuelve resultados en formato de tabla
+                    - GenerateChart: Genera un gráfico visual a partir de resultados numéricos (úsalo cuando
+                      ayude a entender tendencias o comparaciones más rápido que una tabla)
 
                     Siempre sé servicial, claro y educativo en tus respuestas.
                     """,

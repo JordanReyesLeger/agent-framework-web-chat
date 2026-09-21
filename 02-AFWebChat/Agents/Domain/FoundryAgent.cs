@@ -1,18 +1,23 @@
 using AFWebChat.Agents;
+using AFWebChat.Tools;
+using AFWebChat.Tools.Plugins;
 using Azure.AI.Projects;
 using Azure.AI.Projects.Agents;
 using Azure.Identity;
 using Microsoft.Agents.AI;
 using Microsoft.Agents.AI.Foundry;
+using Microsoft.Extensions.AI;
 
 namespace AFWebChat.Agents.Domain;
 
 /// <summary>
 /// Agente orquestador que usa el patrón "Foundry Agent versioned" de Microsoft.Agents.AI.Foundry.
-/// Crea/recupera un agente versionado en Foundry con herramienta OpenAPI que llama a AF-WebChat's
-/// /api/chat/send para delegar trabajo a agentes especializados.
-/// Usa AgentAdministrationClient para gestionar el agente y AsAIAgent(agentRecord) para consumirlo.
-/// Soporta sesiones persistentes, streaming y todas las funcionalidades estándar de AIAgent.
+/// Publica en Foundry un agente con una herramienta OpenAPI que llama a /api/chat/send de esta
+/// misma app para delegar trabajo a agentes especializados, y se consume vía AsAIAgent(agentRecord).
+///
+/// Nota sobre herramientas: combina los dos modos. La tool OpenAPI la ejecuta Foundry; GenerateChart
+/// es una función local que se declara en la definición publicada (para que el modelo la vea) pero
+/// se ejecuta en este proceso — ver <see cref="FoundryAgentProvisioning"/>.
 /// </summary>
 public static class FoundryOrchestratorAgent
 {
@@ -28,6 +33,10 @@ Agentes disponibles: GeneralAssistant, Translator, Summarizer, LegalAdvisor, Cod
 
 Si el usuario no especifica un agente, usa 'GeneralAssistant'.
 Siempre pasa el mensaje del usuario a la herramienta y devuelve la respuesta del agente.
+
+También tienes GenerateChart, que se ejecuta localmente: úsala cuando el usuario pida un gráfico
+o cuando la respuesta de un agente contenga cifras que se entiendan mejor visualmente. Incluye su
+resultado tal cual en tu respuesta.
 Responde en español a menos que el usuario escriba en otro idioma.";
 
     public static AgentDefinition CreateDefinition()
@@ -39,11 +48,12 @@ Responde en español a menos que el usuario escriba en otro idioma.";
             Category = "Foundry",
             Icon = "🏗️",
             Color = "#0078d4",
+            Tools = ["af-webchat-api", "GenerateChart"],
             ExamplePrompts =
             [
                 "Pregúntale al agente GeneralAssistant qué es Semantic Kernel",
                 "Usa el agente Translator para traducir 'hello world' al español",
-                "Envía un mensaje al agente Summarizer"
+                "Grafica en barras: Ene 10, Feb 25, Mar 18"
             ],
             Factory = sp =>
             {
@@ -62,57 +72,46 @@ Responde en español a menos que el usuario escriba en otro idioma.";
                     new Uri(endpointProject),
                     new DefaultAzureCredential());
 
-                // Try to get existing versioned agent from Foundry
-                ProjectsAgentRecord? agentRecord = null;
-                try
-                {
-                    agentRecord = aiProjectClient.AgentAdministrationClient.GetAgent(FoundryAgentName);
-                    logger.LogInformation("Found existing Foundry versioned agent '{AgentName}'", FoundryAgentName);
-                }
-                catch (Azure.RequestFailedException ex) when (ex.Status == 404)
-                {
-                    logger.LogInformation("Foundry agent '{AgentName}' not found, creating...", FoundryAgentName);
-                }
-                catch (System.ClientModel.ClientResultException ex) when (ex.Status == 404)
-                {
-                    logger.LogInformation("Foundry agent '{AgentName}' not found, creating...", FoundryAgentName);
-                }
+                // Herramientas locales (se ejecutan aquí) — se declaran en Foundry junto a la
+                // herramienta OpenAPI, que sí se ejecuta del lado del servicio.
+                var tools = new List<AITool>();
+                tools.AddRange(AIFunctionFactoryExtensions.CreateFromStatic<ChartPlugin>());
+                var declaredTools = FoundryAgentProvisioning.ToResponseTools(tools).ToList();
 
-                // If not found, create it with OpenAPI tool
-                if (agentRecord is null)
-                {
-                    var openApiSpec = BuildOpenApiSpec(tunnelUrl);
-                    var specData = BinaryData.FromString(
-                        System.Text.Json.JsonSerializer.Serialize(openApiSpec));
-
-                    var agentDefinition = new DeclarativeAgentDefinition(model: chatDeployment)
+                var agentRecord = FoundryAgentProvisioning.EnsureAgentVersion(
+                    aiProjectClient,
+                    FoundryAgentName,
+                    buildDefinition: () =>
                     {
-                        Instructions = FoundryInstructions,
-                        Tools =
+                        var specData = BinaryData.FromString(
+                            System.Text.Json.JsonSerializer.Serialize(BuildOpenApiSpec(tunnelUrl)));
+
+                        var definition = new DeclarativeAgentDefinition(model: chatDeployment)
                         {
-                            new OpenAPITool(new OpenApiFunctionDefinition(
-                                "af-webchat-api",
-                                specData,
-                                new OpenAPIAnonymousAuthenticationDetails())
+                            Instructions = FoundryInstructions,
+                            Tools =
                             {
-                                Description = "Envía un mensaje a un agente de AF-WebChat y devuelve la respuesta."
-                            })
-                        }
-                    };
+                                new OpenAPITool(new OpenApiFunctionDefinition(
+                                    "af-webchat-api",
+                                    specData,
+                                    new OpenAPIAnonymousAuthenticationDetails())
+                                {
+                                    Description = "Envía un mensaje a un agente de AF-WebChat y devuelve la respuesta."
+                                })
+                            }
+                        };
+                        foreach (var tool in declaredTools) definition.Tools.Add(tool);
+                        return definition;
+                    },
+                    // La URL del túnel forma parte de la definición: si cambia, hay que republicar.
+                    revisionSource: chatDeployment + FoundryInstructions + tunnelUrl +
+                        string.Join(",", tools.Select(t => t.Name)),
+                    logger: logger);
 
-                    var agentVersion = aiProjectClient.AgentAdministrationClient.CreateAgentVersion(
-                        agentName: FoundryAgentName,
-                        options: new(agentDefinition));
-
-                    logger.LogInformation("Created Foundry versioned agent '{AgentName}' (id: {Id}, version: {Version})",
-                        FoundryAgentName, agentVersion.Value.Id, agentVersion.Value.Version);
-
-                    agentRecord = aiProjectClient.AgentAdministrationClient.GetAgent(FoundryAgentName);
-                }
-
-                // Wrap as standard AIAgent using the Foundry Agent versioned pattern
+                // Wrap as standard AIAgent using the Foundry Agent versioned pattern.
+                // La lista de herramientas aporta la implementación local de GenerateChart.
 #pragma warning disable OPENAI001 // FoundryAgent is in preview
-                Microsoft.Agents.AI.Foundry.FoundryAgent agent = aiProjectClient.AsAIAgent(agentRecord);
+                Microsoft.Agents.AI.Foundry.FoundryAgent agent = aiProjectClient.AsAIAgent(agentRecord, tools);
 #pragma warning restore OPENAI001
                 return agent;
             }

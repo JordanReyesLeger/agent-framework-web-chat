@@ -25,7 +25,8 @@ public static class MultiAgentPlannerAgent
             "GetSchema", "QuerySql", "QuerySqlTabular",
             "SearchDocuments",
             "ScrapeWebPage",
-            "SearchWithBingGrounding"
+            "SearchWithBingGrounding",
+            "GenerateChart"
         ],
         ExamplePrompts = [
             "Crea un plan de proyecto para migrar nuestra base de datos a la nube",
@@ -55,6 +56,7 @@ public static class MultiAgentPlannerAgent
             tools.AddRange(AIFunctionFactoryExtensions.CreateFromInstance(searchPlugin));
             tools.AddRange(AIFunctionFactoryExtensions.CreateFromInstance(webScraping));
             tools.AddRange(AIFunctionFactoryExtensions.CreateFromInstance(bingPlugin));
+            tools.AddRange(AIFunctionFactoryExtensions.CreateFromStatic<ChartPlugin>());
 
             return chatClient.AsAIAgent(
                 name: Name,
@@ -81,7 +83,8 @@ public static class MultiAgentPlannerAgent
                     (Párrafo breve del objetivo y alcance)
                     
                     ### 📊 Datos Internos
-                    (Tabla con métricas clave de la base de datos)
+                    (Tabla con métricas clave de la base de datos; si ayuda, incluye también un gráfico
+                    con GenerateChart para visualizar tendencias o comparaciones)
                     
                     ### 📚 Conocimiento Relevante
                     (Insights de documentos internos)

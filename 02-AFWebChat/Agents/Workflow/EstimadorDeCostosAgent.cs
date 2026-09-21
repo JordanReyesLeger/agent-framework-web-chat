@@ -1,4 +1,6 @@
 using AFWebChat.Services;
+using AFWebChat.Tools;
+using AFWebChat.Tools.Plugins;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 
@@ -15,6 +17,7 @@ public static class EstimadorDeCostosAgent
         Category = "Workflow",
         Icon = "💰",
         Color = "#27ae60",
+        Tools = ["GenerateChart"],
         ExamplePrompts = [
             "Estima el costo de desarrollar una app móvil",
             "¿Cuánto costaría implementar un CRM?",
@@ -65,7 +68,10 @@ public static class EstimadorDeCostosAgent
                     | 🔴 Premium | Todo + extras | X sem | $XX |
 
                     Sé realista con los números. Usa pesos mexicanos por defecto.
-                    """);
+                    Usa GenerateChart para mostrar el desglose de costos por fase o los tres escenarios
+                    en un gráfico de barras — ayuda mucho a comparar de un vistazo.
+                    """,
+                tools: AIFunctionFactoryExtensions.CreateFromStatic<ChartPlugin>());
         }
     };
 }

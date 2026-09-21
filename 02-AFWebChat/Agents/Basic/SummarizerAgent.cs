@@ -1,4 +1,6 @@
 using AFWebChat.Services;
+using AFWebChat.Tools;
+using AFWebChat.Tools.Plugins;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 
@@ -15,6 +17,7 @@ public static class SummarizerAgent
         Category = "Básico",
         Icon = "📝",
         Color = "#238636",
+        Tools = ["GenerateChart"],
         ExamplePrompts = ["Resume este artículo en 3 puntos clave", "Dame un resumen ejecutivo de este texto", "¿Cuáles son las conclusiones principales de este documento?"],
         SupportsStreaming = true,
         Factory = sp =>
@@ -34,7 +37,9 @@ public static class SummarizerAgent
                     3. Mantén el significado y tono originales.
                     4. Si el texto es corto, proporciona un resumen breve de una línea.
                     5. Si se solicita un formato específico (resumen ejecutivo, viñetas, una línea), adáptate.
-                    """);
+                    6. Si el texto contiene cifras que se resumen mejor visualmente, usa GenerateChart.
+                    """,
+                tools: AIFunctionFactoryExtensions.CreateFromStatic<ChartPlugin>());
         }
     };
 }

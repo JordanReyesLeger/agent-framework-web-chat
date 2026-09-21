@@ -1,4 +1,6 @@
 using AFWebChat.Services;
+using AFWebChat.Tools;
+using AFWebChat.Tools.Plugins;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 
@@ -15,6 +17,7 @@ public static class AnalistaDeNegocioAgent
         Category = "Workflow",
         Icon = "📋",
         Color = "#0078d4",
+        Tools = ["GenerateChart"],
         ExamplePrompts = [
             "Necesitamos un sistema de gestión de inventarios",
             "Queremos digitalizar el proceso de facturación",
@@ -59,7 +62,9 @@ public static class AnalistaDeNegocioAgent
                     Métricas concretas para medir si el proyecto fue exitoso.
 
                     Sé práctico, concreto y enfocado en el valor de negocio.
-                    """);
+                    Si ayuda a ilustrar prioridades o riesgos, usa GenerateChart para un gráfico de apoyo.
+                    """,
+                tools: AIFunctionFactoryExtensions.CreateFromStatic<ChartPlugin>());
         }
     };
 }

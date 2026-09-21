@@ -17,7 +17,7 @@ public static class DatabaseQueryAgent
         Category = "Herramientas",
         Icon = "💾",
         Color = "#8764b8",
-        Tools = ["GetSchema", "ExecuteQuery", "ExplainQuery"],
+        Tools = ["GetSchema", "ExecuteQuery", "ExplainQuery", "GenerateChart"],
         ExamplePrompts = ["Muéstrame el esquema de la base de datos", "¿Cuántos registros hay en la tabla de usuarios?", "Encuentra todos los pedidos del mes pasado"],
         SupportsStreaming = true,
         Factory = sp =>
@@ -38,8 +38,10 @@ public static class DatabaseQueryAgent
                     4. Usa ExecuteQuery para ejecutar consultas y presenta los resultados claramente.
                     5. Solo genera consultas SELECT — nunca INSERT, UPDATE o DELETE.
                     6. Formatea los resultados como tablas cuando sea apropiado.
+                    7. Si los resultados se prestan para visualizarse (tendencias, comparaciones), usa
+                       GenerateChart para mostrar un gráfico además de la tabla.
                     """,
-                tools: AIFunctionFactoryExtensions.CreateFromInstance(sqlPlugin));
+                tools: [.. AIFunctionFactoryExtensions.CreateFromInstance(sqlPlugin), .. AIFunctionFactoryExtensions.CreateFromStatic<ChartPlugin>()]);
         }
     };
 }

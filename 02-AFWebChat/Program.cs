@@ -133,6 +133,7 @@ registry.Register(TranslatorAgent.CreateDefinition());
 registry.Register(DatabaseQueryAgent.CreateDefinition());
 registry.Register(WebSearchAgent.CreateDefinition());
 registry.Register(LightsAgent.CreateDefinition());
+registry.Register(ChartAgent.CreateDefinition());
 
 // ── Structured output agents ──
 registry.Register(EntityExtractorAgent.CreateDefinition());

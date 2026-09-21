@@ -17,7 +17,7 @@ public static class AzureSearchAgent
         Category = "Contexto",
         Icon = "📚",
         Color = "#27ae60",
-        Tools = ["SearchDocuments"],
+        Tools = ["SearchDocuments", "GenerateChart"],
         ExamplePrompts = [
             "Busca información sobre contratos de servicio",
             "¿Qué documentos tenemos sobre políticas de seguridad?",
@@ -32,6 +32,7 @@ public static class AzureSearchAgent
             var clientId = config["Tenant:ClientId"] ?? "default";
             var tools = new List<AITool>();
             tools.AddRange(AIFunctionFactoryExtensions.CreateFromInstance(searchPlugin));
+            tools.AddRange(AIFunctionFactoryExtensions.CreateFromStatic<ChartPlugin>());
 
             return chatClient.AsAIAgent(
                 name: Name,

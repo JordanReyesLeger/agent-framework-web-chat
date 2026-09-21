@@ -1,4 +1,6 @@
 using AFWebChat.Services;
+using AFWebChat.Tools;
+using AFWebChat.Tools.Plugins;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 
@@ -15,6 +17,7 @@ public static class VisionAgent
         Category = "Multimodal",
         Icon = "👁️",
         Color = "#9b59b6",
+        Tools = ["GenerateChart"],
         ExamplePrompts = ["Describe lo que ves en esta imagen", "Extrae todo el texto visible de esta captura de pantalla", "¿Qué objetos están presentes en esta foto?"],
         SupportsStreaming = true,
         Factory = sp =>
@@ -32,7 +35,10 @@ public static class VisionAgent
                     3. Responde preguntas específicas sobre la imagen
                     4. Extrae cualquier texto visible (OCR)
                     Si no se proporciona una imagen, pide al usuario que comparta una.
-                    """);
+                    Si la imagen contiene datos numéricos o una tabla que conviene visualizar de nuevo
+                    como gráfico, usa GenerateChart.
+                    """,
+                tools: AIFunctionFactoryExtensions.CreateFromStatic<ChartPlugin>());
         }
     };
 }

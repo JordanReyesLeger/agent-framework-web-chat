@@ -17,7 +17,7 @@ public static class BingGroundingAgent
         Category = "Herramientas",
         Icon = "🌐",
         Color = "#00809d",
-        Tools = ["ScrapeWebPage", "SearchWithBingGrounding"],
+        Tools = ["ScrapeWebPage", "SearchWithBingGrounding", "GenerateChart"],
         ExamplePrompts = [
             "¿Cuáles son las últimas noticias sobre IA?",
             "Busca información actualizada sobre Azure OpenAI",
@@ -32,6 +32,7 @@ public static class BingGroundingAgent
             var tools = new List<AITool>();
             tools.AddRange(AIFunctionFactoryExtensions.CreateFromInstance(webScraping));
             tools.AddRange(AIFunctionFactoryExtensions.CreateFromInstance(bingGrounding));
+            tools.AddRange(AIFunctionFactoryExtensions.CreateFromStatic<ChartPlugin>());
 
             return chatClient.AsAIAgent(
                 name: Name,

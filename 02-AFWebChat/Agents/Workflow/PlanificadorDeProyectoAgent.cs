@@ -1,4 +1,6 @@
 using AFWebChat.Services;
+using AFWebChat.Tools;
+using AFWebChat.Tools.Plugins;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 
@@ -15,6 +17,7 @@ public static class PlanificadorDeProyectoAgent
         Category = "Workflow",
         Icon = "📅",
         Color = "#8e44ad",
+        Tools = ["GenerateChart"],
         ExamplePrompts = [
             "Crea el plan de trabajo para este proyecto",
             "Genera el cronograma con hitos y entregables",
@@ -73,7 +76,10 @@ public static class PlanificadorDeProyectoAgent
                     Acción concreta para arrancar el proyecto esta semana.
 
                     Sé práctico, ejecutable y realista con los tiempos.
-                    """);
+                    Si ayuda a visualizar la carga por fase o recurso, usa GenerateChart (ej. barras
+                    apiladas por fase) además del cronograma en texto.
+                    """,
+                tools: AIFunctionFactoryExtensions.CreateFromStatic<ChartPlugin>());
         }
     };
 }

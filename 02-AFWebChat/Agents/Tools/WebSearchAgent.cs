@@ -17,7 +17,7 @@ public static class WebSearchAgent
         Category = "Herramientas",
         Icon = "🔍",
         Color = "#1abc9c",
-        Tools = ["SearchWeb", "FetchUrl", "ScrapeWebPage"],
+        Tools = ["SearchWeb", "FetchUrl", "ScrapeWebPage", "GenerateChart"],
         ExamplePrompts = [
             "Busca las últimas noticias sobre IA",
             "Extrae el contenido de esta página: https://example.com",
@@ -33,6 +33,7 @@ public static class WebSearchAgent
             var tools = new List<AITool>();
             tools.AddRange(AIFunctionFactoryExtensions.CreateFromStatic<WebSearchPlugin>());
             tools.AddRange(AIFunctionFactoryExtensions.CreateFromInstance(webScraping));
+            tools.AddRange(AIFunctionFactoryExtensions.CreateFromStatic<ChartPlugin>());
 
             return chatClient.AsAIAgent(
                 name: Name,

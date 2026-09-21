@@ -36,6 +36,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    // Configure Chart.js defaults so los gráficos generados por agentes respeten el tema activo.
+    if (typeof Chart !== 'undefined') {
+        const isLightTheme = document.documentElement.getAttribute('data-bs-theme') === 'light';
+        Chart.defaults.color = isLightTheme ? '#3a3a3a' : '#e6e6e6';
+        Chart.defaults.borderColor = isLightTheme ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.12)';
+        Chart.defaults.font.family = getComputedStyle(document.body).fontFamily || Chart.defaults.font.family;
+    }
+
     await loadAgents();
     await loadOrchestrations();
     await loadWorkflows();
@@ -1113,6 +1121,7 @@ function finalizeStreamBubble(stream) {
         stream.contentEl.classList.remove('af-streaming');
         if (stream.fullText) {
             stream.contentEl.innerHTML = renderMarkdown(stream.fullText);
+            renderPendingCharts(stream.contentEl);
             stream.responses.push({ agentName: stream.agentName, text: stream.fullText });
         }
     }
@@ -1558,6 +1567,9 @@ function renderMarkdown(text) {
         if (typeof DOMPurify !== 'undefined') {
             html = DOMPurify.sanitize(html, { ADD_ATTR: ['target'] });
         }
+        // Convierte los bloques ```chart en marcadores de <canvas> ANTES de añadir botones de
+        // copia, para que no se traten como un bloque de código normal.
+        html = injectChartPlaceholders(html);
         // Add copy buttons to code blocks
         html = html.replace(/<pre><code(.*?)>/g, (match, attrs) => {
             return `<pre><button class="af-copy-btn" onclick="copyCodeBlock(this)"><i class="bi bi-clipboard"></i> Copy</button><code${attrs}>`;
@@ -1567,6 +1579,55 @@ function renderMarkdown(text) {
         return html;
     }
     return escapeHtml(text).replace(/\n/g, '<br>');
+}
+
+// ---- Chart rendering (bloques ```chart con configuración JSON de Chart.js) ----
+// Los agentes (ver ChartPlugin) devuelven bloques Markdown ```chart ... ``` con un JSON de
+// configuración de Chart.js. Aquí los detectamos, guardamos la config en memoria (evita tener
+// que serializarla otra vez dentro del HTML) y los sustituimos por un <canvas> pendiente de
+// inicializar. El gráfico real se instancia solo cuando el mensaje termina de renderizarse
+// (ver renderPendingCharts), para no recrear instancias de Chart.js en cada tick del streaming.
+const _afChartConfigs = new Map();
+let _afChartIdSeq = 0;
+
+function injectChartPlaceholders(html) {
+    return html.replace(/<pre><code class="language-chart">([\s\S]*?)<\/code><\/pre>/gi, (match, escapedJson) => {
+        const jsonText = decodeHtmlEntities(escapedJson);
+        let config;
+        try {
+            config = JSON.parse(jsonText);
+        } catch {
+            return match; // JSON incompleto (streaming en curso) o inválido: deja el bloque tal cual.
+        }
+        if (!config || typeof config !== 'object' || !config.type || !config.data) {
+            return match;
+        }
+        const chartId = `af-chart-${++_afChartIdSeq}`;
+        _afChartConfigs.set(chartId, config);
+        return `<div class="af-chart-wrapper"><canvas data-chart-id="${chartId}"></canvas></div>`;
+    });
+}
+
+function decodeHtmlEntities(text) {
+    const el = document.createElement('textarea');
+    el.innerHTML = text;
+    return el.value;
+}
+
+function renderPendingCharts(container) {
+    if (!container || typeof Chart === 'undefined') return;
+    container.querySelectorAll('canvas[data-chart-id]').forEach(canvas => {
+        if (canvas.dataset.rendered === 'true') return;
+        const config = _afChartConfigs.get(canvas.dataset.chartId);
+        if (!config) return;
+        try {
+            config.options = { responsive: true, maintainAspectRatio: false, ...(config.options || {}) };
+            new Chart(canvas, config);
+            canvas.dataset.rendered = 'true';
+        } catch (e) {
+            console.error('No se pudo renderizar el gráfico:', e);
+        }
+    });
 }
 
 function copyCodeBlock(btn) {
@@ -1752,6 +1813,7 @@ function switchToSession(sessionId) {
                 const agentMsgEl = appendAgentMessage(msg.agentName || state.currentAgent, agent);
                 const contentEl = agentMsgEl.querySelector('.af-msg-content');
                 contentEl.innerHTML = renderMarkdown(msg.text);
+                renderPendingCharts(contentEl);
             }
         }
     }

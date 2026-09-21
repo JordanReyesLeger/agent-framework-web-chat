@@ -1,4 +1,6 @@
 using AFWebChat.Services;
+using AFWebChat.Tools;
+using AFWebChat.Tools.Plugins;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 
@@ -21,6 +23,7 @@ public static class EvaluadorDeCVAgent
         Category = "RecursosHumanos",
         Icon = "📄",
         Color = "#1B6EC2",
+        Tools = ["GenerateChart"],
         ExamplePrompts = [
             "Adjunta un CV y evalúalo para un puesto de Senior Software Engineer",
             "Analiza este CV para una posición de Data Scientist senior",
@@ -122,6 +125,10 @@ public static class EvaluadorDeCVAgent
                     | Ajuste Cultural | XX/100 | 10% | ... |
                     | **TOTAL PONDERADO** | **XX/100** | 100% | |
 
+                    Justo después del scorecard, llama a GenerateChart (type="radar") con las 5
+                    dimensiones y sus scores, e incluye el bloque ```chart``` resultante tal cual —
+                    visualiza el perfil del candidato de un vistazo mejor que la tabla sola.
+
                     ## ✅ Fortalezas Principales (top 3-5)
                     - **[Fortaleza]**: evidencia textual del CV
 
@@ -183,7 +190,8 @@ public static class EvaluadorDeCVAgent
                     de reclutamiento, Y **ayudar al candidato a mejorar** con feedback accionable y concreto.
                     Para egresados/juniors, tu rol de coach es especialmente importante — un buen feedback
                     puede transformar su carrera.
-                    """);
+                    """,
+                tools: AIFunctionFactoryExtensions.CreateFromStatic<ChartPlugin>());
         }
     };
 }
