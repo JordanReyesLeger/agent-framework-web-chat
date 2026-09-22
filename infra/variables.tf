@@ -71,6 +71,23 @@ variable "foundry_sku" {
   default     = "S0"
 }
 
+variable "foundry_location" {
+  description = <<-EOT
+    Region for the Foundry (AIServices) account and its model deployments.
+
+    Must be eastus2: `az cognitiveservices model list -l westus2` returns NO
+    entry for gpt-5.4 or text-embedding-3-large, so deployments there fail with
+    400 SpecialFeatureOrQuotaIdRequired. Note that `az cognitiveservices usage
+    list -l westus2` DOES report a 1000-TPM meter for both models - the quota
+    meter exists even where the model is not offered, so quota is not proof of
+    availability. App Service cannot follow Foundry to eastus2 (0 quota for
+    S1/P0v3/P1v3/P1mv3, verified), hence the deliberate two-region split.
+    Cross-region private endpoints and shared private links are supported.
+  EOT
+  type        = string
+  default     = "eastus2"
+}
+
 variable "openai_chat_model_name" {
   description = "OpenAI chat model name to deploy"
   type        = string

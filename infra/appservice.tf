@@ -26,16 +26,21 @@ resource "azurerm_linux_web_app" "main" {
 
   https_only = true
 
+  # La web sigue siendo publica a proposito: es la unica puerta de la demo.
+  # Su salida hacia Foundry, Search, Cosmos y Storage va por la VNet.
+  virtual_network_subnet_id = azurerm_subnet.app.id
+
   identity {
     type         = "SystemAssigned, UserAssigned"
     identity_ids = [azurerm_user_assigned_identity.app.id]
   }
 
   site_config {
-    always_on           = var.app_service_sku != "F1" && var.app_service_sku != "D1"
-    http2_enabled       = true
-    minimum_tls_version = "1.2"
-    ftps_state          = "Disabled"
+    always_on              = var.app_service_sku != "F1" && var.app_service_sku != "D1"
+    http2_enabled          = true
+    minimum_tls_version    = "1.2"
+    ftps_state             = "Disabled"
+    vnet_route_all_enabled = true
 
     application_stack {
       dotnet_version = "9.0"

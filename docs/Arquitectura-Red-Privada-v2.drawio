@@ -1,0 +1,261 @@
+<mxfile host="65bd71144e">
+    <diagram name="Arquitectura Red Privada (vista alterna)" id="afpriv-arch-v2">
+        <mxGraphModel dx="1785" dy="1297" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1940" pageHeight="1080" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="title" value="&lt;b&gt;AF-Private — Chat privado con RAG sobre Azure (vista alterna)&lt;/b&gt;" style="text;html=1;align=left;verticalAlign=middle;fontSize=26;fontColor=#1F1F1F;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="10" width="1200" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="subtitle" value="rg-afpriv-dev-de42f · westus2 · misma arquitectura, plantilla hub-spoke" style="text;html=1;align=right;verticalAlign=middle;fontSize=13;fontColor=#605E5C;" parent="1" vertex="1">
+                    <mxGeometry x="1300" y="10" width="640" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="zoneA" value="" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;dashPattern=12 12;fillColor=none;strokeColor=#004C99;strokeWidth=1;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="100" width="200" height="660" as="geometry"/>
+                </mxCell>
+                <mxCell id="capA" value="1 · USUARIOS" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontStyle=1;fontColor=#004C99;fillColor=#FFFFFF;strokeColor=none;spacingLeft=6;" parent="1" vertex="1">
+                    <mxGeometry x="50" y="90" width="180" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="user" value="Usuario final&#xa;(navegador, Internet)" style="image;verticalLabelPosition=bottom;verticalAlign=top;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=img/lib/azure2/identity/Users.svg;" parent="1" vertex="1">
+                    <mxGeometry x="108" y="254" width="64" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="admin" value="Administrador&#xa;(equipo SE)" style="image;verticalLabelPosition=bottom;verticalAlign=top;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=img/lib/azure2/identity/Users.svg;" parent="1" vertex="1">
+                    <mxGeometry x="108" y="630" width="64" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="zoneB" value="" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;dashPattern=12 12;fillColor=none;strokeColor=#004C99;strokeWidth=1;" parent="1" vertex="1">
+                    <mxGeometry x="300" y="100" width="260" height="660" as="geometry"/>
+                </mxCell>
+                <mxCell id="capB" value="2 · EDGE PUBLICO" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontStyle=1;fontColor=#004C99;fillColor=#FFFFFF;strokeColor=none;spacingLeft=6;" parent="1" vertex="1">
+                    <mxGeometry x="310" y="90" width="240" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="appservice" value="&lt;span&gt;App Service&lt;br&gt;(Linux, S2)&lt;br&gt;publicNetworkAccess=Enabled&lt;/span&gt;" style="image;verticalLabelPosition=bottom;verticalAlign=top;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=img/lib/azure2/app_services/App_Services.svg;" parent="1" vertex="1">
+                    <mxGeometry x="350" y="300" width="64" height="64" as="geometry"/>
+                </mxCell>
+                <mxCell id="speech" value="Azure Speech&#xa;(Live Avatar)&#xa;publicNetworkAccess=Enabled" style="image;verticalLabelPosition=bottom;verticalAlign=top;aspect=fixed;html=1;points=[];align=center;fontSize=11;image=img/lib/azure2/ai_machine_learning/Speech_Services.svg;" parent="1" vertex="1">
+                    <mxGeometry x="452" y="112" width="68" height="68" as="geometry"/>
+                </mxCell>
+                <mxCell id="appinsights" value="Application Insights" style="image;verticalLabelPosition=bottom;verticalAlign=top;aspect=fixed;html=1;points=[];align=center;fontSize=11;image=img/lib/azure2/devops/Application_Insights.svg;" parent="1" vertex="1">
+                    <mxGeometry x="330" y="520" width="44" height="63" as="geometry"/>
+                </mxCell>
+                <mxCell id="entra" value="Managed Identity&#xa;(Microsoft Entra ID)" style="image;verticalLabelPosition=bottom;verticalAlign=top;aspect=fixed;html=1;points=[];align=center;fontSize=11;image=img/lib/azure2/identity/Azure_Active_Directory.svg;" parent="1" vertex="1">
+                    <mxGeometry x="460" y="520" width="60" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="noteB" value="Unico componente con IP publica.&#xa;Recibe todo el trafico HTTPS del chat&#xa;y VoiceLive (WebSocket). Sin llaves:&#xa;autentica con Entra ID. Excepcion:&#xa;Speech usa una key para Live Avatar." style="text;html=1;align=center;verticalAlign=top;fontSize=11;fontColor=#5C6BC0;whiteSpace=wrap;" parent="1" vertex="1">
+                    <mxGeometry x="310" y="680" width="240" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="zoneC" value="" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;dashPattern=12 12;fillColor=none;strokeColor=#004C99;strokeWidth=1;" parent="1" vertex="1">
+                    <mxGeometry x="620" y="100" width="800" height="660" as="geometry"/>
+                </mxCell>
+                <mxCell id="capC" value="3 · VNET PRIVADA 10.20.0.0/16 (westus2)" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontStyle=1;fontColor=#004C99;fillColor=#FFFFFF;strokeColor=none;spacingLeft=6;" parent="1" vertex="1">
+                    <mxGeometry x="630" y="90" width="500" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="subC1" value="" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;dashPattern=8 8;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=1;" parent="1" vertex="1">
+                    <mxGeometry x="650" y="140" width="340" height="270" as="geometry"/>
+                </mxCell>
+                <mxCell id="capC1" value="snet-app  10.20.2.0/24" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fontColor=#1F4E79;fillColor=#FFFFFF;strokeColor=none;spacingLeft=6;" parent="1" vertex="1">
+                    <mxGeometry x="660" y="130" width="300" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="noteC1" value="Sin recursos propios: solo recibe&#xa;la NIC de integracion VNet del&#xa;App Service (route-all)" style="text;html=1;align=center;verticalAlign=middle;fontSize=11;fontColor=#5C6BC0;whiteSpace=wrap;" parent="1" vertex="1">
+                    <mxGeometry x="670" y="220" width="300" height="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="subC2" value="" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;dashPattern=8 8;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=1;" parent="1" vertex="1">
+                    <mxGeometry x="1030" y="140" width="340" height="270" as="geometry"/>
+                </mxCell>
+                <mxCell id="capC2" value="snet-pe  10.20.1.0/24  —  4 Private Endpoints" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fontColor=#1F4E79;fillColor=#FFFFFF;strokeColor=none;spacingLeft=6;" parent="1" vertex="1">
+                    <mxGeometry x="1040" y="130" width="320" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="pe-foundry" value="PE → Foundry" style="image;verticalLabelPosition=bottom;verticalAlign=top;aspect=fixed;html=1;points=[];align=center;fontSize=11;image=img/lib/azure2/networking/Private_Endpoint.svg;" parent="1" vertex="1">
+                    <mxGeometry x="1080" y="180" width="48" height="44" as="geometry"/>
+                </mxCell>
+                <mxCell id="pe-search" value="PE → AI Search" style="image;verticalLabelPosition=bottom;verticalAlign=top;aspect=fixed;html=1;points=[];align=center;fontSize=11;image=img/lib/azure2/networking/Private_Endpoint.svg;" parent="1" vertex="1">
+                    <mxGeometry x="1260" y="180" width="48" height="44" as="geometry"/>
+                </mxCell>
+                <mxCell id="pe-cosmos" value="PE → Cosmos DB" style="image;verticalLabelPosition=bottom;verticalAlign=top;aspect=fixed;html=1;points=[];align=center;fontSize=11;image=img/lib/azure2/networking/Private_Endpoint.svg;" parent="1" vertex="1">
+                    <mxGeometry x="1080" y="280" width="48" height="44" as="geometry"/>
+                </mxCell>
+                <mxCell id="pe-storage" value="PE → Storage" style="image;verticalLabelPosition=bottom;verticalAlign=top;aspect=fixed;html=1;points=[];align=center;fontSize=11;image=img/lib/azure2/networking/Private_Endpoint.svg;" parent="1" vertex="1">
+                    <mxGeometry x="1260" y="280" width="48" height="44" as="geometry"/>
+                </mxCell>
+                <mxCell id="subC3" value="" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;dashPattern=8 8;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=1;" parent="1" vertex="1">
+                    <mxGeometry x="650" y="450" width="340" height="270" as="geometry"/>
+                </mxCell>
+                <mxCell id="capC3" value="AzureBastionSubnet  10.20.3.0/26" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fontColor=#1F4E79;fillColor=#FFFFFF;strokeColor=none;spacingLeft=6;" parent="1" vertex="1">
+                    <mxGeometry x="660" y="440" width="300" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="bastion" value="Azure Bastion (Basic)" style="image;verticalLabelPosition=bottom;verticalAlign=top;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=img/lib/azure2/networking/Bastions.svg;" parent="1" vertex="1">
+                    <mxGeometry x="760" y="540" width="58" height="68" as="geometry"/>
+                </mxCell>
+                <mxCell id="subC4" value="" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;dashPattern=8 8;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=1;" parent="1" vertex="1">
+                    <mxGeometry x="1030" y="450" width="340" height="270" as="geometry"/>
+                </mxCell>
+                <mxCell id="capC4" value="snet-jumpbox  10.20.4.0/27" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fontColor=#1F4E79;fillColor=#FFFFFF;strokeColor=none;spacingLeft=6;" parent="1" vertex="1">
+                    <mxGeometry x="1040" y="440" width="300" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="jumpbox" value="VM jumpbox&#xa;Windows Server 2022" style="image;verticalLabelPosition=bottom;verticalAlign=top;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=img/lib/azure2/compute/Automanaged_VM.svg;" parent="1" vertex="1">
+                    <mxGeometry x="1166" y="543" width="68" height="62" as="geometry"/>
+                </mxCell>
+                <mxCell id="zoneD" value="" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;dashPattern=12 12;fillColor=none;strokeColor=#004C99;strokeWidth=1;" parent="1" vertex="1">
+                    <mxGeometry x="1480" y="100" width="400" height="660" as="geometry"/>
+                </mxCell>
+                <mxCell id="capD" value="4 · SERVICIOS PAAS (RED CERRADA)" style="text;html=1;align=left;verticalAlign=middle;fontSize=12;fontStyle=1;fontColor=#004C99;fillColor=#FFFFFF;strokeColor=none;spacingLeft=6;" parent="1" vertex="1">
+                    <mxGeometry x="1490" y="90" width="380" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="foundry" value="Microsoft Foundry&#xa;Chat + VoiceLive (gpt-realtime)&#xa;publicNetworkAccess=Disabled" style="image;verticalLabelPosition=bottom;verticalAlign=top;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=img/lib/azure2/ai_machine_learning/AI_Studio.svg;" parent="1" vertex="1">
+                    <mxGeometry x="1588" y="130" width="64" height="68" as="geometry"/>
+                </mxCell>
+                <mxCell id="search" value="Azure AI Search&#xa;publicNetworkAccess=Disabled" style="image;verticalLabelPosition=bottom;verticalAlign=top;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=img/lib/azure2/app_services/Search_Services.svg;" parent="1" vertex="1">
+                    <mxGeometry x="1730" y="370" width="68" height="49" as="geometry"/>
+                </mxCell>
+                <mxCell id="cosmos" value="Cosmos DB&#xa;publicNetworkAccess=Disabled" style="image;verticalLabelPosition=bottom;verticalAlign=top;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=img/lib/azure2/databases/Azure_Cosmos_DB.svg;" parent="1" vertex="1">
+                    <mxGeometry x="1550" y="636" width="64" height="64" as="geometry"/>
+                </mxCell>
+                <mxCell id="storage" value="Storage Account&#xa;defaultAction=Deny" style="image;verticalLabelPosition=bottom;verticalAlign=top;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=img/lib/azure2/storage/Storage_Accounts.svg;" parent="1" vertex="1">
+                    <mxGeometry x="1550" y="491" width="65" height="52" as="geometry"/>
+                </mxCell>
+                <mxCell id="e-user-app" value="HTTPS 443&#xa;chat" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#9673a6;strokeWidth=3;fontSize=11;labelBackgroundColor=#FFFFFF;flowAnimation=1;" parent="1" source="user" target="appservice" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e-admin-bastion" value="HTTPS 443&#xa;(Azure Portal)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#9673a6;strokeWidth=3;fontSize=11;labelBackgroundColor=#FFFFFF;flowAnimation=1;" parent="1" source="admin" target="bastion" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e-bastion-jumpbox" value="RDP 3389&#xa;(privado)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0078D4;strokeWidth=3;fontSize=11;labelBackgroundColor=#FFFFFF;flowAnimation=1;" parent="1" source="bastion" target="jumpbox" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e-app-subC1" value="VNet Integration&#xa;(route-all)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#F57C00;strokeWidth=3;dashed=1;fontSize=11;labelBackgroundColor=#FFFFFF;flowAnimation=1;" parent="1" source="appservice" target="subC1" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e-app-appinsights" value="Telemetria" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0078D4;strokeWidth=2;dashed=1;fontSize=11;labelBackgroundColor=#FFFFFF;" parent="1" source="appservice" target="appinsights" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e-app-entra" value="Managed Identity&#xa;(auth)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#F57C00;strokeWidth=2;dashed=1;fontSize=11;labelBackgroundColor=#FFFFFF;" parent="1" source="appservice" target="entra" edge="1">
+                    <mxGeometry x="0.5455" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e-pe-foundry" value="Private Endpoint" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0078D4;strokeWidth=3;fontSize=11;labelBackgroundColor=#FFFFFF;flowAnimation=1;" parent="1" source="pe-foundry" target="foundry" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1104" y="164"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e-pe-search" value="Private Endpoint" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0078D4;strokeWidth=3;fontSize=11;labelBackgroundColor=#FFFFFF;flowAnimation=1;" parent="1" source="pe-search" target="search" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1284" y="270"/>
+                            <mxPoint x="1764" y="270"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e-pe-cosmos" value="Private Endpoint" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0078D4;strokeWidth=3;fontSize=11;labelBackgroundColor=#FFFFFF;flowAnimation=1;" parent="1" source="pe-cosmos" target="cosmos" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1104" y="380"/>
+                            <mxPoint x="1440" y="380"/>
+                            <mxPoint x="1440" y="660"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e-pe-storage" value="Private Endpoint" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0078D4;strokeWidth=3;fontSize=11;labelBackgroundColor=#FFFFFF;flowAnimation=1;" parent="1" source="pe-storage" target="storage" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1284" y="350"/>
+                            <mxPoint x="1500" y="350"/>
+                            <mxPoint x="1500" y="616"/>
+                            <mxPoint x="1583" y="616"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e-search-storage" value="Shared Private Link&#xa;indexer -&gt; blob" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#43A047;strokeWidth=3;dashed=1;fontSize=11;labelBackgroundColor=#FFFFFF;flowAnimation=1;entryX=0.521;entryY=-0.182;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="search" target="storage" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e-search-foundry" value="Shared Private Link&#xa;embeddings" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#F57C00;strokeWidth=3;dashed=1;fontSize=11;labelBackgroundColor=#FFFFFF;flowAnimation=1;" parent="1" source="search" target="foundry" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1830" y="395"/>
+                            <mxPoint x="1830" y="164"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e-jumpbox-subC2" value="Acceso admin&#xa;(misma VNet)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#5C6BC0;strokeWidth=2;dashed=1;fontSize=11;labelBackgroundColor=#FFFFFF;" parent="1" source="jumpbox" target="subC2" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e-app-speech" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#C2185B;strokeWidth=2;dashed=1;fontSize=11;labelBackgroundColor=#FFFFFF;exitX=0.472;exitY=0.016;exitDx=0;exitDy=0;exitPerimeter=0;" parent="1" source="appservice" target="speech" edge="1">
+                    <mxGeometry x="0.1722" y="-28" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e-user-speech" value="WebRTC + ICE&#xa;(audio Live Avatar)" style="rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#C2185B;strokeWidth=3;fontSize=11;labelBackgroundColor=#FFFFFF;flowAnimation=1;exitX=0.981;exitY=0.285;exitDx=0;exitDy=0;exitPerimeter=0;edgeStyle=elbowEdgeStyle;" parent="1" source="user" target="speech" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="171" y="200"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="lg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#cccccc;strokeWidth=1;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="800" width="640" height="300" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg-t" value="&lt;b&gt;Flujos&lt;/b&gt;" style="text;html=1;align=left;verticalAlign=middle;fontSize=14;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="810" width="200" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg-1a" value="" style="endArrow=blockThin;html=1;strokeColor=#9673a6;strokeWidth=3;" parent="1" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="60" y="860" as="sourcePoint"/>
+                        <mxPoint x="140" y="860" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="lg-1b" value="Interaccion de usuario / administrador" style="text;html=1;align=left;verticalAlign=middle;fontSize=13;" parent="1" vertex="1">
+                    <mxGeometry x="160" y="840" width="500" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg-2a" value="" style="endArrow=blockThin;html=1;strokeColor=#0078D4;strokeWidth=3;" parent="1" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="60" y="900" as="sourcePoint"/>
+                        <mxPoint x="140" y="900" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="lg-2b" value="Private Endpoint (entrante, acceso directo)" style="text;html=1;align=left;verticalAlign=middle;fontSize=13;" parent="1" vertex="1">
+                    <mxGeometry x="160" y="880" width="500" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg-3a" value="" style="endArrow=blockThin;html=1;strokeColor=#F57C00;strokeWidth=3;dashed=1;" parent="1" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="60" y="940" as="sourcePoint"/>
+                        <mxPoint x="140" y="940" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="lg-3b" value="VNet Integration / Managed Identity / embeddings" style="text;html=1;align=left;verticalAlign=middle;fontSize=13;" parent="1" vertex="1">
+                    <mxGeometry x="160" y="920" width="500" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg-4a" value="" style="endArrow=blockThin;html=1;strokeColor=#43A047;strokeWidth=3;dashed=1;" parent="1" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="60" y="980" as="sourcePoint"/>
+                        <mxPoint x="140" y="980" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="lg-4b" value="Shared Private Link (ingesta de documentos)" style="text;html=1;align=left;verticalAlign=middle;fontSize=13;" parent="1" vertex="1">
+                    <mxGeometry x="160" y="960" width="500" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg-5a" value="" style="endArrow=blockThin;html=1;strokeColor=#5C6BC0;strokeWidth=2;dashed=1;" parent="1" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="60" y="1020" as="sourcePoint"/>
+                        <mxPoint x="140" y="1020" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="lg-5b" value="Acceso admin dentro de la misma VNet" style="text;html=1;align=left;verticalAlign=middle;fontSize=13;" parent="1" vertex="1">
+                    <mxGeometry x="160" y="1000" width="500" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg-6a" value="" style="endArrow=blockThin;html=1;strokeColor=#C2185B;strokeWidth=3;" parent="1" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="60" y="1060" as="sourcePoint"/>
+                        <mxPoint x="140" y="1060" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="lg-6b" value="Excepcion publica: navegador → Speech por WebRTC (Live Avatar, con token corto)" style="text;html=1;align=left;verticalAlign=middle;fontSize=13;" parent="1" vertex="1">
+                    <mxGeometry x="160" y="1040" width="500" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="notes" value="&lt;b&gt;Notas&lt;/b&gt;&amp;nbsp;&amp;nbsp;|&amp;nbsp;&amp;nbsp; Misma arquitectura que Arquitectura-Red-Privada.drawio, redibujada con la plantilla hub-spoke (zone-layout copy). La app publica es intencional; todo el backend queda cerrado detras de Private Endpoints. VoiceLive (chat de voz en tiempo real) reutiliza el mismo Foundry y su Private Endpoint. Live Avatar es la unica excepcion offline: Speech usa una key propia porque el navegador negocia WebRTC/ICE directo con el servicio. El jumpbox + Bastion son el unico camino de administracion sin abrir puertos a Internet." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;strokeWidth=2;fontSize=13;align=left;verticalAlign=middle;spacingLeft=16;spacingRight=16;" parent="1" vertex="1">
+                    <mxGeometry x="700" y="800" width="1180" height="300" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

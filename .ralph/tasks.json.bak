@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "project": "mi-proyecto",
+  "generatedAt": "",
+  "tasks": [
+    {
+      "id": "TASK-0001",
+      "title": "Ejemplo: borra esta tarea y genera las tuyas con New-RalphPlan.ps1",
+      "status": "pending",
+      "priority": 1,
+      "dependsOn": [],
+      "spec": ".ralph/tasks/TASK-0001.json",
+      "commit": "",
+      "completedAt": "",
+      "blockedReason": ""
+    }
+  ]
+}
+

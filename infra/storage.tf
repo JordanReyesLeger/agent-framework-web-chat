@@ -11,6 +11,16 @@ resource "azurerm_storage_account" "main" {
   shared_access_key_enabled       = false
   default_to_oauth_authentication = true
 
+  # Terraform crea los contenedores por el plano de DATOS, que no pasa por el
+  # private endpoint si se corre fuera de la VNet. Por eso el endpoint publico
+  # queda en Deny con una sola excepcion: la IP de administracion. El trafico de
+  # la app entra por el private endpoint.
+  network_rules {
+    default_action = "Deny"
+    bypass         = ["AzureServices"]
+    ip_rules       = var.admin_ip_address == "" ? [] : [var.admin_ip_address]
+  }
+
   blob_properties {
     delete_retention_policy {
       days = 7

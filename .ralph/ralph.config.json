@@ -1,0 +1,31 @@
+{
+  "name": "afpriv",
+  "description": "Proyecto afpriv",
+  "model": "claude-sonnet-4.6",
+  "agent": "",
+  "iterations": 10,
+  "maxAutopilotContinues": 25,
+  "maxAiCreditsPerIteration": 0,
+  "iterationTimeoutSec": 1800,
+  "stallLimit": 3,
+  "allowPush": false,
+  "denyTools": [
+    "shell(git push)",
+    "shell(gh repo delete)",
+    "shell(npm publish)",
+    "shell(dotnet nuget push)"
+  ],
+  "verify": {
+    "install": "",
+    "build": "dotnet build -warnaserror --nologo",
+    "typecheck": "",
+    "lint": "",
+    "test": "dotnet test --nologo --verbosity quiet",
+    "e2e": ""
+  },
+  "env": {},
+  "notify": {
+    "teamsWebhookUrl": "",
+    "toast": true
+  }
+}

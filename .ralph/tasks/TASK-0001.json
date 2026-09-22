@@ -1,0 +1,37 @@
+{
+  "id": "TASK-0001",
+  "title": "Ejemplo de especificacion de tarea",
+  "why": "Para que el agente entienda el valor y pueda decidir bien cuando la spec se queda corta.",
+  "scope": {
+    "incluye": [
+      "Lo que SI hay que hacer, en viñetas concretas y verificables"
+    ],
+    "excluye": [
+      "Lo que explicitamente NO hay que tocar en esta tarea"
+    ]
+  },
+  "files": [
+    "Rutas de los archivos que se esperan tocar. Orienta al agente y acota el blast radius."
+  ],
+  "steps": [
+    "Paso 1 concreto",
+    "Paso 2 concreto"
+  ],
+  "acceptance": [
+    "Criterio observable 1: dado X, cuando Y, entonces Z",
+    "Criterio observable 2"
+  ],
+  "verify": [
+    { "type": "cmd", "run": "npm test -- ejemplo" },
+    {
+      "type": "file",
+      "path": "docs/ejemplo.md",
+      "contains": ["## Decisiones", "## Riesgos"],
+      "matches": "SLA de \\d+(\\.\\d+)?%",
+      "minWords": 300
+    },
+    { "type": "manual", "check": "Criterio que nadie puede automatizar. NO cuenta como freno." }
+  ],
+  "estimate": "S",
+  "notes": "El bloque verify lo corre EL MOTOR, no el agente: es el freno de la tarea. Deja solo los chequeos que apliquen, pero al menos uno de tipo cmd o file. Ejemplos de cmd segun el dominio: 'npm test', 'dotnet test', 'az bicep build --file infra/main.bicep', 'terraform validate' (con cwd), 'markdownlint docs/**/*.md', 'az deployment group what-if ...'."
+}

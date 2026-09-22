@@ -12,6 +12,9 @@ resource "azurerm_search_service" "main" {
 
   local_authentication_enabled = false
 
+  # Solo se llega por el private endpoint. El indexer sale por shared private link.
+  public_network_access_enabled = false
+
   identity {
     type = "SystemAssigned"
   }

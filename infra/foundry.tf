@@ -5,12 +5,12 @@
 resource "azurerm_cognitive_account" "foundry" {
   name                          = "aif-${local.unique_name}"
   resource_group_name           = azurerm_resource_group.main.name
-  location                      = azurerm_resource_group.main.location
+  location                      = var.foundry_location
   kind                          = "AIServices"
   sku_name                      = var.foundry_sku
   custom_subdomain_name         = "aif-${local.unique_name}"
   project_management_enabled    = true
-  public_network_access_enabled = true
+  public_network_access_enabled = false
   local_auth_enabled            = false
 
   identity {

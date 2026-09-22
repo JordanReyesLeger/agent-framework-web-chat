@@ -377,6 +377,7 @@ AZURE_POLICY_FIX.md
 !*.tfvars.sample
 tfplan.bin
 *.tfplan
+tfplan*
 tfapply*.log
 tfdestroy*.log
 crash.log
@@ -397,3 +398,10 @@ infra/terraform.tfstate.d/
 # Playwright MCP debug artifacts (browser snapshots/console logs captured
 # during manual testing — may embed live subscription/resource identifiers)
 .playwright-mcp/
+
+# Ralph Loop (estado local, no se versiona)
+.ralph/runs/
+.ralph/state/
+.ralph/LOG.md
+.ralph/.lock
+.ralph/STOP

@@ -79,6 +79,34 @@ output "speech_service_endpoint" {
   value       = var.enable_speech ? azurerm_cognitive_account.speech[0].endpoint : null
 }
 
+# ── Jumpbox / Bastion ──
+
+output "bastion_name" {
+  description = "Nombre del Azure Bastion host (si esta habilitado)"
+  value       = var.enable_jumpbox ? azurerm_bastion_host.main[0].name : null
+}
+
+output "jumpbox_vm_name" {
+  description = "Nombre de la VM jumpbox (si esta habilitada)"
+  value       = var.enable_jumpbox ? azurerm_windows_virtual_machine.jumpbox[0].name : null
+}
+
+output "jumpbox_private_ip" {
+  description = "IP privada del jumpbox, usala para conectarte via Bastion"
+  value       = var.enable_jumpbox ? azurerm_network_interface.jumpbox[0].private_ip_address : null
+}
+
+output "jumpbox_admin_username" {
+  description = "Usuario administrador del jumpbox"
+  value       = var.enable_jumpbox ? var.jumpbox_admin_username : null
+}
+
+output "jumpbox_admin_password" {
+  description = "Password generado del jumpbox. Cópialo y guárdalo aparte; no queda en el repo."
+  value       = var.enable_jumpbox ? random_password.jumpbox_admin[0].result : null
+  sensitive   = true
+}
+
 output "speech_service_region" {
   description = "Azure Speech Service region (if deployed)"
   value       = var.enable_speech ? azurerm_cognitive_account.speech[0].location : null

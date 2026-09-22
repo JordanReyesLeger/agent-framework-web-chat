@@ -9,6 +9,8 @@ resource "azurerm_cosmosdb_account" "main" {
   offer_type                   = "Standard"
   local_authentication_enabled = false
 
+  public_network_access_enabled = false
+
   consistency_policy {
     consistency_level = "Session"
   }
