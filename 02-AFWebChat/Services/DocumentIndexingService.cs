@@ -362,12 +362,7 @@ public class DocumentIndexingService : IDocumentIndexingService
                 {
                     { "dataToExtract", "contentAndMetadata" },
                     { "parsingMode", "default" },
-                    { "imageAction", "generateNormalizedImagePerPage" },
-                    // Obligatorio en despliegues de red privada: solo el entorno de ejecucion
-                    // privado del servicio de busqueda puede usar los shared private links.
-                    // Sin esto el indexer corre en el entorno multi-tenant de Microsoft y falla
-                    // con 403 "Public access is disabled. Please configure private endpoint."
-                    { "executionEnvironment", "private" }
+                    { "imageAction", "generateNormalizedImagePerPage" }
                 }
             };
 
