@@ -1,0 +1,329 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="Electron">
+  <diagram name="AF-WebChat · Arquitectura" id="af-webchat-arch">
+    <mxGraphModel dx="1960" dy="1270" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1960" pageHeight="1270" background="#FFFFFF" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="hdr-bar" value="" style="rounded=1;fillColor=#0078D4;strokeColor=none;" parent="1" vertex="1">
+          <mxGeometry x="40" y="20" width="10" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="title" value="&lt;b&gt;AF-WebChat · Arquitectura de la Solución Multi-Agente&lt;/b&gt;" style="text;html=1;align=left;verticalAlign=middle;fontFamily=Segoe UI;fontSize=26;fontColor=#0F172A;" parent="1" vertex="1">
+          <mxGeometry x="60" y="20" width="1180" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" value="Microsoft Agent Framework (.NET 9)  ·  Microsoft Foundry  ·  Seguridad Zero-Trust con Managed Identity" style="text;html=1;align=left;verticalAlign=middle;fontFamily=Segoe UI;fontSize=14;fontColor=#475569;" parent="1" vertex="1">
+          <mxGeometry x="60" y="60" width="1180" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="hdr-pill" value="&lt;b&gt;ASP.NET Core 9&lt;/b&gt;  ·  35+ Agentes  ·  SSE  ·  Teams  ·  RAG  ·  MCP  ·  A2A" style="rounded=1;arcSize=50;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#93C5FD;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=12;fontColor=#1D4ED8;align=center;verticalAlign=middle;" parent="1" vertex="1">
+          <mxGeometry x="1340" y="30" width="580" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="z1" value="1 · CLIENTES Y CANALES" style="swimlane;startSize=38;html=1;rounded=1;arcSize=3;fillColor=#EDE9FE;swimlaneFillColor=#FAF8FF;strokeColor=#7C3AED;strokeWidth=2;fontFamily=Segoe UI;fontSize=13;fontStyle=1;fontColor=#4C1D95;align=left;spacingLeft=16;verticalAlign=middle;" parent="1" vertex="1">
+          <mxGeometry x="40" y="110" width="290" height="980" as="geometry" />
+        </mxCell>
+        <mxCell id="ch-users" value="" style="swimlane;startSize=0;swimlaneLine=0;html=1;rounded=1;arcSize=8;fillColor=#FFFFFF;swimlaneFillColor=#FFFFFF;strokeColor=#C4B5FD;strokeWidth=1.5;" parent="z1" vertex="1">
+          <mxGeometry x="20" y="60" width="250" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="ch-users-ico" value="" style="image;aspect=fixed;html=1;points=[];image=img/lib/azure2/identity/Users.svg;" parent="ch-users" vertex="1">
+          <mxGeometry x="20" y="20" width="52" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="ch-users-txt" value="&lt;b&gt;Usuarios y Equipos&lt;/b&gt;&lt;br&gt;&lt;font color='#64748B'&gt;Interacción en navegador, Microsoft Teams y voz&lt;/font&gt;" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontFamily=Segoe UI;fontSize=11;fontColor=#1E293B;" parent="ch-users" vertex="1">
+          <mxGeometry x="80" y="10" width="160" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="ch-web" value="" style="swimlane;startSize=0;swimlaneLine=0;html=1;rounded=1;arcSize=8;fillColor=#FFFFFF;swimlaneFillColor=#FFFFFF;strokeColor=#A78BFA;strokeWidth=1.5;" parent="z1" vertex="1">
+          <mxGeometry x="20" y="230" width="250" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="ch-web-ico" value="" style="image;aspect=fixed;html=1;points=[];image=img/lib/azure2/general/Browser.svg;" parent="ch-web" vertex="1">
+          <mxGeometry x="20" y="40" width="54" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="ch-web-txt" value="&lt;b&gt;Web Chat UI&lt;/b&gt;&lt;br&gt;&lt;font color='#475569'&gt;Razor + Streaming SSE&lt;br&gt;Theming dinámico&lt;br&gt;VoiceLive y LiveAvatar&lt;/font&gt;" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontFamily=Segoe UI;fontSize=11;fontColor=#1E293B;" parent="ch-web" vertex="1">
+          <mxGeometry x="80" y="10" width="160" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="ch-teams" value="" style="swimlane;startSize=0;swimlaneLine=0;html=1;rounded=1;arcSize=8;fillColor=#FFFFFF;swimlaneFillColor=#FFFFFF;strokeColor=#A78BFA;strokeWidth=1.5;" parent="z1" vertex="1">
+          <mxGeometry x="20" y="420" width="250" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="ch-teams-ico" value="" style="image;aspect=fixed;html=1;points=[];image=img/lib/azure2/ai_machine_learning/Bot_Services.svg;" parent="ch-teams" vertex="1">
+          <mxGeometry x="20" y="40" width="52" height="52" as="geometry" />
+        </mxCell>
+        <mxCell id="ch-teams-txt" value="&lt;b&gt;Microsoft Teams&lt;/b&gt;&lt;br&gt;&lt;font color='#475569'&gt;Azure Bot Service&lt;br&gt;Adaptive Cards&lt;br&gt;Notificaciones proactivas&lt;/font&gt;" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontFamily=Segoe UI;fontSize=11;fontColor=#1E293B;" parent="ch-teams" vertex="1">
+          <mxGeometry x="80" y="10" width="160" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="ch-api" value="" style="swimlane;startSize=0;swimlaneLine=0;html=1;rounded=1;arcSize=8;fillColor=#FFFFFF;swimlaneFillColor=#FFFFFF;strokeColor=#A78BFA;strokeWidth=1.5;" parent="z1" vertex="1">
+          <mxGeometry x="20" y="610" width="250" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="ch-api-ico" value="" style="image;aspect=fixed;html=1;points=[];image=img/lib/azure2/devops/API_Connections.svg;" parent="ch-api" vertex="1">
+          <mxGeometry x="20" y="40" width="56" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="ch-api-txt" value="&lt;b&gt;API REST y A2A&lt;/b&gt;&lt;br&gt;&lt;font color='#475569'&gt;Endpoints HTTP / JSON&lt;br&gt;Callbacks OpenAPI&lt;br&gt;Agentes remotos A2A&lt;/font&gt;" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontFamily=Segoe UI;fontSize=11;fontColor=#1E293B;" parent="ch-api" vertex="1">
+          <mxGeometry x="80" y="10" width="160" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="ch-sec" value="" style="swimlane;startSize=0;swimlaneLine=0;html=1;rounded=1;arcSize=8;fillColor=#F5F3FF;swimlaneFillColor=#F5F3FF;strokeColor=#C4B5FD;strokeWidth=1.5;" parent="z1" vertex="1">
+          <mxGeometry x="20" y="800" width="250" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="ch-sec-ico" value="" style="image;aspect=fixed;html=1;points=[];image=img/lib/azure2/identity/Azure_Active_Directory.svg;" parent="ch-sec" vertex="1">
+          <mxGeometry x="20" y="40" width="48" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="ch-sec-txt" value="&lt;b&gt;Seguridad de Canal&lt;/b&gt;&lt;br&gt;&lt;font color='#475569'&gt;HTTPS / TLS 1.2+&lt;br&gt;Tokens Entra ID (Bot)&lt;br&gt;Tokens ICE (Avatar)&lt;/font&gt;" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontFamily=Segoe UI;fontSize=11;fontColor=#1E293B;" parent="ch-sec" vertex="1">
+          <mxGeometry x="80" y="10" width="160" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="az-rg" value="" style="swimlane;startSize=0;swimlaneLine=0;html=1;rounded=0;dashed=1;dashPattern=12 12;fillColor=#F8FAFC;swimlaneFillColor=#F8FAFC;strokeColor=#004C99;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="460" y="110" width="1460" height="980" as="geometry" />
+        </mxCell>
+        <mxCell id="az-rg-ico" value="" style="image;aspect=fixed;html=1;points=[];image=img/lib/azure2/general/Resource_Groups.svg;" parent="az-rg" vertex="1">
+          <mxGeometry x="30" y="10" width="42" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="az-rg-lbl" value="&lt;b&gt;Azure Subscription  ·  Resource Group&lt;/b&gt;  &lt;font color='#475569'&gt;(rg-af-webchat · Infraestructura Terraform en westus2)&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;fontFamily=Segoe UI;fontSize=14;fontColor=#004C99;" parent="az-rg" vertex="1">
+          <mxGeometry x="80" y="10" width="920" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="z2" value="2 · AF-WEBCHAT  ·  AZURE APP SERVICE (.NET 9 / ASP.NET CORE)" style="swimlane;startSize=38;html=1;rounded=1;arcSize=3;fillColor=#DBEAFE;swimlaneFillColor=#FFFFFF;strokeColor=#0284C7;strokeWidth=2.5;fontFamily=Segoe UI;fontSize=13;fontStyle=1;fontColor=#0C4A6E;align=left;spacingLeft=16;verticalAlign=middle;" parent="az-rg" vertex="1">
+          <mxGeometry x="30" y="60" width="700" height="720" as="geometry" />
+        </mxCell>
+        <mxCell id="z2-app-ico" value="" style="image;aspect=fixed;html=1;points=[];image=img/lib/azure2/app_services/App_Services.svg;" parent="z2" vertex="1">
+          <mxGeometry x="20" y="50" width="48" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="z2-plan-ico" value="" style="image;aspect=fixed;html=1;points=[];image=img/lib/azure2/app_services/App_Service_Plans.svg;" parent="z2" vertex="1">
+          <mxGeometry x="80" y="50" width="44" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="z2-host-lbl" value="&lt;b&gt;★ Host Principal · Linux Web App (B1+ / P1v3)&lt;/b&gt;&lt;br&gt;&lt;font color='#475569'&gt;Middleware transversal (Audit · Logging · Metrics) y eventos SSE (StreamEventService)&lt;/font&gt;" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontFamily=Segoe UI;fontSize=12;fontColor=#0F172A;" parent="z2" vertex="1">
+          <mxGeometry x="140" y="50" width="540" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="app-entry" value="Entrada y Bot" style="swimlane;startSize=30;html=1;rounded=1;arcSize=3;fillColor=#F1F5F9;swimlaneFillColor=#F8FAFC;strokeColor=#94A3B8;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=13;fontStyle=1;fontColor=#334155;align=left;spacingLeft=16;verticalAlign=middle;" parent="z2" vertex="1">
+          <mxGeometry x="20" y="130" width="190" height="560" as="geometry" />
+        </mxCell>
+        <mxCell id="in-web" value="&lt;b&gt;Controllers Web / Voz&lt;/b&gt;&lt;br&gt;&lt;font color='#475569'&gt;ChatController&lt;br&gt;DocumentController&lt;br&gt;VoiceLive · LiveAvatar&lt;/font&gt;" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#C4B5FD;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=11;fontColor=#0F172A;align=left;verticalAlign=middle;spacingLeft=12;spacingRight=10;spacingTop=6;spacingBottom=6;" parent="app-entry" vertex="1">
+          <mxGeometry x="10" y="40" width="170" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="in-teams" value="&lt;b&gt;Canal Teams / Bot&lt;/b&gt;&lt;br&gt;&lt;font color='#475569'&gt;TeamsBotAgent&lt;br&gt;ProactiveController&lt;br&gt;M365 Agents SDK&lt;/font&gt;" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#C4B5FD;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=11;fontColor=#0F172A;align=left;verticalAlign=middle;spacingLeft=12;spacingRight=10;spacingTop=6;spacingBottom=6;" parent="app-entry" vertex="1">
+          <mxGeometry x="10" y="230" width="170" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="in-api" value="&lt;b&gt;Endpoints API / A2A&lt;/b&gt;&lt;br&gt;&lt;font color='#475569'&gt;AgentController&lt;br&gt;SessionController&lt;br&gt;A2AController&lt;/font&gt;" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#C4B5FD;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=11;fontColor=#0F172A;align=left;verticalAlign=middle;spacingLeft=12;spacingRight=10;spacingTop=6;spacingBottom=6;" parent="app-entry" vertex="1">
+          <mxGeometry x="10" y="420" width="170" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="app-orch" value="&lt;b&gt;Motor de Orquestación&lt;/b&gt;&lt;br&gt;&lt;font color='#0369A1'&gt;&lt;b&gt;AgentOrchestrationService&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;br&gt;&lt;font color='#475569'&gt;• &lt;b&gt;Agente único:&lt;/b&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;RunStreamingAsync&lt;br&gt;• &lt;b&gt;Orquestación:&lt;/b&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;Sequential, Concurrent,&lt;br&gt;&amp;nbsp;&amp;nbsp;GroupChat (AI), Handoff&lt;br&gt;• &lt;b&gt;Workflows:&lt;/b&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;Iterative, Conditional, FanOut&lt;br&gt;• &lt;b&gt;Remoto:&lt;/b&gt; Clientes A2A&lt;/font&gt;" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#0284C7;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=11;fontColor=#0F172A;align=left;verticalAlign=middle;spacingLeft=12;spacingRight=10;spacingTop=6;spacingBottom=6;" parent="z2" vertex="1">
+          <mxGeometry x="250" y="130" width="200" height="320" as="geometry" />
+        </mxCell>
+        <mxCell id="app-reg" value="&lt;b&gt;Catálogo y Herramientas&lt;/b&gt;&lt;br&gt;&lt;font color='#0369A1'&gt;&lt;b&gt;AgentRegistry · ToolRegistry&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;br&gt;&lt;font color='#475569'&gt;• 35+ &lt;b&gt;AIAgent&lt;/b&gt; cacheados&lt;br&gt;• 16 Plugins (&lt;b&gt;AIFunction&lt;/b&gt;)&lt;br&gt;• Salida estructurada JSON&lt;br&gt;• Context Providers (RAG)&lt;/font&gt;" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#38BDF8;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=11;fontColor=#0F172A;align=left;verticalAlign=middle;spacingLeft=12;spacingRight=10;spacingTop=6;spacingBottom=6;" parent="z2" vertex="1">
+          <mxGeometry x="250" y="500" width="200" height="190" as="geometry" />
+        </mxCell>
+        <mxCell id="app-llm" value="&lt;b&gt;Clientes IA y Foundry&lt;/b&gt;&lt;br&gt;&lt;font color='#B45309'&gt;&lt;b&gt;ChatClientFactory&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font color='#475569'&gt;• Responses API +&lt;br&gt;&amp;nbsp;&amp;nbsp;ReasoningChatClient&lt;br&gt;• AIProjectClient&lt;br&gt;• Warm-up automático&lt;/font&gt;" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#F59E0B;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=11;fontColor=#0F172A;align=left;verticalAlign=middle;spacingLeft=12;spacingRight=10;spacingTop=6;spacingBottom=6;" parent="z2" vertex="1">
+          <mxGeometry x="490" y="130" width="190" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="app-rag" value="&lt;b&gt;Datos RAG y Sesiones&lt;/b&gt;&lt;br&gt;&lt;font color='#15803D'&gt;&lt;b&gt;Document · SessionSvc&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font color='#475569'&gt;• Ingesta en Blob Storage&lt;br&gt;• Indexación AI Search&lt;br&gt;• Caché + Cosmos DB&lt;/font&gt;" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#F0FDF4;strokeColor=#22C55E;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=11;fontColor=#0F172A;align=left;verticalAlign=middle;spacingLeft=12;spacingRight=10;spacingTop=6;spacingBottom=6;" parent="z2" vertex="1">
+          <mxGeometry x="490" y="290" width="190" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="app-ext" value="&lt;b&gt;Plugins y Voz&lt;/b&gt;&lt;br&gt;&lt;font color='#0369A1'&gt;&lt;b&gt;Plugins · VoiceService&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font color='#475569'&gt;• Voz S2S y LiveAvatar&lt;br&gt;• SqlPlugin · WebScraping&lt;br&gt;• BingGroundingPlugin&lt;br&gt;• McpServerPlugin (MCP)&lt;/font&gt;" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=11;fontColor=#0F172A;align=left;verticalAlign=middle;spacingLeft=12;spacingRight=10;spacingTop=6;spacingBottom=6;" parent="z2" vertex="1">
+          <mxGeometry x="490" y="530" width="190" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="z3-ai" value="3A · MICROSOFT FOUNDRY (INFERENCIA Y AGENTES)" style="swimlane;startSize=38;html=1;rounded=1;arcSize=3;fillColor=#FEF3C7;swimlaneFillColor=#FFFFFF;strokeColor=#D97706;strokeWidth=2;fontFamily=Segoe UI;fontSize=13;fontStyle=1;fontColor=#92400E;align=left;spacingLeft=16;verticalAlign=middle;" parent="az-rg" vertex="1">
+          <mxGeometry x="890" y="60" width="540" height="220" as="geometry" />
+        </mxCell>
+        <mxCell id="svc-foundry" value="" style="swimlane;startSize=0;swimlaneLine=0;html=1;rounded=1;arcSize=8;fillColor=#FFFFFF;swimlaneFillColor=#FFFFFF;strokeColor=#FCD34D;strokeWidth=1.5;" parent="z3-ai" vertex="1">
+          <mxGeometry x="20" y="60" width="230" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="svc-foundry-ico" value="" style="image;aspect=fixed;html=1;points=[];image=img/lib/azure2/ai_machine_learning/AI_Foundry.svg;" parent="svc-foundry" vertex="1">
+          <mxGeometry x="20" y="40" width="50" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="svc-foundry-txt" value="&lt;b&gt;Microsoft Foundry&lt;/b&gt;&lt;br&gt;&lt;font color='#475569'&gt;gpt-5.4 (Responses)&lt;br&gt;text-embedding-3-large&lt;br&gt;gpt-realtime (Voz)&lt;/font&gt;" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontFamily=Segoe UI;fontSize=11;fontColor=#1E293B;" parent="svc-foundry" vertex="1">
+          <mxGeometry x="80" y="10" width="140" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="svc-fagent" value="" style="swimlane;startSize=0;swimlaneLine=0;html=1;rounded=1;arcSize=8;fillColor=#FFFFFF;swimlaneFillColor=#FFFFFF;strokeColor=#FCD34D;strokeWidth=1.5;" parent="z3-ai" vertex="1">
+          <mxGeometry x="290" y="60" width="230" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="svc-fagent-ico" value="" style="image;aspect=fixed;html=1;points=[];image=img/lib/azure2/ai_machine_learning/Foundry_Agent_Service.svg;" parent="svc-fagent" vertex="1">
+          <mxGeometry x="20" y="40" width="48" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="svc-fagent-txt" value="&lt;b&gt;Foundry Agent Service&lt;/b&gt;&lt;br&gt;&lt;font color='#475569'&gt;Foundry Project&lt;br&gt;Agentes versionados&lt;br&gt;Tools + OpenAPI&lt;/font&gt;" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontFamily=Segoe UI;fontSize=11;fontColor=#1E293B;" parent="svc-fagent" vertex="1">
+          <mxGeometry x="80" y="10" width="140" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="z3-data" value="3B · CONOCIMIENTO RAG Y PERSISTENCIA" style="swimlane;startSize=38;html=1;rounded=1;arcSize=3;fillColor=#DCFCE7;swimlaneFillColor=#FFFFFF;strokeColor=#16A34A;strokeWidth=2;fontFamily=Segoe UI;fontSize=13;fontStyle=1;fontColor=#14532D;align=left;spacingLeft=16;verticalAlign=middle;" parent="az-rg" vertex="1">
+          <mxGeometry x="890" y="310" width="540" height="220" as="geometry" />
+        </mxCell>
+        <mxCell id="svc-search" value="" style="swimlane;startSize=0;swimlaneLine=0;html=1;rounded=1;arcSize=8;fillColor=#FFFFFF;swimlaneFillColor=#FFFFFF;strokeColor=#86EFAC;strokeWidth=1.5;" parent="z3-data" vertex="1">
+          <mxGeometry x="20" y="50" width="160" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="svc-search-ico" value="" style="image;aspect=fixed;html=1;points=[];image=img/lib/azure2/app_services/Search_Services.svg;" parent="svc-search" vertex="1">
+          <mxGeometry x="50" y="10" width="54" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="svc-search-txt" value="&lt;b&gt;Azure AI Search&lt;/b&gt;&lt;br&gt;&lt;font color='#475569'&gt;RAG híbrido y vectorial&lt;br&gt;Skillset sin llaves&lt;/font&gt;" style="text;html=1;whiteSpace=wrap;align=center;verticalAlign=top;fontFamily=Segoe UI;fontSize=11;fontColor=#1E293B;" parent="svc-search" vertex="1">
+          <mxGeometry x="10" y="60" width="140" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="svc-blob" value="" style="swimlane;startSize=0;swimlaneLine=0;html=1;rounded=1;arcSize=8;fillColor=#FFFFFF;swimlaneFillColor=#FFFFFF;strokeColor=#86EFAC;strokeWidth=1.5;" parent="z3-data" vertex="1">
+          <mxGeometry x="200" y="50" width="150" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="svc-blob-ico" value="" style="image;aspect=fixed;html=1;points=[];image=img/lib/azure2/storage/Storage_Accounts.svg;" parent="svc-blob" vertex="1">
+          <mxGeometry x="50" y="10" width="50" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="svc-blob-txt" value="&lt;b&gt;Azure Blob Storage&lt;/b&gt;&lt;br&gt;&lt;font color='#475569'&gt;Documentos PDF/DOCX&lt;br&gt;Fuente del indexador&lt;/font&gt;" style="text;html=1;whiteSpace=wrap;align=center;verticalAlign=top;fontFamily=Segoe UI;fontSize=11;fontColor=#1E293B;" parent="svc-blob" vertex="1">
+          <mxGeometry x="10" y="60" width="130" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="svc-cosmos" value="" style="swimlane;startSize=0;swimlaneLine=0;html=1;rounded=1;arcSize=8;fillColor=#FFFFFF;swimlaneFillColor=#FFFFFF;strokeColor=#93C5FD;strokeWidth=1.5;dashed=1;dashPattern=6 4;" parent="z3-data" vertex="1">
+          <mxGeometry x="370" y="50" width="150" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="svc-cosmos-ico" value="" style="image;aspect=fixed;html=1;points=[];image=img/lib/azure2/databases/Azure_Cosmos_DB.svg;" parent="svc-cosmos" vertex="1">
+          <mxGeometry x="50" y="10" width="48" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="svc-cosmos-txt" value="&lt;b&gt;Azure Cosmos DB&lt;/b&gt;&lt;br&gt;&lt;font color='#475569'&gt;Sesiones duraderas&lt;br&gt;&lt;i&gt;(Opcional · RBAC)&lt;/i&gt;&lt;/font&gt;" style="text;html=1;whiteSpace=wrap;align=center;verticalAlign=top;fontFamily=Segoe UI;fontSize=11;fontColor=#1E293B;" parent="svc-cosmos" vertex="1">
+          <mxGeometry x="10" y="60" width="130" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="z3-opt" value="3C · CAPACIDADES OPCIONALES Y EXTENSIBILIDAD" style="swimlane;startSize=38;html=1;rounded=1;arcSize=3;fillColor=#F1F5F9;swimlaneFillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=2;dashed=1;dashPattern=8 6;fontFamily=Segoe UI;fontSize=13;fontStyle=1;fontColor=#334155;align=left;spacingLeft=16;verticalAlign=middle;" parent="az-rg" vertex="1">
+          <mxGeometry x="890" y="560" width="540" height="220" as="geometry" />
+        </mxCell>
+        <mxCell id="svc-speech" value="" style="swimlane;startSize=0;swimlaneLine=0;html=1;rounded=1;arcSize=8;fillColor=#FFFFFF;swimlaneFillColor=#FFFFFF;strokeColor=#CBD5E1;strokeWidth=1.5;dashed=1;dashPattern=6 4;" parent="z3-opt" vertex="1">
+          <mxGeometry x="10" y="50" width="120" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="svc-speech-ico" value="" style="image;aspect=fixed;html=1;points=[];image=img/lib/azure2/ai_machine_learning/Speech_Services.svg;" parent="svc-speech" vertex="1">
+          <mxGeometry x="30" y="10" width="46" height="46" as="geometry" />
+        </mxCell>
+        <mxCell id="svc-speech-txt" value="&lt;b&gt;Azure Speech&lt;/b&gt;&lt;br&gt;&lt;font color='#475569'&gt;Voz neural y&lt;br&gt;LiveAvatar&lt;/font&gt;" style="text;html=1;whiteSpace=wrap;align=center;verticalAlign=top;fontFamily=Segoe UI;fontSize=11;fontColor=#1E293B;" parent="svc-speech" vertex="1">
+          <mxGeometry x="10" y="60" width="100" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="svc-sql" value="" style="swimlane;startSize=0;swimlaneLine=0;html=1;rounded=1;arcSize=8;fillColor=#FFFFFF;swimlaneFillColor=#FFFFFF;strokeColor=#CBD5E1;strokeWidth=1.5;dashed=1;dashPattern=6 4;" parent="z3-opt" vertex="1">
+          <mxGeometry x="140" y="50" width="120" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="svc-sql-ico" value="" style="image;aspect=fixed;html=1;points=[];image=img/lib/azure2/databases/Azure_SQL.svg;" parent="svc-sql" vertex="1">
+          <mxGeometry x="30" y="10" width="50" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="svc-sql-txt" value="&lt;b&gt;Azure SQL DB&lt;/b&gt;&lt;br&gt;&lt;font color='#475569'&gt;Consultas&lt;br&gt;NL2SQL (RO)&lt;/font&gt;" style="text;html=1;whiteSpace=wrap;align=center;verticalAlign=top;fontFamily=Segoe UI;fontSize=11;fontColor=#1E293B;" parent="svc-sql" vertex="1">
+          <mxGeometry x="10" y="60" width="100" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="svc-bing" value="" style="swimlane;startSize=0;swimlaneLine=0;html=1;rounded=1;arcSize=8;fillColor=#FFFFFF;swimlaneFillColor=#FFFFFF;strokeColor=#CBD5E1;strokeWidth=1.5;dashed=1;dashPattern=6 4;" parent="z3-opt" vertex="1">
+          <mxGeometry x="270" y="50" width="120" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="svc-bing-ico" value="" style="image;aspect=fixed;html=1;points=[];image=img/lib/azure2/general/Globe.svg;" parent="svc-bing" vertex="1">
+          <mxGeometry x="30" y="10" width="42" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="svc-bing-txt" value="&lt;b&gt;Bing Search&lt;/b&gt;&lt;br&gt;&lt;font color='#475569'&gt;Grounding web&lt;br&gt;en vivo&lt;/font&gt;" style="text;html=1;whiteSpace=wrap;align=center;verticalAlign=top;fontFamily=Segoe UI;fontSize=11;fontColor=#1E293B;" parent="svc-bing" vertex="1">
+          <mxGeometry x="10" y="60" width="100" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="svc-mcp" value="" style="swimlane;startSize=0;swimlaneLine=0;html=1;rounded=1;arcSize=8;fillColor=#FFFFFF;swimlaneFillColor=#FFFFFF;strokeColor=#CBD5E1;strokeWidth=1.5;dashed=1;dashPattern=6 4;" parent="z3-opt" vertex="1">
+          <mxGeometry x="400" y="50" width="120" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="svc-mcp-ico" value="" style="image;aspect=fixed;html=1;points=[];image=img/lib/azure2/devops/API_Connections.svg;" parent="svc-mcp" vertex="1">
+          <mxGeometry x="30" y="10" width="56" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="svc-mcp-txt" value="&lt;b&gt;Servers MCP&lt;/b&gt;&lt;br&gt;&lt;font color='#475569'&gt;Herramientas&lt;br&gt;externas&lt;/font&gt;" style="text;html=1;whiteSpace=wrap;align=center;verticalAlign=top;fontFamily=Segoe UI;fontSize=11;fontColor=#1E293B;" parent="svc-mcp" vertex="1">
+          <mxGeometry x="10" y="60" width="100" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="z4-gov" value="4 · IDENTIDAD ZERO-TRUST (SIN LLAVES) Y OBSERVABILIDAD" style="swimlane;startSize=34;html=1;rounded=1;arcSize=3;fillColor=#E0E7FF;swimlaneFillColor=#FFFFFF;strokeColor=#4F46E5;strokeWidth=2;fontFamily=Segoe UI;fontSize=13;fontStyle=1;fontColor=#312E81;align=left;spacingLeft=16;verticalAlign=middle;" parent="az-rg" vertex="1">
+          <mxGeometry x="30" y="850" width="1400" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="gov-uami" value="" style="swimlane;startSize=0;swimlaneLine=0;html=1;rounded=1;arcSize=8;fillColor=#FFFFFF;swimlaneFillColor=#FFFFFF;strokeColor=#C7D2FE;strokeWidth=1.5;" parent="z4-gov" vertex="1">
+          <mxGeometry x="20" y="40" width="440" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="gov-uami-ico" value="" style="image;aspect=fixed;html=1;points=[];image=img/lib/azure2/identity/Entra_Managed_Identities.svg;" parent="gov-uami" vertex="1">
+          <mxGeometry x="20" y="10" width="48" height="42" as="geometry" />
+        </mxCell>
+        <mxCell id="gov-uami-txt" value="&lt;b&gt;User-Assigned Managed Identity&lt;/b&gt; · Acceso RBAC sin llaves (Foundry, Search, Blob, Cosmos)" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontFamily=Segoe UI;fontSize=11;fontColor=#1E293B;" parent="gov-uami" vertex="1">
+          <mxGeometry x="80" y="10" width="350" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="gov-entra" value="" style="swimlane;startSize=0;swimlaneLine=0;html=1;rounded=1;arcSize=8;fillColor=#FFFFFF;swimlaneFillColor=#FFFFFF;strokeColor=#C7D2FE;strokeWidth=1.5;" parent="z4-gov" vertex="1">
+          <mxGeometry x="480" y="40" width="440" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="gov-entra-ico" value="" style="image;aspect=fixed;html=1;points=[];image=img/lib/azure2/identity/Azure_Active_Directory.svg;" parent="gov-entra" vertex="1">
+          <mxGeometry x="20" y="10" width="48" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="gov-entra-txt" value="&lt;b&gt;Microsoft Entra ID&lt;/b&gt; · DefaultAzureCredential y autenticación de Azure Bot Service" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontFamily=Segoe UI;fontSize=11;fontColor=#1E293B;" parent="gov-entra" vertex="1">
+          <mxGeometry x="80" y="10" width="350" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="gov-obs" value="" style="swimlane;startSize=0;swimlaneLine=0;html=1;rounded=1;arcSize=8;fillColor=#FFFFFF;swimlaneFillColor=#FFFFFF;strokeColor=#C7D2FE;strokeWidth=1.5;" parent="z4-gov" vertex="1">
+          <mxGeometry x="940" y="40" width="440" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="gov-obs-ico1" value="" style="image;aspect=fixed;html=1;points=[];image=img/lib/azure2/devops/Application_Insights.svg;" parent="gov-obs" vertex="1">
+          <mxGeometry x="10" y="10" width="32" height="46" as="geometry" />
+        </mxCell>
+        <mxCell id="gov-obs-ico2" value="" style="image;aspect=fixed;html=1;points=[];image=img/lib/azure2/analytics/Log_Analytics_Workspaces.svg;" parent="gov-obs" vertex="1">
+          <mxGeometry x="50" y="10" width="44" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="gov-obs-txt" value="&lt;b&gt;Application Insights + Log Analytics&lt;/b&gt; · Trazas, métricas y auditoría centralizada" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontFamily=Segoe UI;fontSize=11;fontColor=#1E293B;" parent="gov-obs" vertex="1">
+          <mxGeometry x="110" y="10" width="320" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="e-usr-web" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classicThin;endFill=1;strokeWidth=2;strokeColor=#7C3AED;" parent="z1" source="ch-users" target="ch-web" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-web-app" value="SSE / WebRTC" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;startArrow=classicThin;startFill=1;endArrow=classicThin;endFill=1;strokeWidth=2;strokeColor=#7C3AED;labelBackgroundColor=#FFFFFF;fontFamily=Segoe UI;fontSize=11;fontColor=#1E293B;" parent="1" source="ch-web" target="in-web" edge="1">
+          <mxGeometry relative="1" as="geometry" x="-0.18" />
+        </mxCell>
+        <mxCell id="e-teams-app" value="Bot Framework" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;startArrow=classicThin;startFill=1;endArrow=classicThin;endFill=1;strokeWidth=2;strokeColor=#7C3AED;labelBackgroundColor=#FFFFFF;fontFamily=Segoe UI;fontSize=11;fontColor=#1E293B;" parent="1" source="ch-teams" target="in-teams" edge="1">
+          <mxGeometry relative="1" as="geometry" x="-0.18" />
+        </mxCell>
+        <mxCell id="e-api-app" value="REST / A2A" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;startArrow=classicThin;startFill=1;endArrow=classicThin;endFill=1;strokeWidth=2;strokeColor=#7C3AED;labelBackgroundColor=#FFFFFF;fontFamily=Segoe UI;fontSize=11;fontColor=#1E293B;" parent="1" source="ch-api" target="in-api" edge="1">
+          <mxGeometry relative="1" as="geometry" x="-0.18" />
+        </mxCell>
+        <mxCell id="e-in-orch" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=10;html=1;endArrow=classicThin;endFill=1;strokeWidth=2;strokeColor=#006EAF;" parent="z2" source="app-entry" target="app-orch" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-orch-reg" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=10;html=1;endArrow=classicThin;endFill=1;strokeWidth=2;strokeColor=#006EAF;" parent="z2" source="app-orch" target="app-reg" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-orch-llm" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=10;html=1;endArrow=classicThin;endFill=1;strokeWidth=2;strokeColor=#FF8000;" parent="z2" source="app-orch" target="app-llm" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-orch-rag" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=10;html=1;endArrow=classicThin;endFill=1;strokeWidth=2;strokeColor=#009900;" parent="z2" source="app-orch" target="app-rag" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-reg-ext" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=10;html=1;endArrow=classicThin;endFill=1;strokeWidth=2;strokeColor=#006EAF;" parent="z2" source="app-reg" target="app-ext" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-llm-foundry" value="Responses · Agentes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;startArrow=classicThin;startFill=1;endArrow=classicThin;endFill=1;strokeWidth=2;strokeColor=#FF8000;labelBackgroundColor=#FFFFFF;fontFamily=Segoe UI;fontSize=11;fontColor=#1E293B;" parent="1" source="app-llm" target="z3-ai" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-foundry-proj" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=10;html=1;endArrow=classicThin;endFill=1;strokeWidth=2;strokeColor=#FF8000;" parent="z3-ai" source="svc-foundry" target="svc-fagent" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-rag-data" value="RAG · Docs · Sesiones" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;startArrow=classicThin;startFill=1;endArrow=classicThin;endFill=1;strokeWidth=2;strokeColor=#009900;labelBackgroundColor=#FFFFFF;fontFamily=Segoe UI;fontSize=11;fontColor=#1E293B;" parent="1" source="app-rag" target="z3-data" edge="1">
+          <mxGeometry relative="1" as="geometry" x="0.06" />
+        </mxCell>
+        <mxCell id="e-ext-opt" value="Voz · SQL · Bing · MCP" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classicThin;endFill=1;strokeWidth=2;strokeColor=#006EAF;dashed=1;dashPattern=6 4;labelBackgroundColor=#FFFFFF;fontFamily=Segoe UI;fontSize=11;fontColor=#1E293B;" parent="1" source="app-ext" target="z3-opt" edge="1">
+          <mxGeometry relative="1" as="geometry" x="0.06" />
+        </mxCell>
+        <mxCell id="e-app-gov" value="Managed Identity (RBAC) y Telemetría" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classicThin;endFill=1;strokeWidth=2;strokeColor=#4F46E5;dashed=1;dashPattern=6 4;labelBackgroundColor=#FFFFFF;fontFamily=Segoe UI;fontSize=11;fontColor=#1E293B;" parent="az-rg" source="z2" target="z4-gov" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lg-card" value="" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#CBD5E1;strokeWidth=1.5;" parent="1" vertex="1">
+          <mxGeometry x="40" y="1120" width="840" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="lg-title" value="&lt;b&gt;Flujos de arquitectura&lt;/b&gt;" style="text;html=1;align=left;verticalAlign=middle;fontFamily=Segoe UI;fontSize=13;fontColor=#0F172A;" parent="1" vertex="1">
+          <mxGeometry x="60" y="1130" width="260" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="lg-f1" value="" style="endArrow=classicThin;endFill=1;html=1;strokeColor=#7C3AED;strokeWidth=2.5;orthogonalLoop=1;" parent="1" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="60" y="1170" as="sourcePoint" />
+            <mxPoint x="120" y="1170" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="lg-f1-lbl" value="Canales omnicanal (Web SSE, Teams Bot, REST / A2A)" style="text;html=1;align=left;verticalAlign=middle;fontFamily=Segoe UI;fontSize=12;fontColor=#334155;" parent="1" vertex="1">
+          <mxGeometry x="130" y="1160" width="330" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="lg-f2" value="" style="endArrow=classicThin;endFill=1;html=1;strokeColor=#FF8000;strokeWidth=2.5;orthogonalLoop=1;" parent="1" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="60" y="1210" as="sourcePoint" />
+            <mxPoint x="120" y="1210" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="lg-f2-lbl" value="Inferencia LLM, Responses API y Agentes Foundry" style="text;html=1;align=left;verticalAlign=middle;fontFamily=Segoe UI;fontSize=12;fontColor=#334155;" parent="1" vertex="1">
+          <mxGeometry x="130" y="1200" width="330" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="lg-f3" value="" style="endArrow=classicThin;endFill=1;html=1;strokeColor=#009900;strokeWidth=2.5;orthogonalLoop=1;" parent="1" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="460" y="1170" as="sourcePoint" />
+            <mxPoint x="520" y="1170" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="lg-f3-lbl" value="Ingesta documental, búsqueda RAG y sesiones" style="text;html=1;align=left;verticalAlign=middle;fontFamily=Segoe UI;fontSize=12;fontColor=#334155;" parent="1" vertex="1">
+          <mxGeometry x="530" y="1160" width="330" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="lg-f4" value="" style="endArrow=classicThin;endFill=1;html=1;strokeColor=#006EAF;strokeWidth=2.5;dashed=1;dashPattern=6 4;orthogonalLoop=1;" parent="1" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="460" y="1210" as="sourcePoint" />
+            <mxPoint x="520" y="1210" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="lg-f4-lbl" value="Plugins opcionales (Voz, SQL, Bing, MCP) y gobernanza" style="text;html=1;align=left;verticalAlign=middle;fontFamily=Segoe UI;fontSize=12;fontColor=#334155;" parent="1" vertex="1">
+          <mxGeometry x="530" y="1200" width="330" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="summary-card" value="&lt;b&gt;Servicios de referencia y decisiones de arquitectura&lt;/b&gt;&lt;br&gt;&lt;font color='#334155'&gt;• &lt;b&gt;Núcleo requerido:&lt;/b&gt; Azure App Service (.NET 9), Microsoft Foundry (gpt-5.4, text-embedding-3-large, agentes versionados) y Microsoft Entra ID.&lt;br&gt;• &lt;b&gt;Zero-Trust por diseño:&lt;/b&gt; User-Assigned Managed Identity con roles RBAC de datos (cero llaves en Foundry, AI Search, Blob Storage y Cosmos DB).&lt;br&gt;• &lt;b&gt;Extensibilidad modular:&lt;/b&gt; RAG (AI Search + Blob), sesiones (Cosmos DB), voz/avatar (Speech + VoiceLive), SQL, Bing y MCP son opcionales.&lt;/font&gt;" style="rounded=1;arcSize=6;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#94A3B8;strokeWidth=1.5;fontFamily=Segoe UI;fontSize=12;align=left;verticalAlign=middle;spacingLeft=18;spacingRight=18;" parent="1" vertex="1">
+          <mxGeometry x="910" y="1120" width="1010" height="120" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

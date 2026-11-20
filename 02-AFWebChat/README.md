@@ -28,49 +28,11 @@ Aplicación web multi-agente construida con **[Microsoft Agent Framework SDK](ht
 
 ## Arquitectura
 
-La aplicación sigue una arquitectura por capas donde múltiples canales de entrada (Web, Teams, API) convergen en un servicio de orquestación central que enruta peticiones a agentes registrados dinámicamente.
+La aplicación sigue una arquitectura modular sobre **Azure App Service (.NET 9)** y **Microsoft Foundry**, donde múltiples canales de entrada (Web SSE, Microsoft Teams y REST / A2A) convergen en `AgentOrchestrationService` para ejecutar agentes individuales, orquestaciones multi-agente y workflows bajo seguridad **Zero-Trust** con Managed Identity.
 
-```
-┌────────────────────────────────────────────────────────────────┐
-│                         AF-WebChat                             │
-│                                                                │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐ │
-│  │  Web Chat UI │  │  REST API    │  │  Bot Framework       │ │
-│  │  (SSE Stream)│  │  /api/chat/* │  │  /api/messages       │ │
-│  │  Razor Views │  │  HTTP + JSON │  │  Teams / WebChat     │ │
-│  └──────┬───────┘  └──────┬───────┘  └──────────┬───────────┘ │
-│         │                 │                      │             │
-│         └────────────┬────┴──────────────────────┘             │
-│                      ▼                                         │
-│         ┌─────────────────────────┐                            │
-│         │  AgentOrchestrationSvc  │ ← Enrutador central       │
-│         │  (Single Agent /        │                            │
-│         │   Orchestration /       │                            │
-│         │   Workflow / Custom)    │                            │
-│         └────────────┬────────────┘                            │
-│                      ▼                                         │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │                  Agent Registry                          │   │
-│  │  ┌─────────┐ ┌──────────┐ ┌───────────┐ ┌───────────┐  │   │
-│  │  │ Básicos │ │  Tools   │ │  Dominio  │ │Enterprise │  │   │
-│  │  │ 3 agents│ │ 6 agents │ │ 9 agents  │ │ 2 agents  │  │   │
-│  │  └─────────┘ └──────────┘ └───────────┘ └───────────┘  │   │
-│  │  ┌─────────┐ ┌──────────┐ ┌───────────┐ ┌───────────┐  │   │
-│  │  │  MCP    │ │ Foundry  │ │ Structured│ │ Workflow  │  │   │
-│  │  │ 1 agent │ │ 2 agents │ │ 2 agents  │ │ 13 agents │  │   │
-│  │  └─────────┘ └──────────┘ └───────────┘ └───────────┘  │   │
-│  └────────────────────────┬────────────────────────────────┘   │
-│                           ▼                                    │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │                     Tool Layer                            │  │
-│  │  SQL │ Azure Search │ Bing │ MCP │ Blob │ Web Scraping   │  │
-│  └──────────────────────────┬───────────────────────────────┘  │
-│                             ▼                                  │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │  Azure OpenAI  │  Azure AI Search  │  Azure AI Foundry   │  │
-│  └──────────────────────────────────────────────────────────┘  │
-└────────────────────────────────────────────────────────────────┘
-```
+[![Arquitectura de la solución AF-WebChat](../docs/architecture/af-webchat-arquitectura.png)](../docs/architecture/af-webchat-arquitectura.svg)
+
+> 📐 **Recursos del diagrama:** [**Fuente editable (`.drawio`)**](../docs/architecture/af-webchat-arquitectura.drawio) · [**Vectorial de alta nitidez (`.svg`)**](../docs/architecture/af-webchat-arquitectura.svg) · [**Imagen de presentación (`.png`)**](../docs/architecture/af-webchat-arquitectura.png)
 
 ### Flujo de una petición
 
